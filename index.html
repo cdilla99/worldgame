@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Geo Game Table</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="hero">
+      <div>
+        <p class="tiny">Name ideas: "Around the World in 10 Questions", "Globetrotter Clue Clash", "Cartographer's Showdown".</p>
+        <h1>Geo Game Table</h1>
+        <p class="subtitle">Fast question-based geography cards for bright teens & curious adults.</p>
+      </div>
+      <div class="pill">Recommended 3–6 players (2–8 supported)</div>
+    </header>
+
+    <section id="setup" class="panel">
+      <h2>Start a Game</h2>
+      <form id="setup-form">
+        <div class="grid">
+          <label>Number of Players (2–8)
+            <input type="number" id="player-count" min="2" max="8" value="4" />
+          </label>
+          <label>Mode
+            <select id="mode">
+              <option value="timer">15-minute timer (default)</option>
+              <option value="points">Race to points</option>
+            </select>
+          </label>
+          <label id="timer-wrapper">Timer length (minutes)
+            <input type="number" id="timer-length" min="5" max="45" value="15" />
+          </label>
+          <label id="points-wrapper" class="hidden">Target points
+            <input type="number" id="target-points" min="5" max="50" value="15" />
+          </label>
+          <label>Difficulty pool
+            <select id="difficulty-pool">
+              <option value="all">All</option>
+              <option value="easy-medium">Easy + Medium</option>
+              <option value="medium-hard">Medium + Hard</option>
+              <option value="easy">Easy only</option>
+              <option value="medium">Medium only</option>
+              <option value="hard">Hard only</option>
+            </select>
+          </label>
+        </div>
+        <div id="player-names" class="names"></div>
+        <button type="submit" class="cta">Start Game</button>
+      </form>
+      <div class="rules-box">
+        <h3>Quick Rules</h3>
+        <ul>
+          <li>Clue-giver sees the country card; others ask up to 10 questions total.</li>
+          <li>On your turn, ask <strong>one</strong> question or make <strong>one</strong> guess.</li>
+          <li>Special clues: built-in clue & nearby country hint (once each).</li>
+          <li>Scoring: Easy 1★ = 1 pt, Medium 2★ = 2 pts, Hard 3★ = 3 pts.</li>
+          <li>Forbidden: direct giveaways like capital city or spelling hints.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="game" class="panel hidden">
+      <div class="top-row">
+        <div>
+          <h2>Current Card</h2>
+          <p id="current-turn" class="pill muted"></p>
+        </div>
+        <div class="stats-row">
+          <div class="pill" id="timer-display">Timer: 15:00</div>
+          <div class="pill" id="score-display">Scoreboard ready</div>
+        </div>
+      </div>
+      <div class="card-layout">
+        <div class="card-detail">
+          <div class="card-header">
+            <div>
+              <div id="card-flag" class="flag">🏳️</div>
+              <h3 id="card-name">Country</h3>
+              <p id="card-stars" class="stars">★</p>
+              <p id="card-meta" class="muted">Continent • Subregion</p>
+            </div>
+            <div class="tags" id="card-tags"></div>
+          </div>
+          <div class="info-grid">
+            <div><strong>Capital:</strong> <span id="card-capital"></span></div>
+            <div><strong>Population:</strong> <span id="card-pop"></span></div>
+            <div><strong>Area:</strong> <span id="card-area"></span></div>
+            <div><strong>Size:</strong> <span id="card-size"></span></div>
+            <div><strong>Hemisphere:</strong> <span id="card-hemi"></span></div>
+            <div><strong>Coast:</strong> <span id="card-coast"></span></div>
+            <div><strong>Languages:</strong> <span id="card-lang"></span></div>
+            <div><strong>Currency:</strong> <span id="card-currency"></span></div>
+            <div><strong>Neighbors:</strong> <span id="card-neighbors"></span></div>
+          </div>
+          <div class="pill inline" id="difficulty-label"></div>
+          <div>
+            <h4>Landmarks</h4>
+            <ul id="card-landmarks"></ul>
+          </div>
+          <div>
+            <h4>Fun Facts</h4>
+            <ul id="card-facts"></ul>
+          </div>
+          <div class="clue-row">
+            <button id="reveal-clue" class="ghost">Reveal Special Clue</button>
+            <span id="built-in-clue" class="hidden"></span>
+          </div>
+          <div class="clue-row">
+            <button id="reveal-nearby" class="ghost">Nearby Country Hint</button>
+            <span id="nearby-clue" class="hidden"></span>
+          </div>
+        </div>
+
+        <div class="card-shared">
+          <div class="question-head">
+            <div class="pill">Questions used: <span id="question-count">0</span>/10</div>
+            <div class="pill">Difficulty: <span id="shared-stars">★</span></div>
+          </div>
+          <div class="question-log" id="qa-log"></div>
+          <form id="qa-form" class="qa-form">
+            <label>Who is speaking?
+              <select id="qa-player"></select>
+            </label>
+            <label>Type
+              <select id="qa-type">
+                <option value="question">Ask Question</option>
+                <option value="guess">Make Guess</option>
+              </select>
+            </label>
+            <label>Text
+              <input type="text" id="qa-text" required maxlength="140" />
+            </label>
+            <button type="submit">Submit</button>
+          </form>
+          <div class="helper">
+            <p><strong>Allowed:</strong> yes/no, multiple-choice, short factual questions.</p>
+            <p><strong>Forbidden:</strong> capitals, spelling hints, or directly reading the card.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="scoreboard" class="panel hidden">
+      <h2>Scoreboard</h2>
+      <table>
+        <thead>
+          <tr><th>Player</th><th>Points</th><th>Easy</th><th>Medium</th><th>Hard</th></tr>
+        </thead>
+        <tbody id="score-rows"></tbody>
+      </table>
+    </section>
+
+    <section id="export" class="panel hidden">
+      <h2>Export Data</h2>
+      <p>Copy JSON or download CSV for printing cards or using in your own tools.</p>
+      <textarea id="export-json" readonly></textarea>
+      <button id="download-csv" class="ghost">Download CSV</button>
+    </section>
+  </div>
+
+  <script src="data/countries.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
