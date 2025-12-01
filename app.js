@@ -262,18 +262,23 @@ function syncHeroTimerButtons(mins) {
   });
 }
 
-function closeTimerMenu() {
-  heroTimerMenu.classList.add('hidden');
+function setTimerMenu(open) {
+  heroTimerMenu.classList.toggle('hidden', !open);
+  heroTimerTrigger.setAttribute('aria-expanded', String(open));
+}
+
+function toggleTimerMenu() {
+  const isOpen = !heroTimerMenu.classList.contains('hidden');
+  setTimerMenu(!isOpen);
 }
 
 heroTimerTrigger.addEventListener('click', (e) => {
-  e.stopPropagation();
-  heroTimerMenu.classList.toggle('hidden');
+  e.preventDefault();
+  toggleTimerMenu();
 });
 
 heroTimerMenu.querySelectorAll('button').forEach((btn) => {
-  btn.addEventListener('click', (e) => {
-    e.stopPropagation();
+  btn.addEventListener('click', () => {
     const mins = parseInt(btn.dataset.minutes, 10);
     timerLengthInput.value = mins;
     state.timerRemaining = mins * 60;
@@ -284,11 +289,25 @@ heroTimerMenu.querySelectorAll('button').forEach((btn) => {
     } else {
       updateModeDisplay();
     }
-    closeTimerMenu();
+    setTimerMenu(false);
   });
 });
 
-document.addEventListener('click', () => closeTimerMenu());
+document.addEventListener('click', (event) => {
+  const clickedInsideMenu = heroTimerMenu.contains(event.target);
+  const clickedTrigger = heroTimerTrigger.contains(event.target);
+  if (!clickedInsideMenu && !clickedTrigger) {
+    setTimerMenu(false);
+  }
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    setTimerMenu(false);
+  }
+});
+
+setTimerMenu(false);
 
 function selectDeck(pool) {
   const filtered = countryCards.filter((c) => {
