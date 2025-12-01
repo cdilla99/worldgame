@@ -79,6 +79,7 @@ button:active { transform: translateY(0); }
 .card-detail { background: #fefefe; border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
 .card-header { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
 .flag { font-size: 48px; }
+.flag img { width: 56px; height: 56px; display: block; }
 .stars { color: #f7c948; font-weight: 800; margin: 6px 0; }
 .muted { color: var(--muted); }
 .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 6px; font-size: 14px; }
