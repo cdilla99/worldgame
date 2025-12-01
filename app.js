@@ -66,7 +66,7 @@ const cardName = document.getElementById('card-name');
 const cardStars = document.getElementById('card-stars');
 const sharedStars = document.getElementById('shared-stars');
 const cardMeta = document.getElementById('card-meta');
-const cardFlag = document.getElementById('card-flag');
+const cardFlagFallback = document.getElementById('card-flag-fallback');
 const cardFlagImg = document.getElementById('card-flag-img');
 const mapOutline = document.getElementById('map-outline');
 const cardTags = document.getElementById('card-tags');
@@ -395,28 +395,28 @@ function renderCard(card) {
   cardMeta.textContent = `${card.continent} • ${card.subregion}`;
   const flagGlyph = card.flag || '🏳️';
   const countryCode = emojiToCountryCode(flagGlyph);
-  cardFlag.innerHTML = '';
+  cardFlagFallback.innerHTML = '';
+  cardFlagFallback.classList.add('hidden');
   cardFlagImg.classList.add('hidden');
   mapOutline.classList.add('hidden');
+  const showFallbackFlag = () => {
+    if (window.twemoji) {
+      cardFlagFallback.innerHTML = twemoji.parse(flagGlyph, { folder: 'svg', ext: '.svg' });
+    } else {
+      cardFlagFallback.textContent = flagGlyph;
+    }
+    cardFlagFallback.classList.remove('hidden');
+  };
   if (countryCode) {
     const codeLower = countryCode.toLowerCase();
-    const img = document.createElement('img');
-    img.src = `https://flagcdn.com/w80/${codeLower}.png`;
-    img.alt = `${card.name} flag`;
-    img.loading = 'lazy';
-    img.referrerPolicy = 'no-referrer';
-    img.onerror = () => {
-      if (window.twemoji) {
-        cardFlag.innerHTML = twemoji.parse(flagGlyph, { folder: 'svg', ext: '.svg' });
-      } else {
-        cardFlag.textContent = flagGlyph;
-      }
-      cardFlagImg.classList.add('hidden');
-    };
-    cardFlag.appendChild(img);
     cardFlagImg.src = `https://flagcdn.com/w320/${codeLower}.png`;
     cardFlagImg.alt = `${card.name} flag`;
     cardFlagImg.loading = 'lazy';
+    cardFlagImg.referrerPolicy = 'no-referrer';
+    cardFlagImg.onload = () => {
+      cardFlagFallback.classList.add('hidden');
+    };
+    cardFlagImg.onerror = showFallbackFlag;
     cardFlagImg.classList.remove('hidden');
     mapOutline.src = `https://raw.githubusercontent.com/djaiss/mapsicon/master/all/${codeLower}/vector.svg`;
     mapOutline.alt = `${card.name} outline map`;
@@ -425,10 +425,8 @@ function renderCard(card) {
       mapOutline.classList.add('hidden');
     };
     mapOutline.classList.remove('hidden');
-  } else if (window.twemoji) {
-    cardFlag.innerHTML = twemoji.parse(flagGlyph, { folder: 'svg', ext: '.svg' });
   } else {
-    cardFlag.textContent = flagGlyph;
+    showFallbackFlag();
   }
   cardTags.innerHTML = '';
   ['hemisphere', 'coastline_type', 'size_category'].forEach((key) => {

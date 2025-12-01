@@ -116,8 +116,8 @@
           <p id="current-turn" class="pill muted"></p>
         </div>
         <div class="stats-row">
-          <div class="pill" id="timer-display">Timer: 15:00</div>
-          <div class="pill" id="mode-display">Mode: Timed challenge</div>
+          <div class="timer-badge" id="timer-display">⏱️ Timer: 15:00</div>
+          <div class="pill strong" id="mode-display">Mode: Timed challenge</div>
           <div class="pill" id="score-display">Scoreboard ready</div>
         </div>
       </div>
@@ -127,7 +127,7 @@
             <div class="card-visuals">
               <figure class="flag-figure">
                 <img id="card-flag-img" alt="Country flag" />
-                <figcaption id="card-flag" class="flag">🏳️</figcaption>
+                <div id="card-flag-fallback" class="flag">🏳️</div>
               </figure>
               <figure class="map-figure">
                 <img id="map-outline" alt="Country outline" />
@@ -140,10 +140,6 @@
               <p id="card-meta" class="muted">Continent • Subregion</p>
             </div>
             <div class="tags" id="card-tags"></div>
-          </div>
-          <div class="holder-row">
-            <div class="holder-label">Card holder</div>
-            <div id="holder-chips" class="chip-row compact"></div>
           </div>
           <div class="reveal-row">
             <div class="helper-label">Flag stays hidden until you start guessing.</div>
@@ -180,16 +176,23 @@
         </div>
 
         <div class="card-shared">
+          <div class="role-board">
+            <div>
+              <p class="helper-label">Card holder</p>
+              <div id="holder-chips" class="chip-row compact"></div>
+            </div>
+            <div>
+              <p class="helper-label">Active guesser</p>
+              <div id="qa-player-chips" class="chip-row"></div>
+              <p class="micro-hint">Tap a player before logging questions or guesses.</p>
+            </div>
+          </div>
           <div class="question-head">
             <div class="pill">Questions used: <span id="question-count">0</span>/10</div>
             <div class="pill">Difficulty: <span id="shared-stars">★</span></div>
           </div>
           <div class="question-log" id="qa-log"></div>
           <div class="qa-lite">
-            <div>
-              <p class="helper-label">Who's up?</p>
-              <div id="qa-player-chips" class="chip-row"></div>
-            </div>
             <div class="actions">
               <button id="log-question" class="ghost">Log Question</button>
               <button id="log-guess" class="ghost">Log Guess</button>
