@@ -24,13 +24,29 @@
         </svg>
       </div>
       <div class="hero-copy">
-        <p class="eyebrow">Globe Dash for kids + teens</p>
+        <p class="eyebrow">Globe Dash</p>
         <h1>Geo Game Table</h1>
-        <p class="subtitle">Quick clue rounds, bright flags, and friendly guessing — perfect for classrooms, clubs, or family nights.</p>
+        <div class="rules-top">
+          <h3>Quick Rules</h3>
+          <ul>
+            <li>Pick a card holder, keep the flag hidden, and let teammates ask up to 10 questions.</li>
+            <li>Each turn: ask <strong>one</strong> question or make <strong>one</strong> guess toward the country.</li>
+            <li>Built-in clue and nearby country hint are each usable once per card.</li>
+            <li>Scoring: Easy 1★ = 1 pt, Medium 2★ = 2 pts, Hard 3★ = 3 pts. No giveaway answers.</li>
+          </ul>
+        </div>
+        <div class="subtitle">Choose how you want to play, then reveal the flag when everyone is ready to guess.</div>
         <div class="hero-highlights">
-          <span class="pill">⏱️ Timed challenge</span>
-          <span class="pill">🤝 Team turns</span>
+          <div class="pill menu-trigger" id="hero-timer-trigger">⏱️ Timed challenge · <span id="hero-timer-value">15 min</span></div>
+          <div class="pill">🤝 Team turns</div>
           <span class="pill muted">Best with 2–6 players</span>
+          <div class="menu hidden" id="hero-timer-menu" role="listbox" aria-label="Select timer length">
+            <button type="button" data-minutes="5">5 minutes</button>
+            <button type="button" data-minutes="10">10 minutes</button>
+            <button type="button" data-minutes="15" class="active">15 minutes</button>
+            <button type="button" data-minutes="20">20 minutes</button>
+            <button type="button" data-minutes="30">30 minutes</button>
+          </div>
         </div>
       </div>
     </header>
@@ -69,16 +85,6 @@
         <div id="player-names" class="names"></div>
         <button type="submit" class="cta">Start Game</button>
       </form>
-      <div class="rules-box">
-        <h3>Quick Rules</h3>
-        <ul>
-          <li>Clue-giver sees the country card; others ask up to 10 questions total.</li>
-          <li>On your turn, ask <strong>one</strong> question or make <strong>one</strong> guess.</li>
-          <li>Special clues: built-in clue & nearby country hint (once each).</li>
-          <li>Scoring: Easy 1★ = 1 pt, Medium 2★ = 2 pts, Hard 3★ = 3 pts.</li>
-          <li>Forbidden: direct giveaways like capital city or spelling hints.</li>
-        </ul>
-      </div>
     </section>
 
     <section id="game" class="panel hidden">

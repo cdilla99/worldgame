@@ -50,6 +50,9 @@ const modeSelect = document.getElementById('mode');
 const difficultyPool = document.getElementById('difficulty-pool');
 const timerLengthInput = document.getElementById('timer-length');
 const targetPointsInput = document.getElementById('target-points');
+const heroTimerTrigger = document.getElementById('hero-timer-trigger');
+const heroTimerMenu = document.getElementById('hero-timer-menu');
+const heroTimerValue = document.getElementById('hero-timer-value');
 
 const gameSection = document.getElementById('game');
 const setupSection = document.getElementById('setup');
@@ -237,6 +240,7 @@ modeSelect.addEventListener('change', () => {
 timerLengthInput.addEventListener('input', () => {
   const mins = parseInt(timerLengthInput.value, 10) || bootstrapOptions.defaultTimerMinutes;
   state.timerRemaining = mins * 60;
+  syncHeroTimerButtons(mins);
   if (state.mode === 'timer') {
     updateModeDisplay();
   }
@@ -251,6 +255,40 @@ targetPointsInput.addEventListener('input', () => {
 
 renderPlayerInputs(parseInt(playerCountInput.value, 10));
 updateModeDisplay();
+
+function syncHeroTimerButtons(mins) {
+  heroTimerMenu.querySelectorAll('button').forEach((b) => {
+    b.classList.toggle('active', parseInt(b.dataset.minutes, 10) === mins);
+  });
+}
+
+function closeTimerMenu() {
+  heroTimerMenu.classList.add('hidden');
+}
+
+heroTimerTrigger.addEventListener('click', (e) => {
+  e.stopPropagation();
+  heroTimerMenu.classList.toggle('hidden');
+});
+
+heroTimerMenu.querySelectorAll('button').forEach((btn) => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const mins = parseInt(btn.dataset.minutes, 10);
+    timerLengthInput.value = mins;
+    state.timerRemaining = mins * 60;
+    syncHeroTimerButtons(mins);
+    if (modeSelect.value !== 'timer') {
+      modeSelect.value = 'timer';
+      modeSelect.dispatchEvent(new Event('change'));
+    } else {
+      updateModeDisplay();
+    }
+    closeTimerMenu();
+  });
+});
+
+document.addEventListener('click', () => closeTimerMenu());
 
 function selectDeck(pool) {
   const filtered = countryCards.filter((c) => {
@@ -293,6 +331,8 @@ function updateModeDisplay() {
     ? `Timed challenge (${timerMins} min)`
     : `Turn-based team play (to ${state.targetPoints} pts)`;
   modeDisplay.textContent = `Mode: ${modeText}`;
+  heroTimerValue.textContent = `${timerMins} min`;
+  syncHeroTimerButtons(timerMins);
 }
 
 function updateScoreDisplay() {

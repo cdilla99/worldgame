@@ -48,12 +48,12 @@ body {
 .hero-icon svg { width: 100%; height: 100%; }
 
 .hero-copy { display: grid; gap: 8px; }
-.hero-highlights { display: flex; gap: 8px; flex-wrap: wrap; }
+.hero-highlights { display: flex; gap: 8px; flex-wrap: wrap; position: relative; align-items: flex-start; }
 
 h1 { margin: 0; font-family: 'Fredoka', 'Inter', system-ui, -apple-system, sans-serif; letter-spacing: 0.5px; }
 
 .eyebrow { font-size: 12px; letter-spacing: 0.8px; text-transform: uppercase; opacity: 0.9; margin: 0; }
-.subtitle { margin: 0; color: #f1f5fb; }
+.subtitle { margin: 8px 0 0; color: #f1f5fb; font-weight: 600; }
 
 .panel {
   margin-top: 18px;
@@ -93,7 +93,15 @@ button:active { transform: translateY(0); }
 .rules-box { background: #f0f4ff; border: 1px dashed #b7c5ff; padding: 12px; border-radius: 12px; }
 .pill { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; background: rgba(255, 255, 255, 0.9); border-radius: 999px; font-weight: 700; color: var(--ink); border: 1px solid rgba(15,27,58,0.06); }
 .pill.muted { background: rgba(255, 255, 255, 0.6); color: #1f2c4d; }
+.pill.menu-trigger { cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
 .pill.inline { margin: 10px 0; }
+.menu { position: absolute; margin-top: 8px; background: #fff; border: 1px solid #d7e2f0; border-radius: 12px; padding: 6px; box-shadow: 0 12px 28px rgba(0,0,0,0.12); display: grid; gap: 6px; width: 180px; z-index: 10; }
+.menu button { width: 100%; text-align: left; background: #f7f9ff; border: 1px solid #e4ebf7; padding: 8px 10px; border-radius: 10px; font-weight: 700; color: var(--ink); }
+.menu button.active, .menu button:hover { background: #e7f0ff; border-color: #c3d5ff; }
+.rules-top { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); border-radius: 14px; padding: 10px 12px; margin: 8px 0; color: #f8fbff; }
+.rules-top h3 { margin: 0 0 6px; color: #fff; }
+.rules-top ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.rules-top li { font-weight: 600; }
 .tags { display: flex; gap: 8px; flex-wrap: wrap; }
 .tag { padding: 6px 10px; border-radius: 10px; background: #fff3e0; color: #8f4600; font-weight: 700; border: 1px solid #ffd5a8; }
 
