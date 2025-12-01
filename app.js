@@ -8,6 +8,8 @@ const bootstrapOptions = {
   defaultTargetPoints: 15,
 };
 
+const avatarOptions = ['😀','😎','🦊','🐱','🐶','🐼','🐯','🐸','🐧','🐨','🐰','🐵','🐠','🐙'];
+
 const state = {
   players: [],
   scores: {},
@@ -94,13 +96,44 @@ let selectedPlayer = null;
 function renderPlayerInputs(count) {
   playerNamesContainer.innerHTML = '';
   for (let i = 0; i < count; i++) {
-    const wrap = document.createElement('label');
-    wrap.textContent = `Player ${i + 1} name`;
-    const input = document.createElement('input');
-    input.value = `Player ${i + 1}`;
-    input.dataset.index = i;
-    wrap.appendChild(input);
-    playerNamesContainer.appendChild(wrap);
+    const card = document.createElement('div');
+    card.className = 'player-card';
+    card.dataset.avatar = avatarOptions[0];
+
+    const header = document.createElement('div');
+    header.className = 'player-card-head';
+    header.innerHTML = `<span class="pill muted">Player ${i + 1}</span><span class="muted">Tap an avatar — type only if you want</span>`;
+
+    const avatarRow = document.createElement('div');
+    avatarRow.className = 'avatar-row';
+
+    avatarOptions.forEach((emoji, idx) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `avatar-btn ${idx === 0 ? 'active' : ''}`;
+      btn.textContent = emoji;
+      btn.title = `Use ${emoji} as player icon`;
+      btn.addEventListener('click', () => {
+        card.dataset.avatar = emoji;
+        avatarRow.querySelectorAll('.avatar-btn').forEach((el) => el.classList.remove('active'));
+        btn.classList.add('active');
+        nameInput.value = nameInput.value.trim() ? nameInput.value : emoji;
+      });
+      avatarRow.appendChild(btn);
+    });
+
+    const nameWrap = document.createElement('label');
+    nameWrap.textContent = 'Custom name (optional)';
+    nameWrap.className = 'name-optional';
+    const nameInput = document.createElement('input');
+    nameInput.placeholder = 'Tap to type — otherwise we use the emoji';
+    nameInput.dataset.index = i;
+    nameWrap.appendChild(nameInput);
+
+    card.appendChild(header);
+    card.appendChild(avatarRow);
+    card.appendChild(nameWrap);
+    playerNamesContainer.appendChild(card);
   }
 }
 
@@ -292,7 +325,12 @@ function startRound() {
 setupForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const count = Math.min(8, Math.max(2, parseInt(playerCountInput.value, 10) || 2));
-  const names = Array.from(playerNamesContainer.querySelectorAll('input')).slice(0, count).map((i) => i.value.trim() || 'Player');
+  const slots = Array.from(playerNamesContainer.querySelectorAll('.player-card')).slice(0, count);
+  const names = slots.map((slot, idx) => {
+    const typed = slot.querySelector('input')?.value.trim();
+    const avatar = slot.dataset.avatar || avatarOptions[0];
+    return typed || `${avatar} Player ${idx + 1}`;
+  });
   state.players = names.map((n, idx) => ({ name: n, index: idx }));
   state.players.forEach((p) => {
     state.scores[p.name] = { points: 0, easy: 0, medium: 0, hard: 0 };

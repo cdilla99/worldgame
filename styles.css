@@ -121,6 +121,29 @@ button:active { transform: translateY(0); }
 .cta.mini { padding: 10px 14px; width: auto; box-shadow: none; }
 .helper { background: #e7f8ef; border: 1px solid #c5f0d4; border-radius: 10px; padding: 10px; font-size: 13px; color: #0e6640; }
 
+.player-card {
+  border: 1px solid #e2eaf5;
+  border-radius: 12px;
+  padding: 12px;
+  background: #f9fbff;
+  display: grid;
+  gap: 8px;
+}
+.player-card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.player-card-head .pill { padding: 6px 10px; }
+.avatar-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(48px, 1fr)); gap: 8px; }
+.avatar-btn {
+  border-radius: 12px;
+  border: 1px solid #dbe4f0;
+  background: #fff;
+  font-size: 20px;
+  padding: 10px 0;
+  width: 100%;
+}
+.avatar-btn.active { border-color: #8cb5ff; box-shadow: 0 0 0 2px rgba(90, 160, 255, 0.2); background: #eef4ff; }
+.name-optional { font-weight: 600; color: var(--muted); }
+.name-optional input { margin-top: 6px; }
+
 .clue-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
 .ghost { background: #fff; border: 1px solid var(--border); color: var(--ink); width: auto; }
 
