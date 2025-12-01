@@ -53,6 +53,10 @@ const targetPointsInput = document.getElementById('target-points');
 const heroTimerTrigger = document.getElementById('hero-timer-trigger');
 const heroTimerMenu = document.getElementById('hero-timer-menu');
 const heroTimerValue = document.getElementById('hero-timer-value');
+const landingPage = document.getElementById('landing-page');
+const gamePage = document.getElementById('game-page');
+const restartSetupBtn = document.getElementById('restart-setup');
+const nextRoundBtn = document.getElementById('next-round');
 
 const gameSection = document.getElementById('game');
 const setupSection = document.getElementById('setup');
@@ -64,6 +68,8 @@ const cardStars = document.getElementById('card-stars');
 const sharedStars = document.getElementById('shared-stars');
 const cardMeta = document.getElementById('card-meta');
 const cardFlag = document.getElementById('card-flag');
+const cardFlagImg = document.getElementById('card-flag-img');
+const mapOutline = document.getElementById('map-outline');
 const cardTags = document.getElementById('card-tags');
 const cardCapital = document.getElementById('card-capital');
 const cardPop = document.getElementById('card-pop');
@@ -388,9 +394,12 @@ function renderCard(card) {
   const flagGlyph = card.flag || '🏳️';
   const countryCode = emojiToCountryCode(flagGlyph);
   cardFlag.innerHTML = '';
+  cardFlagImg.classList.add('hidden');
+  mapOutline.classList.add('hidden');
   if (countryCode) {
+    const codeLower = countryCode.toLowerCase();
     const img = document.createElement('img');
-    img.src = `https://flagcdn.com/w80/${countryCode.toLowerCase()}.png`;
+    img.src = `https://flagcdn.com/w80/${codeLower}.png`;
     img.alt = `${card.name} flag`;
     img.loading = 'lazy';
     img.referrerPolicy = 'no-referrer';
@@ -400,8 +409,20 @@ function renderCard(card) {
       } else {
         cardFlag.textContent = flagGlyph;
       }
+      cardFlagImg.classList.add('hidden');
     };
     cardFlag.appendChild(img);
+    cardFlagImg.src = `https://flagcdn.com/w320/${codeLower}.png`;
+    cardFlagImg.alt = `${card.name} flag`;
+    cardFlagImg.loading = 'lazy';
+    cardFlagImg.classList.remove('hidden');
+    mapOutline.src = `https://raw.githubusercontent.com/djaiss/mapsicon/master/all/${codeLower}/vector.svg`;
+    mapOutline.alt = `${card.name} outline map`;
+    mapOutline.loading = 'lazy';
+    mapOutline.onerror = () => {
+      mapOutline.classList.add('hidden');
+    };
+    mapOutline.classList.remove('hidden');
   } else if (window.twemoji) {
     cardFlag.innerHTML = twemoji.parse(flagGlyph, { folder: 'svg', ext: '.svg' });
   } else {
@@ -474,6 +495,12 @@ function startRound() {
   updateScoreTable();
 }
 
+function showGamePage() {
+  landingPage.classList.add('hidden');
+  gamePage.classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 setupForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const count = Math.min(8, Math.max(2, parseInt(playerCountInput.value, 10) || 2));
@@ -502,11 +529,19 @@ setupForm.addEventListener('submit', (e) => {
   renderPlayerChips();
   renderHolderChips();
   setupSection.classList.add('hidden');
-  gameSection.classList.remove('hidden');
-  scoreboardSection.classList.remove('hidden');
-  exportSection.classList.remove('hidden');
+  showGamePage();
   startRound();
   exportJson.value = JSON.stringify(countryCards, null, 2);
+});
+
+restartSetupBtn.addEventListener('click', () => {
+  window.location.reload();
+});
+
+nextRoundBtn.addEventListener('click', () => {
+  if (!state.players.length) return;
+  advanceClueGiver();
+  startRound();
 });
 
 revealClueBtn.addEventListener('click', () => {

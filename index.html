@@ -9,7 +9,8 @@
 </head>
 <body>
   <div class="app">
-    <header class="hero">
+    <div id="landing-page">
+      <header class="hero">
       <div class="hero-icon" aria-hidden="true">
         <svg viewBox="0 0 120 120" role="presentation">
           <defs>
@@ -49,9 +50,9 @@
           </div>
         </div>
       </div>
-    </header>
+      </header>
 
-    <section id="setup" class="panel">
+      <section id="setup" class="panel">
       <h2>Start a Game</h2>
       <form id="setup-form">
         <div class="grid">
@@ -85,9 +86,23 @@
         <div id="player-names" class="names"></div>
         <button type="submit" class="cta">Start Game</button>
       </form>
-    </section>
+      </section>
+    </div>
 
-    <section id="game" class="panel hidden">
+    <div id="game-page" class="hidden">
+      <section class="game-banner">
+        <div>
+          <p class="eyebrow">Game in play</p>
+          <h2>Round tracker</h2>
+          <p class="muted">Flag stays hidden until you tap reveal. Tap a player chip to log questions or guesses.</p>
+        </div>
+        <div class="banner-actions">
+          <button type="button" id="restart-setup" class="ghost">Back to setup</button>
+          <button type="button" id="next-round" class="cta mini">Next card</button>
+        </div>
+      </section>
+
+      <section id="game" class="panel">
       <div class="top-row">
         <div>
           <h2>Current Card</h2>
@@ -102,8 +117,17 @@
       <div class="card-layout">
         <div class="card-detail">
           <div class="card-header">
-            <div>
-              <div id="card-flag" class="flag">🏳️</div>
+            <div class="card-visuals">
+              <figure class="flag-figure">
+                <img id="card-flag-img" alt="Country flag" />
+                <figcaption id="card-flag" class="flag">🏳️</figcaption>
+              </figure>
+              <figure class="map-figure">
+                <img id="map-outline" alt="Country outline" />
+                <figcaption class="muted">Country outline</figcaption>
+              </figure>
+            </div>
+            <div class="card-title">
               <h3 id="card-name">Country</h3>
               <p id="card-stars" class="stars">★</p>
               <p id="card-meta" class="muted">Continent • Subregion</p>
@@ -140,11 +164,11 @@
           </div>
           <div class="clue-row">
             <button id="reveal-clue" class="ghost">Reveal Special Clue</button>
-            <span id="built-in-clue" class="hidden"></span>
+            <span id="built-in-clue" class="pill hidden"></span>
           </div>
           <div class="clue-row">
             <button id="reveal-nearby" class="ghost">Nearby Country Hint</button>
-            <span id="nearby-clue" class="hidden"></span>
+            <span id="nearby-clue" class="pill hidden"></span>
           </div>
         </div>
 
@@ -171,24 +195,25 @@
           </div>
         </div>
       </div>
-    </section>
+      </section>
 
-    <section id="scoreboard" class="panel hidden">
-      <h2>Scoreboard</h2>
-      <table>
-        <thead>
-          <tr><th>Player</th><th>Points</th><th>Easy</th><th>Medium</th><th>Hard</th></tr>
-        </thead>
-        <tbody id="score-rows"></tbody>
-      </table>
-    </section>
+      <section id="scoreboard" class="panel">
+        <h2>Scoreboard</h2>
+        <table>
+          <thead>
+            <tr><th>Player</th><th>Points</th><th>Easy</th><th>Medium</th><th>Hard</th></tr>
+          </thead>
+          <tbody id="score-rows"></tbody>
+        </table>
+      </section>
 
-    <section id="export" class="panel hidden">
-      <h2>Export Data</h2>
-      <p>Copy JSON or download CSV for printing cards or using in your own tools.</p>
-      <textarea id="export-json" readonly></textarea>
-      <button id="download-csv" class="ghost">Download CSV</button>
-    </section>
+      <section id="export" class="panel">
+        <h2>Export Data</h2>
+        <p>Copy JSON or download CSV for printing cards or using in your own tools.</p>
+        <textarea id="export-json" readonly></textarea>
+        <button id="download-csv" class="ghost">Download CSV</button>
+      </section>
+    </div>
   </div>
 
   <script src="data/countries.js"></script>

@@ -21,6 +21,7 @@ body {
 }
 
 .app { max-width: 1140px; margin: 0 auto; padding: 24px 20px 56px; }
+.app > .hidden { display: none; }
 .hero {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -108,8 +109,11 @@ button:active { transform: translateY(0); }
 .card-layout { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 16px; align-items: start; }
 .card-detail { background: #fefefe; border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
 .card-header { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
-.flag { font-size: 48px; }
-.flag img { width: 56px; height: 56px; display: block; }
+.card-visuals { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+.flag-figure, .map-figure { margin: 0; padding: 6px; background: #f6f8fd; border: 1px solid var(--border); border-radius: 12px; display: grid; gap: 6px; justify-items: center; width: 140px; min-height: 150px; }
+.flag-figure img, .map-figure img { width: 100%; height: auto; max-height: 110px; object-fit: contain; }
+.flag { font-size: 32px; text-align: center; }
+.card-title { display: grid; gap: 4px; min-width: 180px; }
 .stars { color: #f7c948; font-weight: 800; margin: 6px 0; }
 .card-detail.masked .card-header,
 .card-detail.masked .info-grid,
@@ -165,6 +169,7 @@ button:active { transform: translateY(0); }
 .name-optional input { margin-top: 6px; }
 
 .clue-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+.clue-row .pill { background: #eef4ff; border-color: #c6d7ff; font-weight: 700; }
 .ghost { background: #fff; border: 1px solid var(--border); color: var(--ink); width: auto; }
 .holder-row { display: flex; align-items: center; gap: 8px; margin: 10px 0 4px; flex-wrap: wrap; }
 .holder-label { font-weight: 700; color: var(--muted); }
@@ -180,9 +185,24 @@ th { background: #f4f7fb; }
 
 textarea { width: 100%; min-height: 200px; margin-top: 10px; background: #0b1221; color: #d9ffe7; font-family: "SFMono-Regular", monospace; }
 
+.game-banner { display: flex; justify-content: space-between; align-items: center; gap: 14px; background: #102347; color: #f4f7ff; padding: 16px; border-radius: 16px; box-shadow: 0 10px 24px rgba(0,0,0,0.12); margin-top: 18px; }
+.game-banner h2 { margin: 2px 0 0; color: #fff; }
+.banner-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.game-banner .ghost { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.25); color: #f4f7ff; }
+.game-banner .cta { margin-top: 0; box-shadow: none; }
+.card-layout { margin-top: 12px; }
+
+.card-visuals img.hidden, .map-figure img.hidden { display: none; }
+.flag-figure figcaption { font-weight: 700; color: var(--ink); }
+
+.muted.banner { color: rgba(244,247,255,0.85); }
+
 @media (max-width: 900px) {
   .card-layout { grid-template-columns: 1fr; }
   .top-row { flex-direction: column; align-items: flex-start; }
   .hero { grid-template-columns: 1fr; align-items: flex-start; text-align: left; }
   .hero-copy { gap: 10px; }
+  .game-banner { flex-direction: column; align-items: flex-start; }
+  .card-header { flex-direction: column; align-items: flex-start; }
+  .card-visuals { width: 100%; justify-content: flex-start; }
 }
