@@ -75,11 +75,11 @@ const currentTurn = document.getElementById('current-turn');
 const timerDisplay = document.getElementById('timer-display');
 const scoreDisplay = document.getElementById('score-display');
 const questionCountEl = document.getElementById('question-count');
-const qaForm = document.getElementById('qa-form');
-const qaPlayerSelect = document.getElementById('qa-player');
-const qaText = document.getElementById('qa-text');
-const qaType = document.getElementById('qa-type');
 const qaLog = document.getElementById('qa-log');
+const qaPlayerChips = document.getElementById('qa-player-chips');
+const logQuestionBtn = document.getElementById('log-question');
+const logGuessBtn = document.getElementById('log-guess');
+const markCorrectBtn = document.getElementById('mark-correct');
 const revealClueBtn = document.getElementById('reveal-clue');
 const revealNearbyBtn = document.getElementById('reveal-nearby');
 const builtInClue = document.getElementById('built-in-clue');
@@ -89,6 +89,7 @@ const exportJson = document.getElementById('export-json');
 const downloadCsvBtn = document.getElementById('download-csv');
 
 let privacyHidden = false;
+let selectedPlayer = null;
 
 function renderPlayerInputs(count) {
   playerNamesContainer.innerHTML = '';
@@ -101,6 +102,29 @@ function renderPlayerInputs(count) {
     wrap.appendChild(input);
     playerNamesContainer.appendChild(wrap);
   }
+}
+
+function renderPlayerChips() {
+  qaPlayerChips.innerHTML = '';
+  state.players.forEach((p, idx) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `chip ${idx === 0 ? 'active' : ''}`;
+    btn.dataset.name = p.name;
+    btn.textContent = p.name;
+    btn.addEventListener('click', () => {
+      setActiveChip(p.name);
+    });
+    qaPlayerChips.appendChild(btn);
+  });
+  setActiveChip(state.players[0]?.name || null);
+}
+
+function setActiveChip(name) {
+  selectedPlayer = name;
+  Array.from(qaPlayerChips.children).forEach((el) => {
+    el.classList.toggle('active', el.dataset.name === name);
+  });
 }
 
 playerCountInput.addEventListener('input', (e) => {
@@ -243,7 +267,6 @@ function logQA(entry) {
 
 function resetQA() {
   qaLog.innerHTML = '';
-  qaText.value = '';
   questionCountEl.textContent = '0';
 }
 
@@ -260,6 +283,8 @@ function startRound() {
   renderCard(state.currentCard);
   const clueGiver = state.players[state.currentClueGiverIndex];
   currentTurn.textContent = `${clueGiver.name} is Clue-giver. Pass device or hide card for guessers.`;
+  const defaultGuesser = state.players[(state.currentClueGiverIndex + 1) % state.players.length];
+  setActiveChip(defaultGuesser?.name || clueGiver.name);
   updateScoreDisplay();
   updateScoreTable();
 }
@@ -278,7 +303,7 @@ setupForm.addEventListener('submit', (e) => {
   const timerSeconds = (parseInt(timerLengthInput.value, 10) || bootstrapOptions.defaultTimerMinutes) * 60;
   startTimer(timerSeconds);
   state.deck = selectDeck(state.difficultyPool);
-  qaPlayerSelect.innerHTML = state.players.map((p) => `<option value="${p.name}">${p.name}</option>`).join('');
+  renderPlayerChips();
   setupSection.classList.add('hidden');
   gameSection.classList.remove('hidden');
   scoreboardSection.classList.remove('hidden');
@@ -300,41 +325,35 @@ revealNearbyBtn.addEventListener('click', () => {
   revealNearbyBtn.disabled = true;
 });
 
-qaForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const text = qaText.value.trim();
-  if (!text) return;
-  const type = qaType.value;
-  const player = qaPlayerSelect.value;
-  if (type === 'question' && state.questionCount >= 10) {
-    alert('Question limit reached for this card. You can still make guesses.');
+logQuestionBtn.addEventListener('click', () => {
+  const player = selectedPlayer || state.players[0]?.name;
+  if (!player) return;
+  if (state.questionCount >= 10) {
+    alert('Question limit reached for this card. Jump to guesses!');
     return;
   }
-  let result = 'Awaiting Clue-giver answer';
-  if (type === 'guess') {
-    const correct = text.toLowerCase() === state.currentCard.name.toLowerCase();
-    if (correct) {
-      const score = state.scores[player];
-      score.points += state.currentCard.stars;
-      score[state.currentCard.difficulty] += 1;
-      result = `Correct! ${player} gains ${state.currentCard.stars} point(s). Card ends.`;
-      logQA({ player, type, text, result });
-      advanceClueGiver();
-      checkEndConditions();
-      startRound();
-      return;
-    } else {
-      result = 'Wrong guess. Pass to next guesser.';
-    }
-  } else {
-    state.questionCount += 1;
-    questionCountEl.textContent = state.questionCount;
-    if (state.questionCount >= 10) {
-      result = 'Question logged. Limit reached—reveal after guesses.';
-    }
-  }
-  logQA({ player, type, text, result });
-  qaText.value = '';
+  state.questionCount += 1;
+  questionCountEl.textContent = state.questionCount;
+  const limitNote = state.questionCount >= 10 ? 'Question limit reached—switch to guesses.' : 'Question logged—card-holder answers.';
+  logQA({ player, type: 'question', text: 'Asked a question', result: limitNote });
+});
+
+logGuessBtn.addEventListener('click', () => {
+  const player = selectedPlayer || state.players[0]?.name;
+  if (!player) return;
+  logQA({ player, type: 'guess', text: 'Took a guess', result: 'Not correct. Keep the round rolling.' });
+});
+
+markCorrectBtn.addEventListener('click', () => {
+  const player = selectedPlayer || state.players[0]?.name;
+  if (!player) return;
+  const score = state.scores[player];
+  score.points += state.currentCard.stars;
+  score[state.currentCard.difficulty] += 1;
+  logQA({ player, type: 'guess', text: 'Correct guess!', result: `${player} earns ${state.currentCard.stars} point(s). Next card ready.` });
+  advanceClueGiver();
+  checkEndConditions();
+  startRound();
 });
 
 function advanceClueGiver() {

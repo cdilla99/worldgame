@@ -138,24 +138,20 @@
             <div class="pill">Difficulty: <span id="shared-stars">★</span></div>
           </div>
           <div class="question-log" id="qa-log"></div>
-          <form id="qa-form" class="qa-form">
-            <label>Who is speaking?
-              <select id="qa-player"></select>
-            </label>
-            <label>Type
-              <select id="qa-type">
-                <option value="question">Ask Question</option>
-                <option value="guess">Make Guess</option>
-              </select>
-            </label>
-            <label>Text
-              <input type="text" id="qa-text" required maxlength="140" />
-            </label>
-            <button type="submit">Submit</button>
-          </form>
+          <div class="qa-lite">
+            <div>
+              <p class="helper-label">Who's up?</p>
+              <div id="qa-player-chips" class="chip-row"></div>
+            </div>
+            <div class="actions">
+              <button id="log-question" class="ghost">Log Question</button>
+              <button id="log-guess" class="ghost">Log Guess (not yet)</button>
+              <button id="mark-correct" class="cta mini">Mark Correct Guess</button>
+            </div>
+          </div>
           <div class="helper">
-            <p><strong>Allowed:</strong> yes/no, multiple-choice, short factual questions.</p>
-            <p><strong>Forbidden:</strong> capitals, spelling hints, or directly reading the card.</p>
+            <p><strong>Flow:</strong> Tap a player, tap "Log Question" or "Log Guess". When someone nails it, hit "Mark Correct Guess".</p>
+            <p><strong>Remember:</strong> The card-holder answers all questions. No need to type—just tap and keep the energy high.</p>
           </div>
         </div>
       </div>

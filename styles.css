@@ -112,7 +112,13 @@ button:active { transform: translateY(0); }
 .question-log { min-height: 200px; max-height: 380px; overflow-y: auto; background: #fff; border: 1px solid #e4e8f1; border-radius: 10px; padding: 10px; }
 .log-item { border-bottom: 1px dashed #dfe6f0; padding: 8px 0; }
 .log-item:last-child { border-bottom: none; }
-.qa-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 12px; }
+.qa-lite { display: grid; gap: 10px; margin-top: 12px; }
+.helper-label { margin: 0 0 6px; font-weight: 700; color: var(--muted); }
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { padding: 8px 12px; border-radius: 999px; background: #f4f7fb; border: 1px solid #dbe4f0; font-weight: 700; color: var(--ink); cursor: pointer; }
+.chip.active { background: #e7f0ff; border-color: #b4c7ff; box-shadow: 0 0 0 2px rgba(90, 160, 255, 0.25); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.cta.mini { padding: 10px 14px; width: auto; box-shadow: none; }
 .helper { background: #e7f8ef; border: 1px solid #c5f0d4; border-radius: 10px; padding: 10px; font-size: 13px; color: #0e6640; }
 
 .clue-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
