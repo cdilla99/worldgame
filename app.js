@@ -169,7 +169,12 @@ function renderCard(card) {
   cardStars.textContent = '★'.repeat(card.stars);
   sharedStars.textContent = '★'.repeat(card.stars);
   cardMeta.textContent = `${card.continent} • ${card.subregion}`;
-  cardFlag.textContent = card.flag || '🏳️';
+  const flagGlyph = card.flag || '🏳️';
+  if (window.twemoji) {
+    cardFlag.innerHTML = twemoji.parse(flagGlyph, { folder: 'svg', ext: '.svg' });
+  } else {
+    cardFlag.textContent = flagGlyph;
+  }
   cardTags.innerHTML = '';
   ['hemisphere', 'coastline_type', 'size_category'].forEach((key) => {
     const span = document.createElement('span');
