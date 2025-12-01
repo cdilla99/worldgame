@@ -87,6 +87,13 @@
         <button type="submit" class="cta">Start Game</button>
       </form>
       </section>
+
+      <section id="export" class="panel">
+        <h2>Export Data</h2>
+        <p>Copy JSON or download CSV for printing cards or using in your own tools.</p>
+        <textarea id="export-json" readonly></textarea>
+        <button id="download-csv" class="ghost">Download CSV</button>
+      </section>
     </div>
 
     <div id="game-page" class="hidden">
@@ -205,13 +212,6 @@
           </thead>
           <tbody id="score-rows"></tbody>
         </table>
-      </section>
-
-      <section id="export" class="panel">
-        <h2>Export Data</h2>
-        <p>Copy JSON or download CSV for printing cards or using in your own tools.</p>
-        <textarea id="export-json" readonly></textarea>
-        <button id="download-csv" class="ghost">Download CSV</button>
       </section>
     </div>
   </div>

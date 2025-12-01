@@ -61,7 +61,6 @@ const nextRoundBtn = document.getElementById('next-round');
 const gameSection = document.getElementById('game');
 const setupSection = document.getElementById('setup');
 const scoreboardSection = document.getElementById('scoreboard');
-const exportSection = document.getElementById('export');
 
 const cardName = document.getElementById('card-name');
 const cardStars = document.getElementById('card-stars');
@@ -102,6 +101,9 @@ const nearbyClue = document.getElementById('nearby-clue');
 const scoreRows = document.getElementById('score-rows');
 const exportJson = document.getElementById('export-json');
 const downloadCsvBtn = document.getElementById('download-csv');
+
+// Show the full dataset on the landing page only.
+exportJson.value = JSON.stringify(countryCards, null, 2);
 
 let selectedPlayer = null;
 
@@ -531,7 +533,6 @@ setupForm.addEventListener('submit', (e) => {
   setupSection.classList.add('hidden');
   showGamePage();
   startRound();
-  exportJson.value = JSON.stringify(countryCards, null, 2);
 });
 
 restartSetupBtn.addEventListener('click', () => {
