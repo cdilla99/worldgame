@@ -123,28 +123,17 @@
       </div>
       <div class="card-layout">
         <div class="card-detail">
-          <div class="card-header">
-            <div class="card-visuals">
-              <figure class="flag-figure">
-                <img id="card-flag-img" alt="Country flag" />
-                <div id="card-flag-fallback" class="flag">🏳️</div>
-              </figure>
-              <figure class="map-figure">
-                <img id="map-outline" alt="Country outline" />
-                <figcaption class="muted">Country outline</figcaption>
-              </figure>
+          <div class="outline-block">
+            <div class="outline-copy">
+              <p class="helper-label">Start with the outline</p>
+              <p class="muted">Let the guessers study the shape first — the country name and flag live further down.</p>
             </div>
-            <div class="card-title">
-              <h3 id="card-name">Country</h3>
-              <p id="card-stars" class="stars">★</p>
-              <p id="card-meta" class="muted">Continent • Subregion</p>
-            </div>
-            <div class="tags" id="card-tags"></div>
+            <figure class="map-figure spotlight">
+              <img id="map-outline" alt="Country outline" />
+              <figcaption class="muted">Country outline</figcaption>
+            </figure>
           </div>
-          <div class="reveal-row">
-            <div class="helper-label">Flag stays hidden until you start guessing.</div>
-            <button id="reveal-flag" class="cta mini" type="button">Reveal flag + start guessing</button>
-          </div>
+
           <div class="info-grid">
             <div><strong>Capital:</strong> <span id="card-capital"></span></div>
             <div><strong>Population:</strong> <span id="card-pop"></span></div>
@@ -157,6 +146,7 @@
             <div><strong>Neighbors:</strong> <span id="card-neighbors"></span></div>
           </div>
           <div class="pill inline" id="difficulty-label"></div>
+          <div class="tags" id="card-tags"></div>
           <div>
             <h4>Landmarks</h4>
             <ul id="card-landmarks"></ul>
@@ -172,6 +162,28 @@
           <div class="clue-row">
             <button id="reveal-nearby" class="ghost">Nearby Country Hint</button>
             <span id="nearby-clue" class="pill hidden"></span>
+          </div>
+
+          <div class="identity-block" id="identity-block">
+            <div class="identity-inner">
+              <div class="card-visuals">
+                <figure class="flag-figure">
+                  <img id="card-flag-img" alt="Country flag" />
+                  <div id="card-flag-fallback" class="flag">🏳️</div>
+                  <figcaption class="muted">Country flag</figcaption>
+                </figure>
+                <div class="card-title">
+                  <h3 id="card-name">Country</h3>
+                  <p id="card-stars" class="stars">★</p>
+                  <p id="card-meta" class="muted">Continent • Subregion</p>
+                </div>
+              </div>
+              <div class="helper muted">Scroll down to confirm the country after everyone has guessed from the outline.</div>
+            </div>
+            <div class="reveal-row">
+              <div class="helper-label">Tap to reveal the identity and flag.</div>
+              <button id="reveal-flag" class="cta mini" type="button">Reveal country</button>
+            </div>
           </div>
         </div>
 

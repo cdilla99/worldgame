@@ -69,6 +69,7 @@ const cardMeta = document.getElementById('card-meta');
 const cardFlagFallback = document.getElementById('card-flag-fallback');
 const cardFlagImg = document.getElementById('card-flag-img');
 const mapOutline = document.getElementById('map-outline');
+const identityBlock = document.getElementById('identity-block');
 const cardTags = document.getElementById('card-tags');
 const cardCapital = document.getElementById('card-capital');
 const cardPop = document.getElementById('card-pop');
@@ -472,8 +473,8 @@ function resetQA() {
 }
 
 function maskCard(shouldHide) {
-  const detail = document.querySelector('.card-detail');
-  detail.classList.toggle('masked', shouldHide);
+  if (!identityBlock) return;
+  identityBlock.classList.toggle('masked', shouldHide);
 }
 
 function startRound() {

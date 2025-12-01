@@ -109,24 +109,24 @@ button:active { transform: translateY(0); }
 .tag { padding: 6px 10px; border-radius: 10px; background: #fff3e0; color: #8f4600; font-weight: 700; border: 1px solid #ffd5a8; }
 
 .card-layout { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 16px; align-items: start; }
-.card-detail { background: #fefefe; border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
-.card-header { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
-.card-visuals { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+.card-detail { background: #fefefe; border: 1px solid var(--border); border-radius: 14px; padding: 14px; display: grid; gap: 12px; }
+.card-visuals { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .flag-figure, .map-figure { margin: 0; padding: 6px; background: #f6f8fd; border: 1px solid var(--border); border-radius: 12px; display: grid; gap: 6px; justify-items: center; width: 140px; min-height: 150px; }
 .flag-figure img, .map-figure img { width: 100%; height: auto; max-height: 110px; object-fit: contain; }
 .flag { font-size: 32px; text-align: center; }
 .card-title { display: grid; gap: 4px; min-width: 180px; }
 .stars { color: #f7c948; font-weight: 800; margin: 6px 0; }
-.card-detail.masked .card-header,
-.card-detail.masked .info-grid,
-.card-detail.masked .pill.inline,
-.card-detail.masked .card-tags,
-.card-detail.masked h4,
-.card-detail.masked ul,
-.card-detail.masked .clue-row {
-  filter: blur(5px);
-  pointer-events: none;
-}
+.identity-block { border-top: 1px dashed var(--border); padding-top: 10px; display: grid; gap: 8px; }
+.identity-inner { display: grid; gap: 10px; }
+.identity-block .helper { background: #f7f9ff; border-color: #dbe4f0; }
+.identity-block.masked .identity-inner { filter: blur(6px); pointer-events: none; }
+.identity-block .reveal-row { justify-content: space-between; }
+
+.outline-block { display: grid; gap: 10px; align-items: start; grid-template-columns: 1fr; }
+.outline-copy { display: grid; gap: 4px; }
+.map-figure.spotlight { width: 100%; min-height: 220px; }
+.map-figure.spotlight img { max-height: 200px; }
+.map-figure figcaption { font-weight: 700; color: var(--ink); }
 .muted { color: var(--muted); }
 .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 6px; font-size: 14px; }
 .info-grid div { background: #f8fbff; padding: 8px 10px; border-radius: 10px; border: 1px solid #e3ecf5; }
