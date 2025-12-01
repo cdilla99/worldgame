@@ -25,6 +25,7 @@ const state = {
   currentClueGiverIndex: 0,
   clueRevealed: false,
   nearbyRevealed: false,
+  flagRevealed: false,
 };
 
 function emojiToCountryCode(emoji) {
@@ -76,12 +77,15 @@ const difficultyLabel = document.getElementById('difficulty-label');
 const currentTurn = document.getElementById('current-turn');
 const timerDisplay = document.getElementById('timer-display');
 const scoreDisplay = document.getElementById('score-display');
+const modeDisplay = document.getElementById('mode-display');
 const questionCountEl = document.getElementById('question-count');
 const qaLog = document.getElementById('qa-log');
 const qaPlayerChips = document.getElementById('qa-player-chips');
+const holderChips = document.getElementById('holder-chips');
 const logQuestionBtn = document.getElementById('log-question');
 const logGuessBtn = document.getElementById('log-guess');
 const markCorrectBtn = document.getElementById('mark-correct');
+const revealFlagBtn = document.getElementById('reveal-flag');
 const revealClueBtn = document.getElementById('reveal-clue');
 const revealNearbyBtn = document.getElementById('reveal-nearby');
 const builtInClue = document.getElementById('built-in-clue');
@@ -90,11 +94,12 @@ const scoreRows = document.getElementById('score-rows');
 const exportJson = document.getElementById('export-json');
 const downloadCsvBtn = document.getElementById('download-csv');
 
-let privacyHidden = false;
 let selectedPlayer = null;
 
 function renderPlayerInputs(count) {
   playerNamesContainer.innerHTML = '';
+  const quickAvatars = avatarOptions.slice(0, 3);
+  const extraAvatars = avatarOptions.slice(3);
   for (let i = 0; i < count; i++) {
     const card = document.createElement('div');
     card.className = 'player-card';
@@ -107,7 +112,7 @@ function renderPlayerInputs(count) {
     const avatarRow = document.createElement('div');
     avatarRow.className = 'avatar-row';
 
-    avatarOptions.forEach((emoji, idx) => {
+    quickAvatars.forEach((emoji, idx) => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = `avatar-btn ${idx === 0 ? 'active' : ''}`;
@@ -121,6 +126,38 @@ function renderPlayerInputs(count) {
       });
       avatarRow.appendChild(btn);
     });
+
+    if (extraAvatars.length) {
+      const moreRow = document.createElement('div');
+      moreRow.className = 'avatar-row hidden';
+      extraAvatars.forEach((emoji) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'avatar-btn';
+        btn.textContent = emoji;
+        btn.title = `Use ${emoji} as player icon`;
+        btn.addEventListener('click', () => {
+          card.dataset.avatar = emoji;
+          avatarRow.querySelectorAll('.avatar-btn').forEach((el) => el.classList.remove('active'));
+          moreRow.querySelectorAll('.avatar-btn').forEach((el) => el.classList.remove('active'));
+          btn.classList.add('active');
+          nameInput.value = nameInput.value.trim() ? nameInput.value : emoji;
+        });
+        moreRow.appendChild(btn);
+      });
+
+      const moreToggle = document.createElement('button');
+      moreToggle.type = 'button';
+      moreToggle.className = 'ghost more-toggle';
+      moreToggle.textContent = 'More avatars';
+      moreToggle.addEventListener('click', () => {
+        const isHidden = moreRow.classList.toggle('hidden');
+        moreToggle.textContent = isHidden ? 'More avatars' : 'Fewer avatars';
+      });
+
+      card.appendChild(moreToggle);
+      card.appendChild(moreRow);
+    }
 
     const nameWrap = document.createElement('label');
     nameWrap.textContent = 'Custom name (optional)';
@@ -160,6 +197,30 @@ function setActiveChip(name) {
   });
 }
 
+function updateTurnCopy() {
+  const holder = state.players[state.currentClueGiverIndex];
+  if (!holder) return;
+  currentTurn.textContent = `${holder.name} is holding the card. Reveal the flag when everyone is ready to guess.`;
+}
+
+function renderHolderChips() {
+  holderChips.innerHTML = '';
+  state.players.forEach((p, idx) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `chip ${idx === state.currentClueGiverIndex ? 'active' : ''}`;
+    btn.dataset.name = p.name;
+    btn.textContent = p.name;
+    btn.addEventListener('click', () => {
+      state.currentClueGiverIndex = idx;
+      renderHolderChips();
+      setActiveChip(state.players[(idx + 1) % state.players.length]?.name || p.name);
+      updateTurnCopy();
+    });
+    holderChips.appendChild(btn);
+  });
+}
+
 playerCountInput.addEventListener('input', (e) => {
   const count = Math.min(8, Math.max(2, parseInt(e.target.value, 10) || 2));
   renderPlayerInputs(count);
@@ -169,9 +230,27 @@ modeSelect.addEventListener('change', () => {
   const isTimer = modeSelect.value === 'timer';
   timerWrapper.classList.toggle('hidden', !isTimer);
   pointsWrapper.classList.toggle('hidden', isTimer);
+  state.mode = modeSelect.value;
+  updateModeDisplay();
+});
+
+timerLengthInput.addEventListener('input', () => {
+  const mins = parseInt(timerLengthInput.value, 10) || bootstrapOptions.defaultTimerMinutes;
+  state.timerRemaining = mins * 60;
+  if (state.mode === 'timer') {
+    updateModeDisplay();
+  }
+});
+
+targetPointsInput.addEventListener('input', () => {
+  state.targetPoints = parseInt(targetPointsInput.value, 10) || bootstrapOptions.defaultTargetPoints;
+  if (state.mode === 'points') {
+    updateModeDisplay();
+  }
 });
 
 renderPlayerInputs(parseInt(playerCountInput.value, 10));
+updateModeDisplay();
 
 function selectDeck(pool) {
   const filtered = countryCards.filter((c) => {
@@ -205,6 +284,15 @@ function updateTimerDisplay() {
   const mins = Math.floor(state.timerRemaining / 60);
   const secs = String(state.timerRemaining % 60).padStart(2, '0');
   timerDisplay.textContent = `Timer: ${mins}:${secs}`;
+  updateModeDisplay();
+}
+
+function updateModeDisplay() {
+  const timerMins = Math.max(1, Math.floor((state.timerRemaining || bootstrapOptions.defaultTimerMinutes * 60) / 60));
+  const modeText = state.mode === 'timer'
+    ? `Timed challenge (${timerMins} min)`
+    : `Turn-based team play (to ${state.targetPoints} pts)`;
+  modeDisplay.textContent = `Mode: ${modeText}`;
 }
 
 function updateScoreDisplay() {
@@ -305,8 +393,7 @@ function resetQA() {
 
 function maskCard(shouldHide) {
   const detail = document.querySelector('.card-detail');
-  detail.style.filter = shouldHide ? 'blur(6px)' : 'none';
-  detail.style.pointerEvents = shouldHide ? 'none' : 'auto';
+  detail.classList.toggle('masked', shouldHide);
 }
 
 function startRound() {
@@ -314,10 +401,16 @@ function startRound() {
   resetQA();
   state.currentCard = drawCard();
   renderCard(state.currentCard);
-  const clueGiver = state.players[state.currentClueGiverIndex];
-  currentTurn.textContent = `${clueGiver.name} is Clue-giver. Pass device or hide card for guessers.`;
+  state.flagRevealed = false;
+  maskCard(true);
+  revealFlagBtn.disabled = false;
+  logGuessBtn.disabled = true;
+  markCorrectBtn.disabled = true;
   const defaultGuesser = state.players[(state.currentClueGiverIndex + 1) % state.players.length];
-  setActiveChip(defaultGuesser?.name || clueGiver.name);
+  setActiveChip(defaultGuesser?.name || state.players[state.currentClueGiverIndex]?.name);
+  renderHolderChips();
+  updateTurnCopy();
+  updateModeDisplay();
   updateScoreDisplay();
   updateScoreTable();
 }
@@ -339,9 +432,16 @@ setupForm.addEventListener('submit', (e) => {
   state.difficultyPool = difficultyPool.value;
   state.targetPoints = parseInt(targetPointsInput.value, 10) || bootstrapOptions.defaultTargetPoints;
   const timerSeconds = (parseInt(timerLengthInput.value, 10) || bootstrapOptions.defaultTimerMinutes) * 60;
-  startTimer(timerSeconds);
+  updateModeDisplay();
+  if (state.mode === 'timer') {
+    startTimer(timerSeconds);
+  } else {
+    clearInterval(state.timer);
+    timerDisplay.textContent = 'Timer: Turn-based';
+  }
   state.deck = selectDeck(state.difficultyPool);
   renderPlayerChips();
+  renderHolderChips();
   setupSection.classList.add('hidden');
   gameSection.classList.remove('hidden');
   scoreboardSection.classList.remove('hidden');
@@ -394,8 +494,17 @@ markCorrectBtn.addEventListener('click', () => {
   startRound();
 });
 
+revealFlagBtn.addEventListener('click', () => {
+  state.flagRevealed = true;
+  maskCard(false);
+  revealFlagBtn.disabled = true;
+  logGuessBtn.disabled = false;
+  markCorrectBtn.disabled = false;
+});
+
 function advanceClueGiver() {
   state.currentClueGiverIndex = (state.currentClueGiverIndex + 1) % state.players.length;
+  renderHolderChips();
 }
 
 function checkEndConditions() {
@@ -409,17 +518,6 @@ function checkEndConditions() {
     alert('Time is up. Finish this card and wrap up!');
   }
 }
-
-const privacyToggle = document.createElement('button');
-privacyToggle.textContent = 'Toggle Clue-giver Privacy';
-privacyToggle.className = 'ghost';
-privacyToggle.addEventListener('click', () => {
-  privacyHidden = !privacyHidden;
-  maskCard(privacyHidden);
-  privacyToggle.textContent = privacyHidden ? 'Reveal Card (Clue-giver)' : 'Hide Card from Guessers';
-});
-
-document.querySelector('.top-row').appendChild(privacyToggle);
 
 function makeCsvRow(card) {
   const escape = (val) => `"${String(val).replace(/"/g, '""')}"`;

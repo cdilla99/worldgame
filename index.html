@@ -28,9 +28,9 @@
         <h1>Geo Game Table</h1>
         <p class="subtitle">Quick clue rounds, bright flags, and friendly guessing — perfect for classrooms, clubs, or family nights.</p>
         <div class="hero-highlights">
-          <span class="pill">🌍 Globe-forward view</span>
-          <span class="pill">🎯 15-minute sets</span>
-          <span class="pill muted">Best with 3–6 players</span>
+          <span class="pill">⏱️ Timed challenge</span>
+          <span class="pill">🤝 Team turns</span>
+          <span class="pill muted">Best with 2–6 players</span>
         </div>
       </div>
     </header>
@@ -40,12 +40,12 @@
       <form id="setup-form">
         <div class="grid">
           <label>Number of Players (2–8)
-            <input type="number" id="player-count" min="2" max="8" value="4" />
+            <input type="number" id="player-count" min="2" max="8" value="2" />
           </label>
           <label>Mode
             <select id="mode">
-              <option value="timer">15-minute timer (default)</option>
-              <option value="points">Race to points</option>
+              <option value="timer">Timed challenge (countdown)</option>
+              <option value="points">Turn-based team play (points)</option>
             </select>
           </label>
           <label id="timer-wrapper">Timer length (minutes)
@@ -65,7 +65,7 @@
             </select>
           </label>
         </div>
-        <div class="muted helper-label">Tap avatars after setting the player count. Typing is optional.</div>
+        <div class="muted helper-label">After picking the mode and player count, tap an avatar. Typing stays optional.</div>
         <div id="player-names" class="names"></div>
         <button type="submit" class="cta">Start Game</button>
       </form>
@@ -89,6 +89,7 @@
         </div>
         <div class="stats-row">
           <div class="pill" id="timer-display">Timer: 15:00</div>
+          <div class="pill" id="mode-display">Mode: Timed challenge</div>
           <div class="pill" id="score-display">Scoreboard ready</div>
         </div>
       </div>
@@ -102,6 +103,14 @@
               <p id="card-meta" class="muted">Continent • Subregion</p>
             </div>
             <div class="tags" id="card-tags"></div>
+          </div>
+          <div class="holder-row">
+            <div class="holder-label">Card holder</div>
+            <div id="holder-chips" class="chip-row compact"></div>
+          </div>
+          <div class="reveal-row">
+            <div class="helper-label">Flag stays hidden until you start guessing.</div>
+            <button id="reveal-flag" class="cta mini" type="button">Reveal flag + start guessing</button>
           </div>
           <div class="info-grid">
             <div><strong>Capital:</strong> <span id="card-capital"></span></div>
@@ -146,12 +155,12 @@
             </div>
             <div class="actions">
               <button id="log-question" class="ghost">Log Question</button>
-              <button id="log-guess" class="ghost">Log Guess (not yet)</button>
+              <button id="log-guess" class="ghost">Log Guess</button>
               <button id="mark-correct" class="cta mini">Mark Correct Guess</button>
             </div>
           </div>
           <div class="helper">
-            <p><strong>Flow:</strong> Tap a player, tap "Log Question" or "Log Guess". When someone nails it, hit "Mark Correct Guess".</p>
+            <p><strong>Flow:</strong> Pick the card holder, hit "Reveal flag" when everyone is ready, tap a player, then log a question or guess. When someone nails it, hit "Mark Correct Guess".</p>
             <p><strong>Remember:</strong> The card-holder answers all questions. No need to type—just tap and keep the energy high.</p>
           </div>
         </div>

@@ -103,6 +103,16 @@ button:active { transform: translateY(0); }
 .flag { font-size: 48px; }
 .flag img { width: 56px; height: 56px; display: block; }
 .stars { color: #f7c948; font-weight: 800; margin: 6px 0; }
+.card-detail.masked .card-header,
+.card-detail.masked .info-grid,
+.card-detail.masked .pill.inline,
+.card-detail.masked .card-tags,
+.card-detail.masked h4,
+.card-detail.masked ul,
+.card-detail.masked .clue-row {
+  filter: blur(5px);
+  pointer-events: none;
+}
 .muted { color: var(--muted); }
 .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 6px; font-size: 14px; }
 .info-grid div { background: #f8fbff; padding: 8px 10px; border-radius: 10px; border: 1px solid #e3ecf5; }
@@ -117,6 +127,7 @@ button:active { transform: translateY(0); }
 .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { padding: 8px 12px; border-radius: 999px; background: #f4f7fb; border: 1px solid #dbe4f0; font-weight: 700; color: var(--ink); cursor: pointer; }
 .chip.active { background: #e7f0ff; border-color: #b4c7ff; box-shadow: 0 0 0 2px rgba(90, 160, 255, 0.25); }
+.chip-row.compact .chip { padding: 6px 10px; font-size: 13px; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .cta.mini { padding: 10px 14px; width: auto; box-shadow: none; }
 .helper { background: #e7f8ef; border: 1px solid #c5f0d4; border-radius: 10px; padding: 10px; font-size: 13px; color: #0e6640; }
@@ -141,11 +152,15 @@ button:active { transform: translateY(0); }
   width: 100%;
 }
 .avatar-btn.active { border-color: #8cb5ff; box-shadow: 0 0 0 2px rgba(90, 160, 255, 0.2); background: #eef4ff; }
+.more-toggle { width: auto; margin: 4px 0 0; }
 .name-optional { font-weight: 600; color: var(--muted); }
 .name-optional input { margin-top: 6px; }
 
 .clue-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
 .ghost { background: #fff; border: 1px solid var(--border); color: var(--ink); width: auto; }
+.holder-row { display: flex; align-items: center; gap: 8px; margin: 10px 0 4px; flex-wrap: wrap; }
+.holder-label { font-weight: 700; color: var(--muted); }
+.reveal-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 4px 0 12px; }
 
 .top-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .stats-row { display: flex; gap: 8px; flex-wrap: wrap; }
