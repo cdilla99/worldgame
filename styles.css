@@ -65,7 +65,7 @@ h1 { margin: 0; font-family: 'Fredoka', 'Inter', system-ui, -apple-system, sans-
   box-shadow: 0 6px 18px rgba(0,0,0,0.05);
 }
 
-.hidden { display: none; }
+.hidden { display: none !important; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
 label { display: block; font-weight: 600; color: var(--ink); }
 input, select, button, textarea {
