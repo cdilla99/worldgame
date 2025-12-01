@@ -25,6 +25,18 @@ const state = {
   nearbyRevealed: false,
 };
 
+function emojiToCountryCode(emoji) {
+  const codePoints = Array.from(emoji).map((char) => char.codePointAt(0));
+  if (codePoints.length !== 2) return null;
+  const base = 0x1f1e6; // regional indicator A
+  const upperA = 65;
+  const letters = codePoints.map((cp) => {
+    if (cp < base || cp > base + 25) return null;
+    return String.fromCharCode(upperA + (cp - base));
+  });
+  return letters.includes(null) ? null : letters.join('');
+}
+
 const setupForm = document.getElementById('setup-form');
 const playerCountInput = document.getElementById('player-count');
 const playerNamesContainer = document.getElementById('player-names');
@@ -169,7 +181,28 @@ function renderCard(card) {
   cardStars.textContent = '★'.repeat(card.stars);
   sharedStars.textContent = '★'.repeat(card.stars);
   cardMeta.textContent = `${card.continent} • ${card.subregion}`;
-  cardFlag.textContent = card.flag || '🏳️';
+  const flagGlyph = card.flag || '🏳️';
+  const countryCode = emojiToCountryCode(flagGlyph);
+  cardFlag.innerHTML = '';
+  if (countryCode) {
+    const img = document.createElement('img');
+    img.src = `https://flagcdn.com/w80/${countryCode.toLowerCase()}.png`;
+    img.alt = `${card.name} flag`;
+    img.loading = 'lazy';
+    img.referrerPolicy = 'no-referrer';
+    img.onerror = () => {
+      if (window.twemoji) {
+        cardFlag.innerHTML = twemoji.parse(flagGlyph, { folder: 'svg', ext: '.svg' });
+      } else {
+        cardFlag.textContent = flagGlyph;
+      }
+    };
+    cardFlag.appendChild(img);
+  } else if (window.twemoji) {
+    cardFlag.innerHTML = twemoji.parse(flagGlyph, { folder: 'svg', ext: '.svg' });
+  } else {
+    cardFlag.textContent = flagGlyph;
+  }
   cardTags.innerHTML = '';
   ['hemisphere', 'coastline_type', 'size_category'].forEach((key) => {
     const span = document.createElement('span');
