@@ -1,9 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Inter:wght@400;600&display=swap');
+
 :root {
-  --bg: #f6f9fc;
+  --bg: #f6f9ff;
   --panel: #ffffff;
-  --ink: #123;
+  --ink: #0f1b3a;
   --accent: #ff7b72;
   --accent-2: #5aa0ff;
+  --accent-3: #00c2b2;
   --muted: #5f7285;
   --border: #d9e2ec;
   --green: #3cb179;
@@ -21,16 +24,34 @@ body {
 
 .app { max-width: 1200px; margin: 0 auto; padding: 24px 20px 60px; }
 .hero {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 16px;
-  background: linear-gradient(135deg, #5aa0ff, #9d5cff);
+  background: linear-gradient(120deg, #5aa0ff, #9d5cff 60%, #00c2b2);
   color: #fff;
   padding: 20px;
   border-radius: 18px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.12);
 }
+
+.hero-icon {
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 8px;
+  width: 120px;
+  height: 120px;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.18);
+}
+
+.hero-icon svg { width: 100%; height: 100%; }
+
+.hero-highlights { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+h1 { margin: 0; font-family: 'Fredoka', 'Inter', system-ui, -apple-system, sans-serif; letter-spacing: 0.5px; }
 
 .tiny { font-size: 12px; letter-spacing: 0.5px; opacity: 0.9; }
 .subtitle { margin-top: 4px; color: #f1f5fb; }
@@ -60,18 +81,21 @@ button:hover { transform: translateY(-1px); }
 button:active { transform: translateY(0); }
 
 .cta {
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
   color: #fff;
   border: none;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: 0.2px;
   margin-top: 16px;
-  width: 200px;
+  width: 220px;
+  box-shadow: 0 12px 22px rgba(255, 123, 114, 0.35);
 }
 
 .rules-box { background: #f0f4ff; border: 1px dashed #b7c5ff; padding: 12px; border-radius: 12px; }
 .pill { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; background: #eef2f7; border-radius: 999px; font-weight: 700; color: var(--ink); }
 .pill.muted { background: #e8ecf5; color: var(--muted); }
 .pill.inline { margin: 10px 0; }
+.pill.loud { background: #fff; color: #0c1b32; box-shadow: 0 10px 18px rgba(0, 0, 0, 0.08); }
 .tags { display: flex; gap: 8px; flex-wrap: wrap; }
 .tag { padding: 6px 10px; border-radius: 10px; background: #fff3e0; color: #8f4600; font-weight: 700; border: 1px solid #ffd5a8; }
 
@@ -109,5 +133,5 @@ textarea { width: 100%; min-height: 200px; margin-top: 10px; background: #0b1221
 @media (max-width: 900px) {
   .card-layout { grid-template-columns: 1fr; }
   .top-row { flex-direction: column; align-items: flex-start; }
-  .hero { flex-direction: column; align-items: flex-start; }
+  .hero { grid-template-columns: 1fr; align-items: flex-start; text-align: left; }
 }
