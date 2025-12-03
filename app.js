@@ -98,7 +98,8 @@ const difficultyLabel = document.getElementById('difficulty-label');
 const currentTurn = document.getElementById('current-turn');
 const timerDisplay = document.getElementById('timer-display');
 const scoreDisplay = document.getElementById('score-display');
-const modeDisplay = document.getElementById('mode-display');
+const modeDisplaySetup = document.getElementById('mode-display-setup');
+const modeDisplayGame = document.getElementById('mode-display-game');
 const modeHelper = document.getElementById('mode-helper');
 const questionCountEl = document.getElementById('question-count');
 const qaLog = document.getElementById('qa-log');
@@ -533,7 +534,12 @@ function updateModeDisplay() {
   const modeText = state.mode === 'timer'
     ? `Timed challenge (${timerMins} min)`
     : `Team turns points race (to ${state.targetPoints} pts)`;
-  modeDisplay.textContent = `Mode: ${modeText}`;
+  if (modeDisplayGame) {
+    modeDisplayGame.textContent = `Mode: ${modeText}`;
+  }
+  if (modeDisplaySetup) {
+    modeDisplaySetup.textContent = `Mode: ${modeText}`;
+  }
   if (modeHelper) {
     modeHelper.textContent = state.mode === 'timer'
       ? 'Countdown is running—beat the clock.'

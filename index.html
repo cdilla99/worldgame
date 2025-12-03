@@ -111,7 +111,10 @@
         <label id="timer-wrapper" class="visually-hidden">Timer length (minutes)
           <input type="number" id="timer-length" min="3" max="45" value="15" />
         </label>
-        <button type="submit" class="cta">Start Game</button>
+        <div class="cta-row">
+          <button type="submit" class="cta">Start Game</button>
+          <p class="pill strong" id="mode-display-setup">Mode: Timed challenge (15 min)</p>
+        </div>
       </form>
       </section>
 
@@ -150,7 +153,7 @@
         <div class="stats-row sticky-timer">
           <div class="timer-badge" id="timer-display" role="status">⏱️ Timer: 15:00</div>
           <div class="mode-callout">
-            <div class="pill strong" id="mode-display">Mode: Timed challenge</div>
+            <div class="pill strong" id="mode-display-game">Mode: Timed challenge</div>
             <p class="micro-hint" id="mode-helper">Countdown is running—beat the clock.</p>
           </div>
           <div class="pill" id="score-display">Scoreboard ready</div>
