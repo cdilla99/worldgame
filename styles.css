@@ -112,6 +112,26 @@ h1 { margin: 0; font-family: 'Fredoka', 'Inter', system-ui, -apple-system, sans-
 #player-names { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
 
 .hidden { display: none !important; }
+.toast {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: rgba(76, 139, 255, 0.12);
+  color: #0f172a;
+  border: 1px solid rgba(76, 139, 255, 0.35);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.toast.warn {
+  background: rgba(255, 158, 0, 0.12);
+  border-color: rgba(255, 158, 0, 0.45);
+}
+
+.toast.error {
+  background: rgba(255, 77, 109, 0.12);
+  border-color: rgba(255, 77, 109, 0.45);
+}
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
 label { display: block; font-weight: 600; color: var(--ink); }
 input, select, button, textarea {

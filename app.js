@@ -104,6 +104,7 @@ const questionCountEl = document.getElementById('question-count');
 const qaLog = document.getElementById('qa-log');
 const qaPlayerChips = document.getElementById('qa-player-chips');
 const holderChips = document.getElementById('holder-chips');
+const statusToast = document.getElementById('status-toast');
 const logQuestionBtn = document.getElementById('log-question');
 const logGuessBtn = document.getElementById('log-guess');
 const markCorrectBtn = document.getElementById('mark-correct');
@@ -128,6 +129,8 @@ exportJson.value = JSON.stringify(countryCards, null, 2);
 let selectedPlayer = null;
 const MUSIC_TRACK_URL = 'https://stream.chillhop.com/lounge/128mp3';
 const musicState = { fadeInterval: null };
+let resumeMusicAfterHide = false;
+let toastTimeout = null;
 const setupTimerButtons = setupTimerOptions ? setupTimerOptions.querySelectorAll('button[data-minutes]') : [];
 
 function initMusic() {
@@ -136,23 +139,29 @@ function initMusic() {
     console.error('initMusic: no audio element found');
     return;
   }
+  bgMusic.crossOrigin = 'anonymous';
   bgMusic.src = MUSIC_TRACK_URL;
   bgMusic.preload = 'none';
   bgMusic.volume = 0.3;
   bgMusic.dataset.error = 'false';
   bgMusic.addEventListener('playing', () => {
-    console.log('bg-music: playing event fired');
+    console.log('bg-music: playing event fired', { readyState: bgMusic.readyState, networkState: bgMusic.networkState });
     state.musicOn = true;
     bgMusic.dataset.error = 'false';
     updateMusicButtons();
   });
   bgMusic.addEventListener('error', (err) => {
-    console.error('bg-music: error event', err);
+    console.error('bg-music: error event', err, {
+      readyState: bgMusic.readyState,
+      networkState: bgMusic.networkState,
+      error: bgMusic.error,
+    });
     state.musicOn = false;
     bgMusic.dataset.error = 'true';
     updateMusicButtons();
+    showNotice('Music unavailable right now. Try again or open the stream link.', 'error');
   });
-  console.log('initMusic: ready with src', bgMusic.src);
+  console.log('initMusic: ready with src', bgMusic.src, { readyState: bgMusic.readyState, networkState: bgMusic.networkState });
 }
 
 function renderPlayerInputs(count) {
@@ -301,22 +310,23 @@ function startMusic() {
     console.error('startMusic: audio element missing');
     return;
   }
-  console.log('startMusic: attempting play()');
+  console.log('startMusic: attempting play()', { readyState: bgMusic.readyState, networkState: bgMusic.networkState, errored: bgMusic.dataset.error });
   bgMusic.dataset.error = 'false';
   bgMusic.volume = 0;
   clearInterval(musicState.fadeInterval);
   const playAttempt = bgMusic.play();
   if (playAttempt && typeof playAttempt.then === 'function') {
     playAttempt.then(() => {
-      console.log('startMusic: play() resolved');
+      console.log('startMusic: play() resolved', { readyState: bgMusic.readyState, networkState: bgMusic.networkState });
       state.musicOn = true;
       updateMusicButtons();
       fadeVolume(0.3, 400);
     }).catch((err) => {
-      console.error('startMusic: play() rejected', err);
+      console.error('startMusic: play() rejected', err, { readyState: bgMusic.readyState, networkState: bgMusic.networkState });
       state.musicOn = false;
       bgMusic.dataset.error = 'true';
       updateMusicButtons();
+      showNotice('Music unavailable right now. Try again or open the stream link.', 'error');
     });
   } else {
     console.log('startMusic: play() returned without a promise');
@@ -451,8 +461,9 @@ function toggleMusic(event) {
     return;
   }
   if (bgMusic.dataset.error === 'true') {
-    console.log('toggleMusic: clearing previous error state');
+    console.log('toggleMusic: clearing previous error state and reloading stream');
     bgMusic.dataset.error = 'false';
+    bgMusic.load();
   }
   if (state.musicOn) {
     stopMusic();
@@ -466,7 +477,13 @@ gameMusicToggle.addEventListener('click', toggleMusic);
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && state.musicOn) {
+    console.log('visibilitychange: tab hidden, pausing music');
+    resumeMusicAfterHide = true;
     stopMusic();
+  } else if (!document.hidden && resumeMusicAfterHide) {
+    console.log('visibilitychange: tab visible, resuming music');
+    resumeMusicAfterHide = false;
+    startMusic();
   }
 });
 
@@ -651,6 +668,25 @@ function logQA(entry) {
   qaLog.scrollTop = qaLog.scrollHeight;
 }
 
+function showNotice(message, tone = 'info') {
+  if (!statusToast) return;
+  clearTimeout(toastTimeout);
+  statusToast.textContent = message;
+  statusToast.classList.remove('hidden', 'warn', 'error');
+  if (tone !== 'info') {
+    statusToast.classList.add(tone);
+  }
+  toastTimeout = setTimeout(() => {
+    statusToast.classList.add('hidden');
+  }, 6000);
+}
+
+function clearNotice() {
+  if (!statusToast) return;
+  clearTimeout(toastTimeout);
+  statusToast.classList.add('hidden');
+}
+
 function resetQA() {
   qaLog.innerHTML = '';
   questionCountEl.textContent = '0';
@@ -671,6 +707,7 @@ function startRound() {
   revealFlagBtn.disabled = false;
   logGuessBtn.disabled = false;
   markCorrectBtn.disabled = false;
+  clearNotice();
   const defaultGuesser = state.players[(state.currentClueGiverIndex + 1) % state.players.length];
   setActiveChip(defaultGuesser?.name || state.players[state.currentClueGiverIndex]?.name);
   renderHolderChips();
@@ -771,7 +808,7 @@ logQuestionBtn.addEventListener('click', () => {
   const player = selectedPlayer || state.players[0]?.name;
   if (!player) return;
   if (state.questionCount >= 10) {
-    alert('Question limit reached for this card. Jump to guesses!');
+    showNotice('Question limit reached for this card. Jump to guesses!', 'warn');
     return;
   }
   state.questionCount += 1;
@@ -839,11 +876,11 @@ function checkEndConditions() {
   if (state.mode === 'points') {
     const winner = state.players.find((p) => state.scores[p.name].points >= state.targetPoints);
     if (winner) {
-      alert(`${winner.name} reached ${state.targetPoints} points! Finish current card and stop.`);
+      showNotice(`${winner.name} reached ${state.targetPoints} points! Finish current card and stop.`, 'warn');
     }
   }
   if (state.timerRemaining <= 0) {
-    alert('Time is up. Finish this card and wrap up!');
+    showNotice('Time is up. Finish this card and wrap up!', 'warn');
   }
 }
 
