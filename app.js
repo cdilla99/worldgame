@@ -122,7 +122,9 @@ exportJson.value = JSON.stringify(countryCards, null, 2);
 
 let selectedPlayer = null;
 const heroModeButtons = document.querySelectorAll('.mode-btn');
-const musicState = { ctx: null, gain: null, patternTimeout: null };
+const MUSIC_TRACK_URL = 'https://cdn.pixabay.com/download/audio/2022/07/11/audio_d3b4a5c746.mp3?filename=calm-lofi-112191.mp3';
+
+const musicState = { ctx: null, gain: null, source: null, element: null, fadeTimeout: null };
 
 function renderPlayerInputs(count) {
   playerNamesContainer.innerHTML = '';
@@ -228,77 +230,86 @@ function setActiveChip(name) {
 function updateMusicButtons(isOn) {
   [heroMusicToggle, gameMusicToggle].forEach((btn) => {
     if (!btn) return;
-    btn.textContent = isOn ? '🔊 Music on' : '🎵 Play chill loop';
+    btn.textContent = isOn ? '🔊 Music on' : '🎵 Play lo-fi mix';
     btn.classList.toggle('on', isOn);
     btn.setAttribute('aria-pressed', isOn ? 'true' : 'false');
   });
 }
 
-function ensureMusicContext() {
+function ensureMusicChain() {
+  if (!musicState.element) {
+    const audio = new Audio(MUSIC_TRACK_URL);
+    audio.loop = true;
+    audio.preload = 'auto';
+    audio.crossOrigin = 'anonymous';
+    audio.volume = 0.8;
+    musicState.element = audio;
+  }
+
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   if (!AudioContext) return null;
+
   if (!musicState.ctx) {
     musicState.ctx = new AudioContext();
     musicState.gain = musicState.ctx.createGain();
-    musicState.gain.gain.value = 0.08;
+    musicState.gain.gain.value = 0.0001;
     musicState.gain.connect(musicState.ctx.destination);
   }
+
+  if (!musicState.source && musicState.element) {
+    musicState.source = musicState.ctx.createMediaElementSource(musicState.element);
+    musicState.source.connect(musicState.gain);
+  }
+
   if (musicState.ctx.state === 'suspended') {
     musicState.ctx.resume();
   }
+
   return musicState.ctx;
 }
 
-function scheduleAmbientLoop() {
-  const ctx = ensureMusicContext();
-  if (!ctx || !musicState.gain) return;
-  const steps = [
-    { freq: 262, dur: 0.7 },
-    { freq: 330, dur: 0.55 },
-    { freq: 392, dur: 0.9 },
-    { freq: 523, dur: 0.65 },
-    { freq: 330, dur: 0.5 },
-    { freq: 294, dur: 0.6 },
-  ];
-  const start = ctx.currentTime + 0.05;
-  let cursor = start;
-  steps.forEach(({ freq, dur }) => {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0.0001, cursor);
-    gain.gain.linearRampToValueAtTime(0.06, cursor + 0.08);
-    gain.gain.exponentialRampToValueAtTime(0.0001, cursor + dur);
-    osc.connect(gain);
-    gain.connect(musicState.gain);
-    osc.start(cursor);
-    osc.stop(cursor + dur + 0.1);
-    cursor += dur + 0.1;
-  });
-
-  const loopLength = (cursor - start + 0.5) * 1000;
-  musicState.patternTimeout = setTimeout(scheduleAmbientLoop, loopLength);
-}
-
 function startMusic() {
-  if (!ensureMusicContext()) return;
-  clearTimeout(musicState.patternTimeout);
+  const ctx = ensureMusicChain();
+  if (!ctx || !musicState.element || !musicState.gain) return;
+
+  clearTimeout(musicState.fadeTimeout);
   state.musicOn = true;
   updateMusicButtons(true);
-  scheduleAmbientLoop();
+
+  const now = ctx.currentTime;
+  musicState.gain.gain.cancelScheduledValues(now);
+  musicState.gain.gain.setValueAtTime(Math.max(0.0001, musicState.gain.gain.value), now);
+  musicState.gain.gain.exponentialRampToValueAtTime(0.35, now + 0.4);
+
+  if (musicState.element.paused) {
+    musicState.element.currentTime = 0;
+  }
+
+  musicState.element.play().catch(() => {
+    state.musicOn = false;
+    updateMusicButtons(false);
+  });
 }
 
 function stopMusic() {
-  clearTimeout(musicState.patternTimeout);
-  musicState.patternTimeout = null;
-  if (musicState.gain && musicState.ctx) {
-    const now = musicState.ctx.currentTime;
-    musicState.gain.gain.cancelScheduledValues(now);
-    musicState.gain.gain.setValueAtTime(musicState.gain.gain.value, now);
-    musicState.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
-    musicState.ctx.suspend();
+  if (!musicState.ctx || !musicState.gain || !musicState.element) {
+    state.musicOn = false;
+    updateMusicButtons(false);
+    return;
   }
+
+  clearTimeout(musicState.fadeTimeout);
+  const now = musicState.ctx.currentTime;
+  musicState.gain.gain.cancelScheduledValues(now);
+  musicState.gain.gain.setValueAtTime(musicState.gain.gain.value, now);
+  musicState.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+
+  musicState.fadeTimeout = setTimeout(() => {
+    musicState.element.pause();
+    musicState.element.currentTime = 0;
+    musicState.ctx.suspend();
+  }, 400);
+
   state.musicOn = false;
   updateMusicButtons(false);
 }
