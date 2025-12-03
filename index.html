@@ -40,7 +40,7 @@
         <div class="hero-highlights" role="group" aria-label="Choose play style">
           <button class="pill menu-trigger mode-btn active" id="hero-timer-trigger" data-mode="timer">⏱️ Timed challenge · <span id="hero-timer-value">15 min</span></button>
           <button class="pill mode-btn" id="hero-points-trigger" data-mode="points">🤝 Team turns</button>
-          <span class="pill muted pill-static">Best with 2–6 players</span>
+          <button class="pill muted pill-static" type="button" aria-label="Best with two to six players">Best with 2–6 players</button>
           <div class="menu hidden" id="hero-timer-menu" role="listbox" aria-label="Select timer length">
             <button type="button" data-minutes="5">5 minutes</button>
             <button type="button" data-minutes="10">10 minutes</button>
@@ -115,8 +115,8 @@
           <h2>Current Card</h2>
           <p id="current-turn" class="pill muted"></p>
         </div>
-        <div class="stats-row">
-          <div class="timer-badge" id="timer-display">⏱️ Timer: 15:00</div>
+        <div class="stats-row sticky-timer">
+          <div class="timer-badge" id="timer-display" role="status">⏱️ Timer: 15:00</div>
           <div class="pill strong" id="mode-display">Mode: Timed challenge</div>
           <div class="pill" id="score-display">Scoreboard ready</div>
         </div>
@@ -132,6 +132,11 @@
               <img id="map-outline" alt="Country outline" />
               <figcaption class="muted">Country outline</figcaption>
             </figure>
+            <div class="region-hint masked-soft" id="region-hint">
+              <div class="region-label">Region hint</div>
+              <div class="region-values"><span id="card-hemi"></span> • <span id="card-meta-top"></span></div>
+              <button type="button" class="ghost mini" id="region-reveal">Reveal region hint</button>
+            </div>
             <div class="flag-peek">
               <div class="flag-veil masked" id="flag-veil">
                 <figure class="flag-figure">
@@ -142,17 +147,16 @@
               </div>
               <div class="flag-peek-actions">
                 <button id="flag-peek-btn" class="ghost mini" type="button">Peek at flag (-1 point)</button>
-                <p id="flag-peek-note" class="micro-hint">Flag stays blurred until you tap peek.</p>
+                <p id="flag-peek-note" class="micro-hint">Flag stays blurred until you tap peek. Penalty only applies if the next guess is correct.</p>
               </div>
             </div>
           </div>
 
           <div class="info-grid">
-            <div><strong>Capital:</strong> <span id="card-capital"></span></div>
+            <div class="capital-hint masked-soft" id="capital-row"><strong>Capital:</strong> <span id="card-capital"></span> <button type="button" class="ghost mini" id="capital-reveal">Reveal capital hint</button></div>
             <div><strong>Population:</strong> <span id="card-pop"></span></div>
             <div><strong>Area:</strong> <span id="card-area"></span></div>
             <div><strong>Size:</strong> <span id="card-size"></span></div>
-            <div><strong>Hemisphere:</strong> <span id="card-hemi"></span></div>
             <div><strong>Coast:</strong> <span id="card-coast"></span></div>
             <div><strong>Languages:</strong> <span id="card-lang"></span></div>
             <div><strong>Currency:</strong> <span id="card-currency"></span></div>

@@ -27,6 +27,7 @@ const state = {
   nearbyRevealed: false,
   flagRevealed: false,
   flagPenalty: false,
+  timerWarningPlayed: false,
 };
 
 function emojiToCountryCode(emoji) {
@@ -77,6 +78,7 @@ const mapOutline = document.getElementById('map-outline');
 const identityBlock = document.getElementById('identity-block');
 const cardTags = document.getElementById('card-tags');
 const cardCapital = document.getElementById('card-capital');
+const cardMetaTop = document.getElementById('card-meta-top');
 const cardPop = document.getElementById('card-pop');
 const cardArea = document.getElementById('card-area');
 const cardSize = document.getElementById('card-size');
@@ -104,6 +106,10 @@ const revealClueBtn = document.getElementById('reveal-clue');
 const revealNearbyBtn = document.getElementById('reveal-nearby');
 const builtInClue = document.getElementById('built-in-clue');
 const nearbyClue = document.getElementById('nearby-clue');
+const regionHint = document.getElementById('region-hint');
+const regionRevealBtn = document.getElementById('region-reveal');
+const capitalRow = document.getElementById('capital-row');
+const capitalRevealBtn = document.getElementById('capital-reveal');
 const scoreRows = document.getElementById('score-rows');
 const exportJson = document.getElementById('export-json');
 const downloadCsvBtn = document.getElementById('download-csv');
@@ -359,6 +365,7 @@ function selectDeck(pool) {
 function startTimer(seconds) {
   clearInterval(state.timer);
   state.timerRemaining = seconds;
+  state.timerWarningPlayed = false;
   updateTimerDisplay();
   state.timer = setInterval(() => {
     state.timerRemaining -= 1;
@@ -375,6 +382,11 @@ function updateTimerDisplay() {
   const mins = Math.floor(state.timerRemaining / 60);
   const secs = String(state.timerRemaining % 60).padStart(2, '0');
   timerDisplay.textContent = `Timer: ${mins}:${secs}`;
+  timerDisplay.classList.toggle('low-time', state.timerRemaining <= 30);
+  if (state.timerRemaining <= 15 && !state.timerWarningPlayed) {
+    playBeep();
+    state.timerWarningPlayed = true;
+  }
   updateModeDisplay();
 }
 
@@ -468,6 +480,7 @@ function renderCard(card) {
     cardTags.appendChild(span);
   });
   cardCapital.textContent = card.capital;
+  cardMetaTop.textContent = `${card.continent} • ${card.subregion}`;
   cardPop.textContent = card.population_hint;
   cardArea.textContent = card.area_hint;
   cardSize.textContent = card.size_category;
@@ -487,6 +500,10 @@ function renderCard(card) {
   revealNearbyBtn.disabled = !card.nearby_country_clue;
   state.clueRevealed = false;
   state.nearbyRevealed = false;
+  regionHint.classList.add('masked-soft');
+  capitalRow.classList.add('masked-soft');
+  regionRevealBtn.disabled = false;
+  capitalRevealBtn.disabled = false;
   questionCountEl.textContent = state.questionCount;
 }
 
@@ -579,6 +596,7 @@ revealClueBtn.addEventListener('click', () => {
   builtInClue.classList.remove('hidden');
   state.clueRevealed = true;
   revealClueBtn.disabled = true;
+  logQA({ player: 'Host', type: 'clue', text: 'Special clue revealed', result: 'One-time clue used for this card.' });
 });
 
 revealNearbyBtn.addEventListener('click', () => {
@@ -586,6 +604,7 @@ revealNearbyBtn.addEventListener('click', () => {
   nearbyClue.classList.remove('hidden');
   state.nearbyRevealed = true;
   revealNearbyBtn.disabled = true;
+  logQA({ player: 'Host', type: 'clue', text: 'Nearby country hint revealed', result: 'Hint consumed for this card.' });
 });
 
 flagPeekBtn.addEventListener('click', () => {
@@ -593,6 +612,19 @@ flagPeekBtn.addEventListener('click', () => {
   state.flagPenalty = true;
   flagPeekBtn.disabled = true;
   flagPeekNote.textContent = 'Flag peeked: correct guess is worth one less point (minimum 1).';
+  logQA({ player: 'Host', type: 'peek', text: 'Flag peeked', result: 'Next correct guess earns -1 point.' });
+});
+
+regionRevealBtn.addEventListener('click', () => {
+  regionHint.classList.remove('masked-soft');
+  regionRevealBtn.disabled = true;
+  logQA({ player: 'Host', type: 'hint', text: 'Region hint revealed', result: 'Hemisphere and continent shown.' });
+});
+
+capitalRevealBtn.addEventListener('click', () => {
+  capitalRow.classList.remove('masked-soft');
+  capitalRevealBtn.disabled = true;
+  logQA({ player: 'Host', type: 'hint', text: 'Capital revealed', result: 'Mid-game hint used.' });
 });
 
 logQuestionBtn.addEventListener('click', () => {
@@ -636,11 +668,31 @@ revealFlagBtn.addEventListener('click', () => {
   revealFlagBtn.disabled = true;
   logGuessBtn.disabled = false;
   markCorrectBtn.disabled = false;
+  regionHint.classList.remove('masked-soft');
+  capitalRow.classList.remove('masked-soft');
+  regionRevealBtn.disabled = true;
+  capitalRevealBtn.disabled = true;
 });
 
 function advanceClueGiver() {
   state.currentClueGiverIndex = (state.currentClueGiverIndex + 1) % state.players.length;
   renderHolderChips();
+}
+
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.value = 880;
+    gain.gain.value = 0.08;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.25);
+  } catch (e) {
+    // audio not available; silently skip
+  }
 }
 
 function checkEndConditions() {
