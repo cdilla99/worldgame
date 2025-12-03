@@ -155,6 +155,18 @@
                 <p id="flag-peek-note" class="micro-hint">Flag stays blurred until you tap peek. Penalty only applies if the next guess is correct.</p>
               </div>
             </div>
+
+            <div class="clue-stack" aria-label="Revealable clues">
+              <div class="clue-row">
+                <button id="reveal-clue" class="ghost">Reveal Special Clue</button>
+                <span id="built-in-clue" class="pill hidden"></span>
+              </div>
+              <div class="clue-row">
+                <button id="reveal-nearby" class="ghost">Nearby Country Hint</button>
+                <span id="nearby-clue" class="pill hidden"></span>
+              </div>
+              <p class="micro-hint">Each hint can be used once per card. Keep them close to the outline so the flow stays quick.</p>
+            </div>
           </div>
 
           <div class="info-grid">
@@ -177,15 +189,6 @@
             <h4>Fun Facts</h4>
             <ul id="card-facts"></ul>
           </div>
-          <div class="clue-row">
-            <button id="reveal-clue" class="ghost">Reveal Special Clue</button>
-            <span id="built-in-clue" class="pill hidden"></span>
-          </div>
-          <div class="clue-row">
-            <button id="reveal-nearby" class="ghost">Nearby Country Hint</button>
-            <span id="nearby-clue" class="pill hidden"></span>
-          </div>
-
           <div class="identity-block" id="identity-block">
             <div class="identity-inner">
               <div class="card-title">

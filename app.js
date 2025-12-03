@@ -528,6 +528,7 @@ function renderCard(card) {
   state.flagPenalty = false;
   if (flagPeekBtn) {
     flagPeekBtn.disabled = false;
+    flagPeekBtn.classList.remove('used');
     flagPeekNote.textContent = 'Flag stays blurred until you tap peek.';
   }
   mapOutline.classList.add('hidden');
@@ -585,7 +586,9 @@ function renderCard(card) {
   builtInClue.classList.add('hidden');
   nearbyClue.classList.add('hidden');
   revealClueBtn.disabled = false;
+  revealClueBtn.classList.remove('used');
   revealNearbyBtn.disabled = !card.nearby_country_clue;
+  revealNearbyBtn.classList.toggle('used', !card.nearby_country_clue);
   state.clueRevealed = false;
   state.nearbyRevealed = false;
   regionHint.classList.add('masked-soft');
@@ -684,6 +687,7 @@ revealClueBtn.addEventListener('click', () => {
   builtInClue.classList.remove('hidden');
   state.clueRevealed = true;
   revealClueBtn.disabled = true;
+  revealClueBtn.classList.add('used');
   logQA({ player: 'Host', type: 'clue', text: 'Special clue revealed', result: 'One-time clue used for this card.' });
 });
 
@@ -692,6 +696,7 @@ revealNearbyBtn.addEventListener('click', () => {
   nearbyClue.classList.remove('hidden');
   state.nearbyRevealed = true;
   revealNearbyBtn.disabled = true;
+  revealNearbyBtn.classList.add('used');
   logQA({ player: 'Host', type: 'clue', text: 'Nearby country hint revealed', result: 'Hint consumed for this card.' });
 });
 
@@ -699,6 +704,7 @@ flagPeekBtn.addEventListener('click', () => {
   flagVeil.classList.remove('masked');
   state.flagPenalty = true;
   flagPeekBtn.disabled = true;
+  flagPeekBtn.classList.add('used');
   flagPeekNote.textContent = 'Flag peeked: correct guess is worth one less point (minimum 1).';
   logQA({ player: 'Host', type: 'peek', text: 'Flag peeked', result: 'Next correct guess earns -1 point.' });
 });
