@@ -122,7 +122,7 @@ exportJson.value = JSON.stringify(countryCards, null, 2);
 
 let selectedPlayer = null;
 const heroModeButtons = document.querySelectorAll('.mode-btn');
-const musicState = { ctx: null, gain: null, intervalId: null };
+const musicState = { ctx: null, gain: null, patternTimeout: null };
 
 function renderPlayerInputs(count) {
   playerNamesContainer.innerHTML = '';
@@ -240,7 +240,7 @@ function ensureMusicContext() {
   if (!musicState.ctx) {
     musicState.ctx = new AudioContext();
     musicState.gain = musicState.ctx.createGain();
-    musicState.gain.gain.value = 0.05;
+    musicState.gain.gain.value = 0.08;
     musicState.gain.connect(musicState.ctx.destination);
   }
   if (musicState.ctx.state === 'suspended') {
@@ -249,43 +249,55 @@ function ensureMusicContext() {
   return musicState.ctx;
 }
 
-function playAmbientTone() {
+function scheduleAmbientLoop() {
   const ctx = ensureMusicContext();
   if (!ctx || !musicState.gain) return;
-  const notes = [261.63, 293.66, 329.63, 392.0, 523.25];
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  const now = ctx.currentTime;
-  const freq = notes[Math.floor(Math.random() * notes.length)] * (Math.random() > 0.65 ? 2 : 1);
-  osc.type = 'sine';
-  osc.frequency.value = freq;
-  gain.gain.value = 0.0001;
-  gain.gain.exponentialRampToValueAtTime(0.05, now + 0.08);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
-  osc.connect(gain);
-  gain.connect(musicState.gain);
-  osc.start();
-  osc.stop(now + 1);
+  const steps = [
+    { freq: 262, dur: 0.7 },
+    { freq: 330, dur: 0.55 },
+    { freq: 392, dur: 0.9 },
+    { freq: 523, dur: 0.65 },
+    { freq: 330, dur: 0.5 },
+    { freq: 294, dur: 0.6 },
+  ];
+  const start = ctx.currentTime + 0.05;
+  let cursor = start;
+  steps.forEach(({ freq, dur }) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, cursor);
+    gain.gain.linearRampToValueAtTime(0.06, cursor + 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.0001, cursor + dur);
+    osc.connect(gain);
+    gain.connect(musicState.gain);
+    osc.start(cursor);
+    osc.stop(cursor + dur + 0.1);
+    cursor += dur + 0.1;
+  });
+
+  const loopLength = (cursor - start + 0.5) * 1000;
+  musicState.patternTimeout = setTimeout(scheduleAmbientLoop, loopLength);
 }
 
 function startMusic() {
   if (!ensureMusicContext()) return;
-  if (musicState.intervalId) clearInterval(musicState.intervalId);
-  playAmbientTone();
-  musicState.intervalId = setInterval(playAmbientTone, 1400);
+  clearTimeout(musicState.patternTimeout);
   state.musicOn = true;
   updateMusicButtons(true);
+  scheduleAmbientLoop();
 }
 
 function stopMusic() {
-  if (musicState.intervalId) {
-    clearInterval(musicState.intervalId);
-    musicState.intervalId = null;
-  }
-  if (musicState.ctx) {
-    musicState.ctx.close().catch(() => {});
-    musicState.ctx = null;
-    musicState.gain = null;
+  clearTimeout(musicState.patternTimeout);
+  musicState.patternTimeout = null;
+  if (musicState.gain && musicState.ctx) {
+    const now = musicState.ctx.currentTime;
+    musicState.gain.gain.cancelScheduledValues(now);
+    musicState.gain.gain.setValueAtTime(musicState.gain.gain.value, now);
+    musicState.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
+    musicState.ctx.suspend();
   }
   state.musicOn = false;
   updateMusicButtons(false);
