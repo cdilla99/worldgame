@@ -45,7 +45,7 @@
         <div class="mode-status" id="hero-mode-status" role="status" aria-live="polite">Timed challenge · 15 min countdown active</div>
         <div class="hero-highlights" aria-label="Game ambience and setup summary">
           <div class="vibe-row" aria-label="Game ambience">
-            <button id="music-toggle" type="button" class="pill ghost music-toggle">🎵 Play lo-fi mix</button>
+            <button id="music-toggle" type="button" class="pill ghost music-toggle">🎵 Lo-fi: Off</button>
             <span class="micro-hint">Soft lo-fi stream you can toggle anytime. If it errors, try again or open the stream link below.</span>
             <a class="micro-link" id="music-direct-link" href="https://stream.chillhop.com/lounge/128mp3" target="_blank" rel="noopener">Open stream link</a>
           </div>
@@ -154,7 +154,7 @@
             <p class="micro-hint" id="mode-helper">Countdown is running—beat the clock.</p>
           </div>
           <div class="pill" id="score-display">Scoreboard ready</div>
-          <button id="music-toggle-game" type="button" class="pill ghost compact music-toggle">🎵 Music off</button>
+          <button id="music-toggle-game" type="button" class="pill ghost compact music-toggle">🎵 Lo-fi: Off</button>
         </div>
       </div>
       <div class="card-layout">
@@ -281,7 +281,7 @@
   </div>
 
   <script src="data/countries.js"></script>
-  <audio id="bg-music" loop crossorigin="anonymous" class="visually-hidden">
+  <audio id="bg-music" loop preload="none" crossorigin="anonymous" class="visually-hidden">
     <source src="https://stream.chillhop.com/lounge/128mp3" type="audio/mpeg" />
   </audio>
   <script src="app.js"></script>

@@ -130,21 +130,29 @@ const MUSIC_TRACK_URL = 'https://stream.chillhop.com/lounge/128mp3';
 const musicState = { fadeInterval: null };
 const setupTimerButtons = setupTimerOptions ? setupTimerOptions.querySelectorAll('button[data-minutes]') : [];
 
-if (bgMusic) {
+function initMusic() {
+  console.log('initMusic: locating bg-music element');
+  if (!bgMusic) {
+    console.error('initMusic: no audio element found');
+    return;
+  }
   bgMusic.src = MUSIC_TRACK_URL;
-  bgMusic.volume = 0.4;
+  bgMusic.preload = 'none';
+  bgMusic.volume = 0.3;
   bgMusic.dataset.error = 'false';
-  bgMusic.addEventListener('error', () => {
+  bgMusic.addEventListener('playing', () => {
+    console.log('bg-music: playing event fired');
+    state.musicOn = true;
+    bgMusic.dataset.error = 'false';
+    updateMusicButtons();
+  });
+  bgMusic.addEventListener('error', (err) => {
+    console.error('bg-music: error event', err);
     state.musicOn = false;
     bgMusic.dataset.error = 'true';
-    updateMusicButtons(false);
-    showMusicError('Stream blocked or offline. Try again.');
+    updateMusicButtons();
   });
-  bgMusic.addEventListener('playing', () => {
-    bgMusic.dataset.error = 'false';
-    state.musicOn = true;
-    updateMusicButtons(true);
-  });
+  console.log('initMusic: ready with src', bgMusic.src);
 }
 
 function renderPlayerInputs(count) {
@@ -254,30 +262,18 @@ function setMode(mode) {
   modeSelect.dispatchEvent(new Event('change'));
 }
 
-function updateMusicButtons(isOn) {
+function updateMusicButtons() {
+  const errored = bgMusic?.dataset.error === 'true';
   [heroMusicToggle, gameMusicToggle].forEach((btn) => {
     if (!btn) return;
-    btn.textContent = isOn ? '🔊 Stop lo-fi mix' : '🎵 Play lo-fi mix';
-    btn.classList.toggle('on', isOn);
-    btn.setAttribute('aria-pressed', isOn ? 'true' : 'false');
-  });
-}
-
-function showMusicError(message) {
-  [heroMusicToggle, gameMusicToggle].forEach((btn) => {
-    if (!btn) return;
-    btn.textContent = '🔇 Music unavailable — tap to retry';
-    btn.classList.add('error');
-    btn.setAttribute('aria-pressed', 'false');
-    btn.title = message;
-  });
-}
-
-function setMusicLoading(isLoading) {
-  [heroMusicToggle, gameMusicToggle].forEach((btn) => {
-    if (!btn) return;
-    btn.classList.toggle('loading', isLoading);
-    if (isLoading) btn.textContent = '⏳ Loading lo-fi mix…';
+    btn.classList.toggle('on', state.musicOn);
+    btn.classList.toggle('error', errored);
+    btn.setAttribute('aria-pressed', state.musicOn ? 'true' : 'false');
+    if (errored) {
+      btn.textContent = '🔇 Music unavailable';
+    } else {
+      btn.textContent = state.musicOn ? '🔊 Lo-fi: On' : '🎵 Lo-fi: Off';
+    }
   });
 }
 
@@ -301,36 +297,47 @@ function fadeVolume(target, duration = 400) {
 }
 
 function startMusic() {
-  if (!bgMusic) return;
-  setMusicLoading(true);
-  bgMusic.load();
+  if (!bgMusic) {
+    console.error('startMusic: audio element missing');
+    return;
+  }
+  console.log('startMusic: attempting play()');
   bgMusic.dataset.error = 'false';
   bgMusic.volume = 0;
   clearInterval(musicState.fadeInterval);
-  bgMusic.play().then(() => {
+  const playAttempt = bgMusic.play();
+  if (playAttempt && typeof playAttempt.then === 'function') {
+    playAttempt.then(() => {
+      console.log('startMusic: play() resolved');
+      state.musicOn = true;
+      updateMusicButtons();
+      fadeVolume(0.3, 400);
+    }).catch((err) => {
+      console.error('startMusic: play() rejected', err);
+      state.musicOn = false;
+      bgMusic.dataset.error = 'true';
+      updateMusicButtons();
+    });
+  } else {
+    console.log('startMusic: play() returned without a promise');
     state.musicOn = true;
-    updateMusicButtons(true);
-    setMusicLoading(false);
-    [heroMusicToggle, gameMusicToggle].forEach((btn) => btn?.classList.remove('error'));
-    fadeVolume(0.4, 600);
-  }).catch((err) => {
-    console.error('Playback blocked:', err);
-    state.musicOn = false;
-    updateMusicButtons(false);
-    setMusicLoading(false);
-    showMusicError('Playback was blocked. Tap again after interacting with the page.');
-  });
+    updateMusicButtons();
+    fadeVolume(0.3, 400);
+  }
 }
 
 function stopMusic() {
-  if (!bgMusic) { state.musicOn = false; updateMusicButtons(false); return; }
+  if (!bgMusic) {
+    console.error('stopMusic: audio element missing');
+    state.musicOn = false;
+    updateMusicButtons();
+    return;
+  }
+  console.log('stopMusic: pausing stream');
   state.musicOn = false;
-  updateMusicButtons(false);
-  setMusicLoading(false);
-  fadeVolume(0, 400);
-  setTimeout(() => {
-    bgMusic.pause();
-  }, 420);
+  clearInterval(musicState.fadeInterval);
+  bgMusic.pause();
+  updateMusicButtons();
 }
 
 function updateTurnCopy() {
@@ -432,11 +439,21 @@ setupTimerButtons.forEach((btn) => {
     }
   });
 });
+initMusic();
 setMode(state.mode);
 syncTimerButtons(bootstrapOptions.defaultTimerMinutes);
-updateMusicButtons(state.musicOn);
+updateMusicButtons();
 
-function toggleMusic() {
+function toggleMusic(event) {
+  console.log('toggleMusic: user gesture received', event?.type);
+  if (!bgMusic) {
+    console.error('toggleMusic: audio element missing');
+    return;
+  }
+  if (bgMusic.dataset.error === 'true') {
+    console.log('toggleMusic: clearing previous error state');
+    bgMusic.dataset.error = 'false';
+  }
   if (state.musicOn) {
     stopMusic();
   } else {
