@@ -10,13 +10,16 @@
   --border: #d9e2ec;
   --green: #3cb179;
   --yellow: #f7c948;
+  --glow: 0 12px 26px rgba(16, 46, 92, 0.12);
 }
 
 * { box-sizing: border-box; }
 body {
   margin: 0;
   font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
-  background: linear-gradient(120deg, #f8fbff, #f5f7fb 40%, #fdf8ff);
+  background: radial-gradient(circle at 20% 20%, rgba(90,160,255,0.08), transparent 30%),
+    radial-gradient(circle at 80% 0%, rgba(255,123,114,0.1), transparent 32%),
+    linear-gradient(120deg, #f8fbff, #f5f7fb 40%, #fdf8ff);
   color: var(--ink);
 }
 
@@ -31,7 +34,7 @@ body {
   color: #fff;
   padding: 20px 22px;
   border-radius: 18px;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.1);
+  box-shadow: var(--glow);
 }
 
 .hero-icon {
@@ -53,6 +56,9 @@ body {
 .mode-btn { border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.16); color: #fff; font-weight: 800; }
 .mode-btn.active { background: #fff; color: #0f1b3a; border-color: #fff; box-shadow: 0 10px 18px rgba(0,0,0,0.15); }
 .pill-static { pointer-events: none; }
+.vibe-row { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: rgba(255,255,255,0.16); border-radius: 12px; border: 1px solid rgba(255,255,255,0.22); }
+.vibe-row .micro-hint { color: #eef5ff; margin: 0; }
+.vibe-row button { width: auto; border-color: rgba(255,255,255,0.4); color: #0f1b3a; background: #fff; font-weight: 800; }
 .sticky-timer { position: sticky; top: 10px; align-items: stretch; }
 
 h1 { margin: 0; font-family: 'Fredoka', 'Inter', system-ui, -apple-system, sans-serif; letter-spacing: 0.5px; }
@@ -62,11 +68,11 @@ h1 { margin: 0; font-family: 'Fredoka', 'Inter', system-ui, -apple-system, sans-
 
 .panel {
   margin-top: 18px;
-  background: var(--panel);
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 18px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+  box-shadow: var(--glow);
 }
 
 .hidden { display: none !important; }
@@ -119,9 +125,9 @@ button:active { transform: translateY(0); }
 .tag { padding: 6px 10px; border-radius: 10px; background: #fff3e0; color: #8f4600; font-weight: 700; border: 1px solid #ffd5a8; }
 
 .card-layout { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 16px; align-items: start; }
-.card-detail { background: #fefefe; border: 1px solid var(--border); border-radius: 14px; padding: 14px; display: grid; gap: 12px; }
+.card-detail { background: #fefefe; border: 1px solid var(--border); border-radius: 14px; padding: 14px; display: grid; gap: 12px; box-shadow: var(--glow); }
 .card-visuals { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-.flag-figure, .map-figure { margin: 0; padding: 6px; background: #f6f8fd; border: 1px solid var(--border); border-radius: 12px; display: grid; gap: 6px; justify-items: center; width: 140px; min-height: 150px; }
+.flag-figure, .map-figure { margin: 0; padding: 6px; background: #f6f8fd; border: 1px solid var(--border); border-radius: 12px; display: grid; gap: 6px; justify-items: center; width: 140px; min-height: 150px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.7); }
 .flag-figure img, .map-figure img { width: 100%; height: auto; max-height: 110px; object-fit: contain; }
 .flag { font-size: 32px; text-align: center; }
 .card-title { display: grid; gap: 4px; min-width: 180px; }
@@ -142,7 +148,7 @@ button:active { transform: translateY(0); }
 .region-hint .region-values { color: #1f2c4d; font-weight: 700; }
 .region-hint .ghost { margin-left: auto; }
 .flag-peek { display: grid; gap: 6px; }
-.flag-veil { position: relative; overflow: hidden; border-radius: 12px; }
+.flag-veil { position: relative; overflow: hidden; border-radius: 12px; background: linear-gradient(180deg, rgba(90,160,255,0.08), rgba(255,123,114,0.05)); }
 .flag-veil.masked img, .flag-veil.masked .flag { filter: blur(12px); opacity: 0.5; }
 .flag-veil::after { content: ""; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.1)); pointer-events: none; border-radius: 12px; }
 .flag-peek-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -198,6 +204,12 @@ button:active { transform: translateY(0); }
 }
 .avatar-btn.active { border-color: #8cb5ff; box-shadow: 0 0 0 2px rgba(90, 160, 255, 0.2); background: #eef4ff; }
 .more-toggle { width: auto; margin: 4px 0 0; }
+.music-toggle { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; }
+.music-toggle.on { background: #0f1b3a; color: #f5fbff; border-color: #0f1b3a; box-shadow: 0 8px 18px rgba(15,27,58,0.18); }
+.stats-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.top-row > div:first-child h2 { margin-bottom: 2px; }
+.map-figure.spotlight { background: radial-gradient(circle at 25% 30%, rgba(255,123,114,0.06), transparent 40%), #f6f8fd; }
+.region-hint, .capital-hint { box-shadow: inset 0 1px 0 rgba(255,255,255,0.9); }
 .name-optional { font-weight: 600; color: var(--muted); }
 .name-optional input { margin-top: 6px; }
 
@@ -206,9 +218,6 @@ button:active { transform: translateY(0); }
 .ghost { background: #fff; border: 1px solid var(--border); color: var(--ink); width: auto; }
 .reveal-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 4px 0 12px; }
 
-.top-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-.stats-row { display: flex; gap: 8px; flex-wrap: wrap; }
-
 .table { width: 100%; }
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: 10px; border-bottom: 1px solid #e5eaf0; }
@@ -216,6 +225,7 @@ th { background: #f4f7fb; }
 
 textarea { width: 100%; min-height: 200px; margin-top: 10px; background: #0b1221; color: #d9ffe7; font-family: "SFMono-Regular", monospace; }
 
+.top-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .game-banner { display: flex; justify-content: space-between; align-items: center; gap: 14px; background: #102347; color: #f4f7ff; padding: 16px; border-radius: 16px; box-shadow: 0 10px 24px rgba(0,0,0,0.12); margin-top: 18px; }
 .game-banner h2 { margin: 2px 0 0; color: #fff; }
 .banner-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }

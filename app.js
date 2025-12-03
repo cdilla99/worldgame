@@ -28,6 +28,7 @@ const state = {
   flagRevealed: false,
   flagPenalty: false,
   timerWarningPlayed: false,
+  musicOn: false,
 };
 
 function emojiToCountryCode(emoji) {
@@ -56,10 +57,12 @@ const heroTimerTrigger = document.getElementById('hero-timer-trigger');
 const heroPointsTrigger = document.getElementById('hero-points-trigger');
 const heroTimerMenu = document.getElementById('hero-timer-menu');
 const heroTimerValue = document.getElementById('hero-timer-value');
+const heroMusicToggle = document.getElementById('music-toggle');
 const landingPage = document.getElementById('landing-page');
 const gamePage = document.getElementById('game-page');
 const restartSetupBtn = document.getElementById('restart-setup');
 const nextRoundBtn = document.getElementById('next-round');
+const gameMusicToggle = document.getElementById('music-toggle-game');
 
 const gameSection = document.getElementById('game');
 const setupSection = document.getElementById('setup');
@@ -119,6 +122,7 @@ exportJson.value = JSON.stringify(countryCards, null, 2);
 
 let selectedPlayer = null;
 const heroModeButtons = document.querySelectorAll('.mode-btn');
+const musicState = { ctx: null, gain: null, intervalId: null };
 
 function renderPlayerInputs(count) {
   playerNamesContainer.innerHTML = '';
@@ -219,6 +223,72 @@ function setActiveChip(name) {
   Array.from(qaPlayerChips.children).forEach((el) => {
     el.classList.toggle('active', el.dataset.name === name);
   });
+}
+
+function updateMusicButtons(isOn) {
+  [heroMusicToggle, gameMusicToggle].forEach((btn) => {
+    if (!btn) return;
+    btn.textContent = isOn ? '🔊 Music on' : '🎵 Play chill loop';
+    btn.classList.toggle('on', isOn);
+    btn.setAttribute('aria-pressed', isOn ? 'true' : 'false');
+  });
+}
+
+function ensureMusicContext() {
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContext) return null;
+  if (!musicState.ctx) {
+    musicState.ctx = new AudioContext();
+    musicState.gain = musicState.ctx.createGain();
+    musicState.gain.gain.value = 0.05;
+    musicState.gain.connect(musicState.ctx.destination);
+  }
+  if (musicState.ctx.state === 'suspended') {
+    musicState.ctx.resume();
+  }
+  return musicState.ctx;
+}
+
+function playAmbientTone() {
+  const ctx = ensureMusicContext();
+  if (!ctx || !musicState.gain) return;
+  const notes = [261.63, 293.66, 329.63, 392.0, 523.25];
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const now = ctx.currentTime;
+  const freq = notes[Math.floor(Math.random() * notes.length)] * (Math.random() > 0.65 ? 2 : 1);
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  gain.gain.value = 0.0001;
+  gain.gain.exponentialRampToValueAtTime(0.05, now + 0.08);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
+  osc.connect(gain);
+  gain.connect(musicState.gain);
+  osc.start();
+  osc.stop(now + 1);
+}
+
+function startMusic() {
+  if (!ensureMusicContext()) return;
+  if (musicState.intervalId) clearInterval(musicState.intervalId);
+  playAmbientTone();
+  musicState.intervalId = setInterval(playAmbientTone, 1400);
+  state.musicOn = true;
+  updateMusicButtons(true);
+}
+
+function stopMusic() {
+  if (musicState.intervalId) {
+    clearInterval(musicState.intervalId);
+    musicState.intervalId = null;
+  }
+  if (musicState.ctx) {
+    musicState.ctx.close().catch(() => {});
+    musicState.ctx = null;
+    musicState.gain = null;
+  }
+  state.musicOn = false;
+  updateMusicButtons(false);
 }
 
 function updateTurnCopy() {
@@ -348,6 +418,24 @@ document.addEventListener('keydown', (event) => {
 
 setTimerMenu(false);
 setHeroMode(state.mode);
+updateMusicButtons(state.musicOn);
+
+function toggleMusic() {
+  if (state.musicOn) {
+    stopMusic();
+  } else {
+    startMusic();
+  }
+}
+
+heroMusicToggle.addEventListener('click', toggleMusic);
+gameMusicToggle.addEventListener('click', toggleMusic);
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && state.musicOn) {
+    stopMusic();
+  }
+});
 
 function selectDeck(pool) {
   const filtered = countryCards.filter((c) => {
