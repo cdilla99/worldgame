@@ -42,6 +42,7 @@
           </div>
         </div>
         <div class="subtitle">Choose how you want to play, then reveal the flag when everyone is ready to guess.</div>
+        <div class="mode-status" id="hero-mode-status" role="status" aria-live="polite">Timed challenge · 15 min countdown active</div>
         <div class="hero-highlights" role="group" aria-label="Choose play style">
           <div class="mode-group">
             <button class="pill mode-btn active" id="hero-timer-trigger" data-mode="timer">⏱️ Timed challenge · <span id="hero-timer-value">15 min</span></button>
@@ -57,7 +58,8 @@
           <button class="pill mode-btn" id="hero-points-trigger" data-mode="points">🤝 Team turns (points race)</button>
           <div class="vibe-row" aria-label="Game ambience">
             <button id="music-toggle" type="button" class="pill ghost music-toggle">🎵 Play lo-fi mix</button>
-            <span class="micro-hint">Soft lo-fi stream you can toggle anytime.</span>
+            <span class="micro-hint">Soft lo-fi stream you can toggle anytime. If it errors, try again or open the stream link below.</span>
+            <a class="micro-link" id="music-direct-link" href="https://stream.chillhop.com/lounge/128mp3" target="_blank" rel="noopener">Open stream link</a>
           </div>
           <p class="micro-hint mode-note">Timed challenge = beat the clock. Team turns = rotating card holder racing to target points.</p>
         </div>
@@ -129,7 +131,10 @@
         </div>
         <div class="stats-row sticky-timer">
           <div class="timer-badge" id="timer-display" role="status">⏱️ Timer: 15:00</div>
-          <div class="pill strong" id="mode-display">Mode: Timed challenge</div>
+          <div class="mode-callout">
+            <div class="pill strong" id="mode-display">Mode: Timed challenge</div>
+            <p class="micro-hint" id="mode-helper">Countdown is running—beat the clock.</p>
+          </div>
           <div class="pill" id="score-display">Scoreboard ready</div>
           <button id="music-toggle-game" type="button" class="pill ghost compact music-toggle">🎵 Music off</button>
         </div>

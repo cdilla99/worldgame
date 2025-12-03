@@ -57,6 +57,7 @@ const heroTimerTrigger = document.getElementById('hero-timer-trigger');
 const heroPointsTrigger = document.getElementById('hero-points-trigger');
 const heroTimerOptions = document.getElementById('hero-timer-options');
 const heroTimerValue = document.getElementById('hero-timer-value');
+const heroModeStatus = document.getElementById('hero-mode-status');
 const heroMusicToggle = document.getElementById('music-toggle');
 const rulesToggle = document.getElementById('rules-toggle');
 const rulesPanel = document.getElementById('rules-panel');
@@ -99,6 +100,7 @@ const currentTurn = document.getElementById('current-turn');
 const timerDisplay = document.getElementById('timer-display');
 const scoreDisplay = document.getElementById('score-display');
 const modeDisplay = document.getElementById('mode-display');
+const modeHelper = document.getElementById('mode-helper');
 const questionCountEl = document.getElementById('question-count');
 const qaLog = document.getElementById('qa-log');
 const qaPlayerChips = document.getElementById('qa-player-chips');
@@ -238,8 +240,26 @@ function updateMusicButtons(isOn) {
   });
 }
 
+function showMusicError(message) {
+  [heroMusicToggle, gameMusicToggle].forEach((btn) => {
+    if (!btn) return;
+    btn.textContent = '🔇 Music unavailable — tap to retry';
+    btn.classList.add('error');
+    btn.setAttribute('aria-pressed', 'false');
+    btn.title = message;
+  });
+}
+
 function ensureMusicElement() {
-  if (musicState.element) return musicState.element;
+  if (musicState.element && musicState.element.dataset.error !== 'true') return musicState.element;
+  if (musicState.element?.dataset.error === 'true') {
+    try {
+      musicState.element.remove();
+    } catch (e) {
+      // ignore remove failures
+    }
+    musicState.element = null;
+  }
   const audio = document.createElement('audio');
   audio.src = MUSIC_TRACK_URL;
   audio.loop = true;
@@ -248,16 +268,13 @@ function ensureMusicElement() {
   audio.volume = 0;
   audio.setAttribute('aria-hidden', 'true');
   audio.style.display = 'none';
+  audio.dataset.error = 'false';
   audio.load();
   audio.addEventListener('error', () => {
     state.musicOn = false;
+    audio.dataset.error = 'true';
     updateMusicButtons(false);
-    [heroMusicToggle, gameMusicToggle].forEach((btn) => {
-      if (!btn) return;
-      btn.textContent = '🔇 Music unavailable';
-      btn.classList.add('error');
-      btn.setAttribute('aria-pressed', 'false');
-    });
+    showMusicError('Stream blocked or offline. Try again or open the stream link.');
   });
   audio.addEventListener('playing', () => {
     state.musicOn = true;
@@ -289,6 +306,10 @@ function fadeVolume(target, duration = 400) {
 }
 
 function startMusic() {
+  if (musicState.element?.dataset.error === 'true') {
+    try { musicState.element.remove(); } catch (e) { /* noop */ }
+    musicState.element = null;
+  }
   const audio = ensureMusicElement();
   if (!audio) return;
   clearInterval(musicState.fadeInterval);
@@ -299,11 +320,7 @@ function startMusic() {
   }).catch(() => {
     state.musicOn = false;
     updateMusicButtons(false);
-    [heroMusicToggle, gameMusicToggle].forEach((btn) => {
-      if (!btn) return;
-      btn.textContent = '🔇 Music unavailable';
-      btn.classList.add('error');
-    });
+    showMusicError('Playback was blocked. Make sure audio is allowed, then tap again.');
   });
 }
 
@@ -388,7 +405,10 @@ function setHeroMode(mode) {
   modeSelect.dispatchEvent(new Event('change'));
   heroModeButtons.forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.mode === mode);
+    btn.setAttribute('aria-pressed', btn.dataset.mode === mode ? 'true' : 'false');
   });
+  heroTimerOptions.classList.toggle('hidden', mode !== 'timer');
+  heroTimerOptions.classList.toggle('disabled', mode !== 'timer');
 }
 
 heroTimerTrigger.addEventListener('click', (e) => {
@@ -489,8 +509,24 @@ function updateModeDisplay() {
     ? `Timed challenge (${timerMins} min)`
     : `Team turns points race (to ${state.targetPoints} pts)`;
   modeDisplay.textContent = `Mode: ${modeText}`;
+  if (modeHelper) {
+    modeHelper.textContent = state.mode === 'timer'
+      ? 'Countdown is running—beat the clock.'
+      : 'Points race: rotate card holder until someone hits the target score.';
+  }
+  if (heroModeStatus) {
+    heroModeStatus.textContent = state.mode === 'timer'
+      ? `Timed challenge · ${timerMins} min countdown active`
+      : `Team turns points race · first to ${state.targetPoints} pts`;
+  }
   heroTimerValue.textContent = `${timerMins} min`;
+  heroTimerOptions.classList.toggle('hidden', state.mode !== 'timer');
+  heroTimerOptions.classList.toggle('disabled', state.mode !== 'timer');
   syncHeroTimerButtons(timerMins);
+  if (state.mode !== 'timer') {
+    timerDisplay.textContent = `Points race: first to ${state.targetPoints} pts`;
+    timerDisplay.classList.remove('low-time');
+  }
 }
 
 function updateScoreDisplay() {
@@ -668,7 +704,8 @@ setupForm.addEventListener('submit', (e) => {
     startTimer(timerSeconds);
   } else {
     clearInterval(state.timer);
-    timerDisplay.textContent = 'Timer: Turn-based';
+    timerDisplay.textContent = `Points race: first to ${state.targetPoints} pts`;
+    timerDisplay.classList.remove('low-time');
   }
   state.deck = selectDeck(state.difficultyPool);
   renderPlayerChips();
