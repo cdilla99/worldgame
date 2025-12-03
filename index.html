@@ -37,10 +37,10 @@
           </ul>
         </div>
         <div class="subtitle">Choose how you want to play, then reveal the flag when everyone is ready to guess.</div>
-        <div class="hero-highlights">
-          <div class="pill menu-trigger" id="hero-timer-trigger">⏱️ Timed challenge · <span id="hero-timer-value">15 min</span></div>
-          <div class="pill">🤝 Team turns</div>
-          <span class="pill muted">Best with 2–6 players</span>
+        <div class="hero-highlights" role="group" aria-label="Choose play style">
+          <button class="pill menu-trigger mode-btn active" id="hero-timer-trigger" data-mode="timer">⏱️ Timed challenge · <span id="hero-timer-value">15 min</span></button>
+          <button class="pill mode-btn" id="hero-points-trigger" data-mode="points">🤝 Team turns</button>
+          <span class="pill muted pill-static">Best with 2–6 players</span>
           <div class="menu hidden" id="hero-timer-menu" role="listbox" aria-label="Select timer length">
             <button type="button" data-minutes="5">5 minutes</button>
             <button type="button" data-minutes="10">10 minutes</button>
@@ -123,15 +123,28 @@
       </div>
       <div class="card-layout">
         <div class="card-detail">
-          <div class="outline-block">
-            <div class="outline-copy">
-              <p class="helper-label">Start with the outline</p>
-              <p class="muted">Let the guessers study the shape first — the country name and flag live further down.</p>
-            </div>
+            <div class="outline-block">
+              <div class="outline-copy">
+                <p class="helper-label">Start with the outline</p>
+                <p class="muted">Study the shape first. Peek the blurred flag if you must (costs a point) and keep the name hidden until ready.</p>
+              </div>
             <figure class="map-figure spotlight">
               <img id="map-outline" alt="Country outline" />
               <figcaption class="muted">Country outline</figcaption>
             </figure>
+            <div class="flag-peek">
+              <div class="flag-veil masked" id="flag-veil">
+                <figure class="flag-figure">
+                  <img id="card-flag-img" alt="Country flag" />
+                  <div id="card-flag-fallback" class="flag">🏳️</div>
+                  <figcaption class="muted">Flag (tap to peek)</figcaption>
+                </figure>
+              </div>
+              <div class="flag-peek-actions">
+                <button id="flag-peek-btn" class="ghost mini" type="button">Peek at flag (-1 point)</button>
+                <p id="flag-peek-note" class="micro-hint">Flag stays blurred until you tap peek.</p>
+              </div>
+            </div>
           </div>
 
           <div class="info-grid">
@@ -166,22 +179,15 @@
 
           <div class="identity-block" id="identity-block">
             <div class="identity-inner">
-              <div class="card-visuals">
-                <figure class="flag-figure">
-                  <img id="card-flag-img" alt="Country flag" />
-                  <div id="card-flag-fallback" class="flag">🏳️</div>
-                  <figcaption class="muted">Country flag</figcaption>
-                </figure>
-                <div class="card-title">
-                  <h3 id="card-name">Country</h3>
-                  <p id="card-stars" class="stars">★</p>
-                  <p id="card-meta" class="muted">Continent • Subregion</p>
-                </div>
+              <div class="card-title">
+                <h3 id="card-name">Country</h3>
+                <p id="card-stars" class="stars">★</p>
+                <p id="card-meta" class="muted">Continent • Subregion</p>
               </div>
-              <div class="helper muted">Scroll down to confirm the country after everyone has guessed from the outline.</div>
+              <div class="helper muted">Keep the name hidden until everyone has guessed from the outline and (optional) flag peek.</div>
             </div>
             <div class="reveal-row">
-              <div class="helper-label">Tap to reveal the identity and flag.</div>
+              <div class="helper-label">Tap to reveal the country name.</div>
               <button id="reveal-flag" class="cta mini" type="button">Reveal country</button>
             </div>
           </div>

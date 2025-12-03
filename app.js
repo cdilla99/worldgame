@@ -26,6 +26,7 @@ const state = {
   clueRevealed: false,
   nearbyRevealed: false,
   flagRevealed: false,
+  flagPenalty: false,
 };
 
 function emojiToCountryCode(emoji) {
@@ -51,6 +52,7 @@ const difficultyPool = document.getElementById('difficulty-pool');
 const timerLengthInput = document.getElementById('timer-length');
 const targetPointsInput = document.getElementById('target-points');
 const heroTimerTrigger = document.getElementById('hero-timer-trigger');
+const heroPointsTrigger = document.getElementById('hero-points-trigger');
 const heroTimerMenu = document.getElementById('hero-timer-menu');
 const heroTimerValue = document.getElementById('hero-timer-value');
 const landingPage = document.getElementById('landing-page');
@@ -68,6 +70,9 @@ const sharedStars = document.getElementById('shared-stars');
 const cardMeta = document.getElementById('card-meta');
 const cardFlagFallback = document.getElementById('card-flag-fallback');
 const cardFlagImg = document.getElementById('card-flag-img');
+const flagVeil = document.getElementById('flag-veil');
+const flagPeekBtn = document.getElementById('flag-peek-btn');
+const flagPeekNote = document.getElementById('flag-peek-note');
 const mapOutline = document.getElementById('map-outline');
 const identityBlock = document.getElementById('identity-block');
 const cardTags = document.getElementById('card-tags');
@@ -107,6 +112,7 @@ const downloadCsvBtn = document.getElementById('download-csv');
 exportJson.value = JSON.stringify(countryCards, null, 2);
 
 let selectedPlayer = null;
+const heroModeButtons = document.querySelectorAll('.mode-btn');
 
 function renderPlayerInputs(count) {
   playerNamesContainer.innerHTML = '';
@@ -114,12 +120,12 @@ function renderPlayerInputs(count) {
   const extraAvatars = avatarOptions.slice(3);
   for (let i = 0; i < count; i++) {
     const card = document.createElement('div');
-    card.className = 'player-card';
+    card.className = 'player-card compact';
     card.dataset.avatar = avatarOptions[0];
 
     const header = document.createElement('div');
     header.className = 'player-card-head';
-    header.innerHTML = `<span class="pill muted">Player ${i + 1}</span><span class="muted">Tap an avatar — type only if you want</span>`;
+    header.innerHTML = `<span class="pill muted">P${i + 1}</span><span class="muted">Tap an avatar or keep default</span>`;
 
     const avatarRow = document.createElement('div');
     avatarRow.className = 'avatar-row';
@@ -281,9 +287,27 @@ function toggleTimerMenu() {
   setTimerMenu(!isOpen);
 }
 
+function setHeroMode(mode, openTimerMenu = false) {
+  modeSelect.value = mode;
+  modeSelect.dispatchEvent(new Event('change'));
+  heroModeButtons.forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+  if (mode === 'points') {
+    setTimerMenu(false);
+  } else if (openTimerMenu) {
+    setTimerMenu(true);
+  }
+}
+
 heroTimerTrigger.addEventListener('click', (e) => {
   e.preventDefault();
-  toggleTimerMenu();
+  setHeroMode('timer', true);
+});
+
+heroPointsTrigger.addEventListener('click', (e) => {
+  e.preventDefault();
+  setHeroMode('points');
 });
 
 heroTimerMenu.querySelectorAll('button').forEach((btn) => {
@@ -317,6 +341,7 @@ document.addEventListener('keydown', (event) => {
 });
 
 setTimerMenu(false);
+setHeroMode(state.mode);
 
 function selectDeck(pool) {
   const filtered = countryCards.filter((c) => {
@@ -399,6 +424,12 @@ function renderCard(card) {
   cardFlagFallback.innerHTML = '';
   cardFlagFallback.classList.add('hidden');
   cardFlagImg.classList.add('hidden');
+  flagVeil?.classList.add('masked');
+  state.flagPenalty = false;
+  if (flagPeekBtn) {
+    flagPeekBtn.disabled = false;
+    flagPeekNote.textContent = 'Flag stays blurred until you tap peek.';
+  }
   mapOutline.classList.add('hidden');
   const showFallbackFlag = () => {
     if (window.twemoji) {
@@ -485,8 +516,8 @@ function startRound() {
   state.flagRevealed = false;
   maskCard(true);
   revealFlagBtn.disabled = false;
-  logGuessBtn.disabled = true;
-  markCorrectBtn.disabled = true;
+  logGuessBtn.disabled = false;
+  markCorrectBtn.disabled = false;
   const defaultGuesser = state.players[(state.currentClueGiverIndex + 1) % state.players.length];
   setActiveChip(defaultGuesser?.name || state.players[state.currentClueGiverIndex]?.name);
   renderHolderChips();
@@ -557,6 +588,13 @@ revealNearbyBtn.addEventListener('click', () => {
   revealNearbyBtn.disabled = true;
 });
 
+flagPeekBtn.addEventListener('click', () => {
+  flagVeil.classList.remove('masked');
+  state.flagPenalty = true;
+  flagPeekBtn.disabled = true;
+  flagPeekNote.textContent = 'Flag peeked: correct guess is worth one less point (minimum 1).';
+});
+
 logQuestionBtn.addEventListener('click', () => {
   const player = selectedPlayer || state.players[0]?.name;
   if (!player) return;
@@ -580,9 +618,13 @@ markCorrectBtn.addEventListener('click', () => {
   const player = selectedPlayer || state.players[0]?.name;
   if (!player) return;
   const score = state.scores[player];
-  score.points += state.currentCard.stars;
+  const basePoints = state.currentCard.stars;
+  const penalty = state.flagPenalty ? 1 : 0;
+  const awarded = Math.max(1, basePoints - penalty);
+  score.points += awarded;
   score[state.currentCard.difficulty] += 1;
-  logQA({ player, type: 'guess', text: 'Correct guess!', result: `${player} earns ${state.currentCard.stars} point(s). Next card ready.` });
+  const flagNote = penalty ? ' (flag peeked: -1 point)' : '';
+  logQA({ player, type: 'guess', text: 'Correct guess!', result: `${player} earns ${awarded} point(s)${flagNote}. Next card ready.` });
   advanceClueGiver();
   checkEndConditions();
   startRound();
