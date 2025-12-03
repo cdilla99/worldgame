@@ -29,10 +29,10 @@ body {
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: center;
-  gap: 18px;
+  gap: 14px;
   background: linear-gradient(120deg, #65b4ff, #8ea8ff);
   color: #fff;
-  padding: 20px 22px;
+  padding: 16px 18px;
   border-radius: 18px;
   box-shadow: var(--glow);
 }
@@ -42,8 +42,8 @@ body {
   border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: 16px;
   padding: 8px;
-  width: 120px;
-  height: 120px;
+  width: 108px;
+  height: 108px;
   display: grid;
   place-items: center;
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.12);
@@ -52,7 +52,7 @@ body {
 .hero-icon svg { width: 100%; height: 100%; }
 
 .hero-copy { display: grid; gap: 8px; }
-.hero-highlights { display: grid; gap: 8px; align-items: flex-start; }
+.hero-highlights { display: grid; gap: 6px; align-items: flex-start; }
 .hero-summary { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); padding: 10px; border-radius: 14px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.4); }
 .mode-status {
   background: rgba(15, 27, 58, 0.18);
@@ -78,7 +78,7 @@ body {
 .timer-pills.disabled .micro-hint { color: #e6ebf7; }
 .timer-pills .micro-hint { grid-column: 1 / -1; margin: 2px 0 0; color: #eef5ff; }
 .pill-static { pointer-events: none; }
-.vibe-row { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: rgba(255,255,255,0.16); border-radius: 12px; border: 1px solid rgba(255,255,255,0.22); }
+.vibe-row { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: rgba(255,255,255,0.16); border-radius: 12px; border: 1px solid rgba(255,255,255,0.22); flex-wrap: wrap; }
 .vibe-row .micro-hint { color: #eef5ff; margin: 0; }
 .vibe-row button { width: auto; border-color: rgba(255,255,255,0.4); color: #0f1b3a; background: #fff; font-weight: 800; }
 .sticky-timer { position: sticky; top: 10px; align-items: stretch; }
@@ -89,16 +89,16 @@ h1 { margin: 0; font-family: 'Fredoka', 'Inter', system-ui, -apple-system, sans-
 .subtitle { margin: 8px 0 0; color: #f1f5fb; font-weight: 600; }
 
 .panel {
-  margin-top: 18px;
+  margin-top: 16px;
   background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
   border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 18px;
+  padding: 16px;
   box-shadow: var(--glow);
 }
 
 .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-.setup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.setup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
 .setup-block { background: #f7f9ff; border: 1px solid #e2e8f3; border-radius: 12px; padding: 10px 12px; display: grid; gap: 8px; }
 .mode-block .pill-row { flex-wrap: wrap; gap: 8px; }
 .pill-row { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -240,7 +240,7 @@ button:active { transform: translateY(0); }
 .player-card {
   border: 1px solid #e2eaf5;
   border-radius: 12px;
-  padding: 12px;
+  padding: 10px;
   background: #f9fbff;
   display: grid;
   gap: 8px;
@@ -264,6 +264,7 @@ button:active { transform: translateY(0); }
 .more-toggle { width: auto; margin: 4px 0 0; }
 .music-toggle { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; }
 .music-toggle.on { background: #0f1b3a; color: #f5fbff; border-color: #0f1b3a; box-shadow: 0 8px 18px rgba(15,27,58,0.18); }
+.music-toggle.loading { opacity: 0.7; pointer-events: none; }
 .music-toggle.error { opacity: 0.7; border-style: dashed; }
 .stats-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 .mode-callout { display: grid; gap: 4px; min-width: 180px; }

@@ -41,13 +41,9 @@
             </ul>
           </div>
         </div>
-        <div class="subtitle">Choose how you want to play, then reveal the flag when everyone is ready to guess.</div>
+        <div class="subtitle">Pick a challenge, set players, then start the dash.</div>
         <div class="mode-status" id="hero-mode-status" role="status" aria-live="polite">Timed challenge · 15 min countdown active</div>
         <div class="hero-highlights" aria-label="Game ambience and setup summary">
-          <div class="hero-summary">
-            <p class="muted">Set your players and mode below in Game Setup. The hero always reflects the current choice.</p>
-            <p class="micro-hint">Timed challenge = beat the clock. Team turns = points race. Pick what fits the group.</p>
-          </div>
           <div class="vibe-row" aria-label="Game ambience">
             <button id="music-toggle" type="button" class="pill ghost music-toggle">🎵 Play lo-fi mix</button>
             <span class="micro-hint">Soft lo-fi stream you can toggle anytime. If it errors, try again or open the stream link below.</span>
@@ -77,9 +73,9 @@
             <p class="helper-label">Mode</p>
             <div class="pill-row" id="mode-pills">
               <button type="button" class="pill strong active mode-pill" data-mode="timer">⏱️ Timed challenge</button>
-              <button type="button" class="pill ghost mode-pill" data-mode="points">🏁 Team turns points race</button>
+              <button type="button" class="pill ghost mode-pill" data-mode="points">🏁 Points race</button>
             </div>
-            <p class="micro-hint">Timed challenge = countdown; Team turns = rotate the card holder and race to the target score.</p>
+            <p class="micro-hint">Timed challenge = countdown. Points race = rotate the card holder and race to a target score.</p>
             <div class="timer-pills" id="setup-timer-options" aria-label="Pick timer length">
               <span class="muted">Countdown length</span>
               <div class="pill-row tight">
@@ -121,7 +117,7 @@
 
       <section id="export" class="panel collapsed">
         <button class="accordion-toggle export-toggle" id="export-toggle" aria-expanded="false" aria-controls="export-content">
-          <span>Export data (rarely used)</span>
+          <span>Export data</span>
           <span class="chevron" aria-hidden="true">▾</span>
         </button>
         <div id="export-content" class="hidden">

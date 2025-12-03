@@ -273,6 +273,14 @@ function showMusicError(message) {
   });
 }
 
+function setMusicLoading(isLoading) {
+  [heroMusicToggle, gameMusicToggle].forEach((btn) => {
+    if (!btn) return;
+    btn.classList.toggle('loading', isLoading);
+    if (isLoading) btn.textContent = '⏳ Loading lo-fi mix…';
+  });
+}
+
 function fadeVolume(target, duration = 400) {
   if (!bgMusic) return;
   clearInterval(musicState.fadeInterval);
@@ -294,18 +302,22 @@ function fadeVolume(target, duration = 400) {
 
 function startMusic() {
   if (!bgMusic) return;
+  setMusicLoading(true);
+  bgMusic.load();
   bgMusic.dataset.error = 'false';
   bgMusic.volume = 0;
   clearInterval(musicState.fadeInterval);
   bgMusic.play().then(() => {
     state.musicOn = true;
     updateMusicButtons(true);
+    setMusicLoading(false);
     [heroMusicToggle, gameMusicToggle].forEach((btn) => btn?.classList.remove('error'));
     fadeVolume(0.4, 600);
   }).catch((err) => {
     console.error('Playback blocked:', err);
     state.musicOn = false;
     updateMusicButtons(false);
+    setMusicLoading(false);
     showMusicError('Playback was blocked. Tap again after interacting with the page.');
   });
 }
@@ -314,6 +326,7 @@ function stopMusic() {
   if (!bgMusic) { state.musicOn = false; updateMusicButtons(false); return; }
   state.musicOn = false;
   updateMusicButtons(false);
+  setMusicLoading(false);
   fadeVolume(0, 400);
   setTimeout(() => {
     bgMusic.pause();
