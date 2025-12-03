@@ -61,61 +61,66 @@
         </div>
         <p class="pill strong">Setup first · reveal when ready</p>
       </div>
-      <form id="setup-form">
-        <div class="setup-grid">
-          <div class="setup-block">
-            <p class="helper-label">Select number of players</p>
-            <label class="inline-input">Players (2–8)
-              <input type="number" id="player-count" min="2" max="8" value="2" />
-            </label>
-          </div>
-          <div class="setup-block mode-block" role="group" aria-label="Choose game mode">
-            <p class="helper-label">Mode</p>
-            <div class="pill-row" id="mode-pills">
-              <button type="button" class="pill strong active mode-pill" data-mode="timer">⏱️ Timed challenge</button>
-              <button type="button" class="pill ghost mode-pill" data-mode="points">🏁 Points race</button>
-            </div>
-            <p class="micro-hint">Timed challenge = countdown. Points race = rotate the card holder and race to a target score.</p>
-            <div class="timer-pills" id="setup-timer-options" aria-label="Pick timer length">
-              <span class="muted">Countdown length</span>
-              <div class="pill-row tight">
-                <button type="button" data-minutes="3">3</button>
-                <button type="button" data-minutes="5">5</button>
-                <button type="button" data-minutes="8">8</button>
-                <button type="button" data-minutes="10">10</button>
-                <button type="button" data-minutes="15" class="active">15</button>
+        <form id="setup-form">
+          <div class="setup-grid aligned">
+            <div class="setup-block mode-block span-2" role="group" aria-label="Choose game mode">
+              <div class="block-head">
+                <p class="helper-label">Mode</p>
+                <p class="micro-hint">Choose the flow, then pick a countdown or target points.</p>
               </div>
-              <span class="micro-hint">Pick a time and keep it at the top during play.</span>
+              <div class="pill-row" id="mode-pills">
+                <button type="button" class="pill strong active mode-pill" data-mode="timer">⏱️ Timed challenge</button>
+                <button type="button" class="pill ghost mode-pill" data-mode="points">🏁 Points race</button>
+              </div>
+              <div class="timer-pills" id="setup-timer-options" aria-label="Pick timer length">
+                <span class="muted">Countdown length</span>
+                <div class="pill-row tight">
+                  <button type="button" data-minutes="3">3</button>
+                  <button type="button" data-minutes="5">5</button>
+                  <button type="button" data-minutes="8">8</button>
+                  <button type="button" data-minutes="10">10</button>
+                  <button type="button" data-minutes="15" class="active">15</button>
+                </div>
+              </div>
+              <label id="points-wrapper" class="hidden compact-field">Target points
+                <input type="number" id="target-points" min="5" max="50" value="15" />
+              </label>
             </div>
-            <label id="points-wrapper" class="hidden">Target points
-              <input type="number" id="target-points" min="5" max="50" value="15" />
-            </label>
+            <div class="setup-block">
+              <p class="helper-label">Select number of players</p>
+              <label class="inline-input">Players (2–8)
+                <input type="number" id="player-count" min="2" max="8" value="2" />
+              </label>
+            </div>
+            <div class="setup-block">
+              <p class="helper-label">Difficulty pool</p>
+              <select id="difficulty-pool">
+                <option value="all">All</option>
+                <option value="easy-medium">Easy + Medium</option>
+                <option value="medium-hard">Medium + Hard</option>
+                <option value="easy">Easy only</option>
+                <option value="medium">Medium only</option>
+                <option value="hard">Hard only</option>
+              </select>
+            </div>
           </div>
-          <label class="setup-block">Difficulty pool
-            <select id="difficulty-pool">
-              <option value="all">All</option>
-              <option value="easy-medium">Easy + Medium</option>
-              <option value="medium-hard">Medium + Hard</option>
-              <option value="easy">Easy only</option>
-              <option value="medium">Medium only</option>
-              <option value="hard">Hard only</option>
-            </select>
+          <div class="muted helper-label align-row">After picking the mode and player count, tap a name or avatar. Typing stays optional.</div>
+          <div id="player-names" class="names"></div>
+          <select id="mode" class="visually-hidden" aria-hidden="true">
+            <option value="timer">Timed challenge</option>
+            <option value="points">Team turns points race</option>
+          </select>
+          <label id="timer-wrapper" class="visually-hidden">Timer length (minutes)
+            <input type="number" id="timer-length" min="3" max="45" value="15" />
           </label>
-        </div>
-        <div class="muted helper-label">After picking the mode and player count, tap a name or avatar. Typing stays optional.</div>
-        <div id="player-names" class="names"></div>
-        <select id="mode" class="visually-hidden" aria-hidden="true">
-          <option value="timer">Timed challenge</option>
-          <option value="points">Team turns points race</option>
-        </select>
-        <label id="timer-wrapper" class="visually-hidden">Timer length (minutes)
-          <input type="number" id="timer-length" min="3" max="45" value="15" />
-        </label>
-        <div class="cta-row">
-          <button type="submit" class="cta">Start Game</button>
-          <p class="pill strong" id="mode-display-setup">Mode: Timed challenge (15 min)</p>
-        </div>
-      </form>
+          <div class="cta-row align-row">
+            <div class="cta-stack">
+              <button type="submit" class="cta">Start Game</button>
+              <p class="micro-hint muted">Launches a fresh game screen with your selections.</p>
+            </div>
+            <p class="pill strong" id="mode-display-setup">Mode: Timed challenge (15 min)</p>
+          </div>
+        </form>
       </section>
 
       <section id="export" class="panel collapsed">
