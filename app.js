@@ -55,9 +55,11 @@ const timerLengthInput = document.getElementById('timer-length');
 const targetPointsInput = document.getElementById('target-points');
 const heroTimerTrigger = document.getElementById('hero-timer-trigger');
 const heroPointsTrigger = document.getElementById('hero-points-trigger');
-const heroTimerMenu = document.getElementById('hero-timer-menu');
+const heroTimerOptions = document.getElementById('hero-timer-options');
 const heroTimerValue = document.getElementById('hero-timer-value');
 const heroMusicToggle = document.getElementById('music-toggle');
+const rulesToggle = document.getElementById('rules-toggle');
+const rulesPanel = document.getElementById('rules-panel');
 const landingPage = document.getElementById('landing-page');
 const gamePage = document.getElementById('game-page');
 const restartSetupBtn = document.getElementById('restart-setup');
@@ -124,7 +126,7 @@ let selectedPlayer = null;
 const heroModeButtons = document.querySelectorAll('.mode-btn');
 const MUSIC_TRACK_URL = 'https://stream.chillhop.com/lounge/128mp3';
 
-const musicState = { ctx: null, gain: null, source: null, element: null, fadeTimeout: null, handlersBound: false };
+const musicState = { element: null, fadeInterval: null };
 
 function renderPlayerInputs(count) {
   playerNamesContainer.innerHTML = '';
@@ -230,110 +232,93 @@ function setActiveChip(name) {
 function updateMusicButtons(isOn) {
   [heroMusicToggle, gameMusicToggle].forEach((btn) => {
     if (!btn) return;
-    btn.textContent = isOn ? '🔊 Music on' : '🎵 Play lo-fi mix';
+    btn.textContent = isOn ? '🔊 Stop lo-fi mix' : '🎵 Play lo-fi mix';
     btn.classList.toggle('on', isOn);
     btn.setAttribute('aria-pressed', isOn ? 'true' : 'false');
   });
 }
 
-function ensureMusicChain() {
-  if (!musicState.element) {
-    const audio = new Audio(MUSIC_TRACK_URL);
-    audio.loop = true;
-    audio.preload = 'auto';
-    audio.crossOrigin = 'anonymous';
-    audio.volume = 0.8;
-    musicState.element = audio;
+function ensureMusicElement() {
+  if (musicState.element) return musicState.element;
+  const audio = document.createElement('audio');
+  audio.src = MUSIC_TRACK_URL;
+  audio.loop = true;
+  audio.preload = 'auto';
+  audio.crossOrigin = 'anonymous';
+  audio.volume = 0;
+  audio.setAttribute('aria-hidden', 'true');
+  audio.style.display = 'none';
+  audio.load();
+  audio.addEventListener('error', () => {
+    state.musicOn = false;
+    updateMusicButtons(false);
+    [heroMusicToggle, gameMusicToggle].forEach((btn) => {
+      if (!btn) return;
+      btn.textContent = '🔇 Music unavailable';
+      btn.classList.add('error');
+      btn.setAttribute('aria-pressed', 'false');
+    });
+  });
+  audio.addEventListener('playing', () => {
+    state.musicOn = true;
+    updateMusicButtons(true);
+    [heroMusicToggle, gameMusicToggle].forEach((btn) => btn?.classList.remove('error'));
+  });
+  document.body.appendChild(audio);
+  musicState.element = audio;
+  return audio;
+}
 
-    if (!musicState.handlersBound) {
-      audio.addEventListener('error', () => {
-        state.musicOn = false;
-        updateMusicButtons(false);
-        [heroMusicToggle, gameMusicToggle].forEach((btn) => {
-          if (!btn) return;
-          btn.textContent = '🔇 Music unavailable';
-          btn.classList.add('error');
-          btn.setAttribute('aria-pressed', 'false');
-        });
-      });
-
-      audio.addEventListener('playing', () => {
-        [heroMusicToggle, gameMusicToggle].forEach((btn) => {
-          if (!btn) return;
-          btn.classList.remove('error');
-        });
-      });
-
-      musicState.handlersBound = true;
+function fadeVolume(target, duration = 400) {
+  if (!musicState.element) return;
+  clearInterval(musicState.fadeInterval);
+  const steps = 20;
+  const start = musicState.element.volume;
+  const delta = target - start;
+  let count = 0;
+  musicState.fadeInterval = setInterval(() => {
+    count += 1;
+    const progress = count / steps;
+    const next = start + delta * progress;
+    musicState.element.volume = Math.min(1, Math.max(0, next));
+    if (count >= steps) {
+      clearInterval(musicState.fadeInterval);
+      musicState.element.volume = Math.min(1, Math.max(0, target));
     }
-  }
-
-  const AudioContext = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContext) return null;
-
-  if (!musicState.ctx) {
-    musicState.ctx = new AudioContext();
-    musicState.gain = musicState.ctx.createGain();
-    musicState.gain.gain.value = 0.0001;
-    musicState.gain.connect(musicState.ctx.destination);
-  }
-
-  if (!musicState.source && musicState.element) {
-    musicState.source = musicState.ctx.createMediaElementSource(musicState.element);
-    musicState.source.connect(musicState.gain);
-  }
-
-  if (musicState.ctx.state === 'suspended') {
-    musicState.ctx.resume();
-  }
-
-  return musicState.ctx;
+  }, duration / steps);
 }
 
 function startMusic() {
-  const ctx = ensureMusicChain();
-  if (!ctx || !musicState.element || !musicState.gain) return;
-
-  clearTimeout(musicState.fadeTimeout);
-  state.musicOn = true;
-  updateMusicButtons(true);
-
-  const now = ctx.currentTime;
-  musicState.gain.gain.cancelScheduledValues(now);
-  musicState.gain.gain.setValueAtTime(Math.max(0.0001, musicState.gain.gain.value), now);
-  musicState.gain.gain.exponentialRampToValueAtTime(0.35, now + 0.4);
-
-  if (musicState.element.paused) {
-    musicState.element.currentTime = 0;
-  }
-
-  musicState.element.play().catch(() => {
+  const audio = ensureMusicElement();
+  if (!audio) return;
+  clearInterval(musicState.fadeInterval);
+  audio.play().then(() => {
+    state.musicOn = true;
+    updateMusicButtons(true);
+    fadeVolume(0.4, 600);
+  }).catch(() => {
     state.musicOn = false;
     updateMusicButtons(false);
+    [heroMusicToggle, gameMusicToggle].forEach((btn) => {
+      if (!btn) return;
+      btn.textContent = '🔇 Music unavailable';
+      btn.classList.add('error');
+    });
   });
 }
 
 function stopMusic() {
-  if (!musicState.ctx || !musicState.gain || !musicState.element) {
+  if (!musicState.element) {
     state.musicOn = false;
     updateMusicButtons(false);
     return;
   }
-
-  clearTimeout(musicState.fadeTimeout);
-  const now = musicState.ctx.currentTime;
-  musicState.gain.gain.cancelScheduledValues(now);
-  musicState.gain.gain.setValueAtTime(musicState.gain.gain.value, now);
-  musicState.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
-
-  musicState.fadeTimeout = setTimeout(() => {
-    musicState.element.pause();
-    musicState.element.currentTime = 0;
-    musicState.ctx.suspend();
-  }, 400);
-
   state.musicOn = false;
   updateMusicButtons(false);
+  fadeVolume(0, 400);
+  setTimeout(() => {
+    musicState.element.pause();
+  }, 420);
 }
 
 function updateTurnCopy() {
@@ -393,37 +378,22 @@ renderPlayerInputs(parseInt(playerCountInput.value, 10));
 updateModeDisplay();
 
 function syncHeroTimerButtons(mins) {
-  heroTimerMenu.querySelectorAll('button').forEach((b) => {
+  heroTimerOptions.querySelectorAll('button[data-minutes]').forEach((b) => {
     b.classList.toggle('active', parseInt(b.dataset.minutes, 10) === mins);
   });
 }
 
-function setTimerMenu(open) {
-  heroTimerMenu.classList.toggle('hidden', !open);
-  heroTimerTrigger.setAttribute('aria-expanded', String(open));
-}
-
-function toggleTimerMenu() {
-  const isOpen = !heroTimerMenu.classList.contains('hidden');
-  setTimerMenu(!isOpen);
-}
-
-function setHeroMode(mode, openTimerMenu = false) {
+function setHeroMode(mode) {
   modeSelect.value = mode;
   modeSelect.dispatchEvent(new Event('change'));
   heroModeButtons.forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.mode === mode);
   });
-  if (mode === 'points') {
-    setTimerMenu(false);
-  } else if (openTimerMenu) {
-    setTimerMenu(true);
-  }
 }
 
 heroTimerTrigger.addEventListener('click', (e) => {
   e.preventDefault();
-  setHeroMode('timer', true);
+  setHeroMode('timer');
 });
 
 heroPointsTrigger.addEventListener('click', (e) => {
@@ -431,7 +401,14 @@ heroPointsTrigger.addEventListener('click', (e) => {
   setHeroMode('points');
 });
 
-heroTimerMenu.querySelectorAll('button').forEach((btn) => {
+rulesToggle.addEventListener('click', () => {
+  const willOpen = rulesPanel.classList.toggle('hidden');
+  const expanded = !willOpen;
+  rulesToggle.setAttribute('aria-expanded', String(expanded));
+  rulesToggle.classList.toggle('open', expanded);
+});
+
+heroTimerOptions.querySelectorAll('button[data-minutes]').forEach((btn) => {
   btn.addEventListener('click', () => {
     const mins = parseInt(btn.dataset.minutes, 10);
     timerLengthInput.value = mins;
@@ -443,25 +420,8 @@ heroTimerMenu.querySelectorAll('button').forEach((btn) => {
     } else {
       updateModeDisplay();
     }
-    setTimerMenu(false);
   });
 });
-
-document.addEventListener('click', (event) => {
-  const clickedInsideMenu = heroTimerMenu.contains(event.target);
-  const clickedTrigger = heroTimerTrigger.contains(event.target);
-  if (!clickedInsideMenu && !clickedTrigger) {
-    setTimerMenu(false);
-  }
-});
-
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') {
-    setTimerMenu(false);
-  }
-});
-
-setTimerMenu(false);
 setHeroMode(state.mode);
 updateMusicButtons(state.musicOn);
 
@@ -527,7 +487,7 @@ function updateModeDisplay() {
   const timerMins = Math.max(1, Math.floor((state.timerRemaining || bootstrapOptions.defaultTimerMinutes * 60) / 60));
   const modeText = state.mode === 'timer'
     ? `Timed challenge (${timerMins} min)`
-    : `Turn-based team play (to ${state.targetPoints} pts)`;
+    : `Team turns points race (to ${state.targetPoints} pts)`;
   modeDisplay.textContent = `Mode: ${modeText}`;
   heroTimerValue.textContent = `${timerMins} min`;
   syncHeroTimerButtons(timerMins);

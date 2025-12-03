@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Geo Game Table</title>
+  <title>The Dillon's Globe Dash</title>
   <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -26,32 +26,40 @@
       </div>
       <div class="hero-copy">
         <p class="eyebrow">Globe Dash</p>
-        <h1>Geo Game Table</h1>
-        <div class="rules-top">
-          <h3>Quick Rules</h3>
-          <ul>
-            <li>Pick a card holder, keep the flag hidden, and let teammates ask up to 10 questions.</li>
-            <li>Each turn: ask <strong>one</strong> question or make <strong>one</strong> guess toward the country.</li>
-            <li>Built-in clue and nearby country hint are each usable once per card.</li>
-            <li>Scoring: Easy 1★ = 1 pt, Medium 2★ = 2 pts, Hard 3★ = 3 pts. No giveaway answers.</li>
-          </ul>
+        <h1>The Dillon's Globe Dash</h1>
+        <div class="rules-accordion" aria-label="Game rules">
+          <button class="accordion-toggle" id="rules-toggle" aria-expanded="false" aria-controls="rules-panel">
+            <span>Quick Rules</span>
+            <span class="chevron" aria-hidden="true">▾</span>
+          </button>
+          <div id="rules-panel" class="rules-panel hidden">
+            <ul>
+              <li>Pick a card holder, keep the flag hidden, and let teammates ask up to 10 questions.</li>
+              <li>Each turn: ask <strong>one</strong> question or make <strong>one</strong> guess toward the country.</li>
+              <li>Built-in clue and nearby country hint are each usable once per card.</li>
+              <li>Scoring: Easy 1★ = 1 pt, Medium 2★ = 2 pts, Hard 3★ = 3 pts. No giveaway answers.</li>
+            </ul>
+          </div>
         </div>
         <div class="subtitle">Choose how you want to play, then reveal the flag when everyone is ready to guess.</div>
         <div class="hero-highlights" role="group" aria-label="Choose play style">
-          <button class="pill menu-trigger mode-btn active" id="hero-timer-trigger" data-mode="timer">⏱️ Timed challenge · <span id="hero-timer-value">15 min</span></button>
-          <button class="pill mode-btn" id="hero-points-trigger" data-mode="points">🤝 Team turns</button>
-          <button class="pill muted pill-static" type="button" aria-label="Best with two to six players">Best with 2–6 players</button>
-          <div class="menu hidden" id="hero-timer-menu" role="listbox" aria-label="Select timer length">
-            <button type="button" data-minutes="5">5 minutes</button>
-            <button type="button" data-minutes="10">10 minutes</button>
-            <button type="button" data-minutes="15" class="active">15 minutes</button>
-            <button type="button" data-minutes="20">20 minutes</button>
-            <button type="button" data-minutes="30">30 minutes</button>
+          <div class="mode-group">
+            <button class="pill mode-btn active" id="hero-timer-trigger" data-mode="timer">⏱️ Timed challenge · <span id="hero-timer-value">15 min</span></button>
+            <div class="timer-pills" id="hero-timer-options" aria-label="Pick timer length">
+              <button type="button" data-minutes="3">3</button>
+              <button type="button" data-minutes="5">5</button>
+              <button type="button" data-minutes="8">8</button>
+              <button type="button" data-minutes="10">10</button>
+              <button type="button" data-minutes="15" class="active">15</button>
+              <span class="micro-hint">Tap a time to set the countdown.</span>
+            </div>
           </div>
+          <button class="pill mode-btn" id="hero-points-trigger" data-mode="points">🤝 Team turns (points race)</button>
           <div class="vibe-row" aria-label="Game ambience">
             <button id="music-toggle" type="button" class="pill ghost music-toggle">🎵 Play lo-fi mix</button>
             <span class="micro-hint">Soft lo-fi stream you can toggle anytime.</span>
           </div>
+          <p class="micro-hint mode-note">Timed challenge = beat the clock. Team turns = rotating card holder racing to target points.</p>
         </div>
       </div>
       </header>
@@ -66,11 +74,11 @@
           <label>Mode
             <select id="mode">
               <option value="timer">Timed challenge (countdown)</option>
-              <option value="points">Turn-based team play (points)</option>
+              <option value="points">Team turns points race</option>
             </select>
           </label>
           <label id="timer-wrapper">Timer length (minutes)
-            <input type="number" id="timer-length" min="5" max="45" value="15" />
+            <input type="number" id="timer-length" min="3" max="45" value="15" />
           </label>
           <label id="points-wrapper" class="hidden">Target points
             <input type="number" id="target-points" min="5" max="50" value="15" />
