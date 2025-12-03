@@ -77,7 +77,6 @@ const cardMeta = document.getElementById('card-meta');
 const cardFlagFallback = document.getElementById('card-flag-fallback');
 const cardFlagImg = document.getElementById('card-flag-img');
 const flagVeil = document.getElementById('flag-veil');
-const flagPeekBtn = document.getElementById('flag-peek-btn');
 const flagPeekNote = document.getElementById('flag-peek-note');
 const mapOutline = document.getElementById('map-outline');
 const identityBlock = document.getElementById('identity-block');
@@ -99,8 +98,6 @@ const currentTurn = document.getElementById('current-turn');
 const timerDisplay = document.getElementById('timer-display');
 const scoreDisplay = document.getElementById('score-display');
 const modeDisplaySetup = document.getElementById('mode-display-setup');
-const modeDisplayGame = document.getElementById('mode-display-game');
-const modeHelper = document.getElementById('mode-helper');
 const questionCountEl = document.getElementById('question-count');
 const qaLog = document.getElementById('qa-log');
 const qaPlayerChips = document.getElementById('qa-player-chips');
@@ -533,22 +530,14 @@ function updateModeDisplay() {
   const timerMins = Math.max(1, Math.floor((state.timerRemaining || bootstrapOptions.defaultTimerMinutes * 60) / 60));
   const modeText = state.mode === 'timer'
     ? `Timed challenge (${timerMins} min)`
-    : `Team turns points race (to ${state.targetPoints} pts)`;
-  if (modeDisplayGame) {
-    modeDisplayGame.textContent = `Mode: ${modeText}`;
-  }
+    : `Points race (first to ${state.targetPoints} pts)`;
   if (modeDisplaySetup) {
     modeDisplaySetup.textContent = `Mode: ${modeText}`;
-  }
-  if (modeHelper) {
-    modeHelper.textContent = state.mode === 'timer'
-      ? 'Countdown is running—beat the clock.'
-      : 'Points race: rotate card holder until someone hits the target score.';
   }
   if (heroModeStatus) {
     heroModeStatus.textContent = state.mode === 'timer'
       ? `Timed challenge · ${timerMins} min countdown active`
-      : `Team turns points race · first to ${state.targetPoints} pts`;
+      : `Points race · first to ${state.targetPoints} pts`;
   }
   if (state.mode !== 'timer') {
     timerDisplay.textContent = `Points race: first to ${state.targetPoints} pts`;
@@ -593,12 +582,11 @@ function renderCard(card) {
   cardFlagFallback.classList.add('hidden');
   cardFlagImg.classList.add('hidden');
   flagVeil?.classList.add('masked');
+  flagVeil?.classList.remove('used');
+  flagVeil?.setAttribute('aria-pressed', 'false');
+  if (flagVeil) flagVeil.disabled = false;
   state.flagPenalty = false;
-  if (flagPeekBtn) {
-    flagPeekBtn.disabled = false;
-    flagPeekBtn.classList.remove('used');
-    flagPeekNote.textContent = 'Flag stays blurred until you tap peek.';
-  }
+  flagPeekNote.textContent = 'Flag stays blurred until you tap peek. Penalty only applies if the next guess is correct.';
   mapOutline.classList.add('hidden');
   const showFallbackFlag = () => {
     if (window.twemoji) {
@@ -789,11 +777,13 @@ revealNearbyBtn.addEventListener('click', () => {
   logQA({ player: 'Host', type: 'clue', text: 'Nearby country hint revealed', result: 'Hint consumed for this card.' });
 });
 
-flagPeekBtn.addEventListener('click', () => {
+flagVeil?.addEventListener('click', () => {
+  if (state.flagPenalty) return;
   flagVeil.classList.remove('masked');
+  flagVeil.classList.add('used');
+  flagVeil.disabled = true;
+  flagVeil.setAttribute('aria-pressed', 'true');
   state.flagPenalty = true;
-  flagPeekBtn.disabled = true;
-  flagPeekBtn.classList.add('used');
   flagPeekNote.textContent = 'Flag peeked: correct guess is worth one less point (minimum 1).';
   logQA({ player: 'Host', type: 'peek', text: 'Flag peeked', result: 'Next correct guess earns -1 point.' });
 });

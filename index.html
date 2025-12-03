@@ -157,15 +157,42 @@
         </div>
         <div class="stats-row sticky-timer">
           <div class="timer-badge" id="timer-display" role="status">⏱️ Timer: 15:00</div>
-          <div class="mode-callout">
-            <div class="pill strong" id="mode-display-game">Mode: Timed challenge</div>
-            <p class="micro-hint" id="mode-helper">Countdown is running—beat the clock.</p>
-          </div>
           <div class="pill" id="score-display">Scoreboard ready</div>
           <button id="music-toggle-game" type="button" class="pill ghost compact music-toggle">🎵 Lo-fi: Off</button>
         </div>
         <div id="status-toast" class="toast hidden" role="status" aria-live="polite"></div>
       </div>
+
+      <div class="card-shared role-panel">
+        <div class="role-board">
+          <div>
+            <p class="helper-label">Card holder</p>
+            <div id="holder-chips" class="chip-row compact"></div>
+          </div>
+          <div>
+            <p class="helper-label">Active guesser</p>
+            <div id="qa-player-chips" class="chip-row"></div>
+            <p class="micro-hint">Tap a player before logging questions or guesses.</p>
+          </div>
+        </div>
+        <div class="role-actions">
+          <div class="question-head">
+            <div class="pill">Questions used: <span id="question-count">0</span>/10</div>
+            <div class="pill">Difficulty: <span id="shared-stars">★</span></div>
+          </div>
+          <div class="actions">
+            <button id="log-question" class="ghost">Log Question</button>
+            <button id="log-guess" class="ghost">Log Guess</button>
+            <button id="mark-correct" class="cta mini">Mark Correct Guess</button>
+          </div>
+        </div>
+        <div class="question-log" id="qa-log"></div>
+        <div class="helper">
+          <p><strong>Flow:</strong> Pick the card holder, start the card, tap a player, then log a question or guess. When someone nails it, hit "Mark Correct Guess".</p>
+          <p><strong>Remember:</strong> The card-holder answers all questions. No need to type—just tap and keep the energy high.</p>
+        </div>
+      </div>
+
       <div class="card-layout">
         <div class="card-detail">
             <div class="outline-block">
@@ -183,17 +210,14 @@
               <button type="button" class="ghost mini" id="region-reveal">Reveal region hint</button>
             </div>
             <div class="flag-peek">
-              <div class="flag-veil masked" id="flag-veil">
+              <button class="flag-veil masked" id="flag-veil" type="button" aria-describedby="flag-peek-note">
                 <figure class="flag-figure">
                   <img id="card-flag-img" alt="Country flag" />
                   <div id="card-flag-fallback" class="flag">🏳️</div>
-                  <figcaption class="muted">Flag (tap to peek)</figcaption>
+                  <figcaption class="muted">Flag (tap to peek · -1 point)</figcaption>
                 </figure>
-              </div>
-              <div class="flag-peek-actions">
-                <button id="flag-peek-btn" class="ghost mini" type="button">Peek at flag (-1 point)</button>
-                <p id="flag-peek-note" class="micro-hint">Flag stays blurred until you tap peek. Penalty only applies if the next guess is correct.</p>
-              </div>
+              </button>
+              <p id="flag-peek-note" class="micro-hint">Flag stays blurred until you tap peek. Penalty only applies if the next guess is correct.</p>
             </div>
 
             <div class="clue-stack" aria-label="Revealable clues">
@@ -245,35 +269,6 @@
           </div>
         </div>
 
-        <div class="card-shared">
-          <div class="role-board">
-            <div>
-              <p class="helper-label">Card holder</p>
-              <div id="holder-chips" class="chip-row compact"></div>
-            </div>
-            <div>
-              <p class="helper-label">Active guesser</p>
-              <div id="qa-player-chips" class="chip-row"></div>
-              <p class="micro-hint">Tap a player before logging questions or guesses.</p>
-            </div>
-          </div>
-          <div class="question-head">
-            <div class="pill">Questions used: <span id="question-count">0</span>/10</div>
-            <div class="pill">Difficulty: <span id="shared-stars">★</span></div>
-          </div>
-          <div class="question-log" id="qa-log"></div>
-          <div class="qa-lite">
-            <div class="actions">
-              <button id="log-question" class="ghost">Log Question</button>
-              <button id="log-guess" class="ghost">Log Guess</button>
-              <button id="mark-correct" class="cta mini">Mark Correct Guess</button>
-            </div>
-          </div>
-          <div class="helper">
-            <p><strong>Flow:</strong> Pick the card holder, hit "Reveal flag" when everyone is ready, tap a player, then log a question or guess. When someone nails it, hit "Mark Correct Guess".</p>
-            <p><strong>Remember:</strong> The card-holder answers all questions. No need to type—just tap and keep the energy high.</p>
-          </div>
-        </div>
       </div>
       </section>
 
