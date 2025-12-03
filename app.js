@@ -122,9 +122,9 @@ exportJson.value = JSON.stringify(countryCards, null, 2);
 
 let selectedPlayer = null;
 const heroModeButtons = document.querySelectorAll('.mode-btn');
-const MUSIC_TRACK_URL = 'https://cdn.pixabay.com/download/audio/2022/07/11/audio_d3b4a5c746.mp3?filename=calm-lofi-112191.mp3';
+const MUSIC_TRACK_URL = 'https://stream.chillhop.com/lounge/128mp3';
 
-const musicState = { ctx: null, gain: null, source: null, element: null, fadeTimeout: null };
+const musicState = { ctx: null, gain: null, source: null, element: null, fadeTimeout: null, handlersBound: false };
 
 function renderPlayerInputs(count) {
   playerNamesContainer.innerHTML = '';
@@ -244,6 +244,28 @@ function ensureMusicChain() {
     audio.crossOrigin = 'anonymous';
     audio.volume = 0.8;
     musicState.element = audio;
+
+    if (!musicState.handlersBound) {
+      audio.addEventListener('error', () => {
+        state.musicOn = false;
+        updateMusicButtons(false);
+        [heroMusicToggle, gameMusicToggle].forEach((btn) => {
+          if (!btn) return;
+          btn.textContent = '🔇 Music unavailable';
+          btn.classList.add('error');
+          btn.setAttribute('aria-pressed', 'false');
+        });
+      });
+
+      audio.addEventListener('playing', () => {
+        [heroMusicToggle, gameMusicToggle].forEach((btn) => {
+          if (!btn) return;
+          btn.classList.remove('error');
+        });
+      });
+
+      musicState.handlersBound = true;
+    }
   }
 
   const AudioContext = window.AudioContext || window.webkitAudioContext;
