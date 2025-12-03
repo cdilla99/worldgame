@@ -53,10 +53,8 @@ const modeSelect = document.getElementById('mode');
 const difficultyPool = document.getElementById('difficulty-pool');
 const timerLengthInput = document.getElementById('timer-length');
 const targetPointsInput = document.getElementById('target-points');
-const heroTimerTrigger = document.getElementById('hero-timer-trigger');
-const heroPointsTrigger = document.getElementById('hero-points-trigger');
-const heroTimerOptions = document.getElementById('hero-timer-options');
-const heroTimerValue = document.getElementById('hero-timer-value');
+const modePills = document.querySelectorAll('.mode-pill');
+const setupTimerOptions = document.getElementById('setup-timer-options');
 const heroModeStatus = document.getElementById('hero-mode-status');
 const heroMusicToggle = document.getElementById('music-toggle');
 const rulesToggle = document.getElementById('rules-toggle');
@@ -66,6 +64,7 @@ const gamePage = document.getElementById('game-page');
 const restartSetupBtn = document.getElementById('restart-setup');
 const nextRoundBtn = document.getElementById('next-round');
 const gameMusicToggle = document.getElementById('music-toggle-game');
+const bgMusic = document.getElementById('bg-music');
 
 const gameSection = document.getElementById('game');
 const setupSection = document.getElementById('setup');
@@ -120,15 +119,33 @@ const capitalRevealBtn = document.getElementById('capital-reveal');
 const scoreRows = document.getElementById('score-rows');
 const exportJson = document.getElementById('export-json');
 const downloadCsvBtn = document.getElementById('download-csv');
+const exportToggle = document.getElementById('export-toggle');
+const exportContent = document.getElementById('export-content');
 
 // Show the full dataset on the landing page only.
 exportJson.value = JSON.stringify(countryCards, null, 2);
 
 let selectedPlayer = null;
-const heroModeButtons = document.querySelectorAll('.mode-btn');
 const MUSIC_TRACK_URL = 'https://stream.chillhop.com/lounge/128mp3';
+const musicState = { fadeInterval: null };
+const setupTimerButtons = setupTimerOptions ? setupTimerOptions.querySelectorAll('button[data-minutes]') : [];
 
-const musicState = { element: null, fadeInterval: null };
+if (bgMusic) {
+  bgMusic.src = MUSIC_TRACK_URL;
+  bgMusic.volume = 0.4;
+  bgMusic.dataset.error = 'false';
+  bgMusic.addEventListener('error', () => {
+    state.musicOn = false;
+    bgMusic.dataset.error = 'true';
+    updateMusicButtons(false);
+    showMusicError('Stream blocked or offline. Try again.');
+  });
+  bgMusic.addEventListener('playing', () => {
+    bgMusic.dataset.error = 'false';
+    state.musicOn = true;
+    updateMusicButtons(true);
+  });
+}
 
 function renderPlayerInputs(count) {
   playerNamesContainer.innerHTML = '';
@@ -141,7 +158,15 @@ function renderPlayerInputs(count) {
 
     const header = document.createElement('div');
     header.className = 'player-card-head';
-    header.innerHTML = `<span class="pill muted">P${i + 1}</span><span class="muted">Tap an avatar or keep default</span>`;
+    header.innerHTML = `<span class="pill muted">P${i + 1}</span><span class="muted">Tap a name or emoji</span>`;
+
+    const nameWrap = document.createElement('label');
+    nameWrap.textContent = 'Player name (or keep emoji)';
+    nameWrap.className = 'name-optional prominent';
+    const nameInput = document.createElement('input');
+    nameInput.placeholder = 'Add a name or keep the emoji';
+    nameInput.dataset.index = i;
+    nameWrap.appendChild(nameInput);
 
     const avatarRow = document.createElement('div');
     avatarRow.className = 'avatar-row';
@@ -160,6 +185,10 @@ function renderPlayerInputs(count) {
       });
       avatarRow.appendChild(btn);
     });
+
+    card.appendChild(header);
+    card.appendChild(nameWrap);
+    card.appendChild(avatarRow);
 
     if (extraAvatars.length) {
       const moreRow = document.createElement('div');
@@ -193,17 +222,6 @@ function renderPlayerInputs(count) {
       card.appendChild(moreRow);
     }
 
-    const nameWrap = document.createElement('label');
-    nameWrap.textContent = 'Custom name (optional)';
-    nameWrap.className = 'name-optional';
-    const nameInput = document.createElement('input');
-    nameInput.placeholder = 'Tap to type — otherwise we use the emoji';
-    nameInput.dataset.index = i;
-    nameWrap.appendChild(nameInput);
-
-    card.appendChild(header);
-    card.appendChild(avatarRow);
-    card.appendChild(nameWrap);
     playerNamesContainer.appendChild(card);
   }
 }
@@ -231,6 +249,11 @@ function setActiveChip(name) {
   });
 }
 
+function setMode(mode) {
+  modeSelect.value = mode;
+  modeSelect.dispatchEvent(new Event('change'));
+}
+
 function updateMusicButtons(isOn) {
   [heroMusicToggle, gameMusicToggle].forEach((btn) => {
     if (!btn) return;
@@ -250,91 +273,50 @@ function showMusicError(message) {
   });
 }
 
-function ensureMusicElement() {
-  if (musicState.element && musicState.element.dataset.error !== 'true') return musicState.element;
-  if (musicState.element?.dataset.error === 'true') {
-    try {
-      musicState.element.remove();
-    } catch (e) {
-      // ignore remove failures
-    }
-    musicState.element = null;
-  }
-  const audio = document.createElement('audio');
-  audio.src = MUSIC_TRACK_URL;
-  audio.loop = true;
-  audio.preload = 'auto';
-  audio.crossOrigin = 'anonymous';
-  audio.volume = 0;
-  audio.setAttribute('aria-hidden', 'true');
-  audio.style.display = 'none';
-  audio.dataset.error = 'false';
-  audio.load();
-  audio.addEventListener('error', () => {
-    state.musicOn = false;
-    audio.dataset.error = 'true';
-    updateMusicButtons(false);
-    showMusicError('Stream blocked or offline. Try again or open the stream link.');
-  });
-  audio.addEventListener('playing', () => {
-    state.musicOn = true;
-    updateMusicButtons(true);
-    [heroMusicToggle, gameMusicToggle].forEach((btn) => btn?.classList.remove('error'));
-  });
-  document.body.appendChild(audio);
-  musicState.element = audio;
-  return audio;
-}
-
 function fadeVolume(target, duration = 400) {
-  if (!musicState.element) return;
+  if (!bgMusic) return;
   clearInterval(musicState.fadeInterval);
   const steps = 20;
-  const start = musicState.element.volume;
+  const start = bgMusic.volume;
   const delta = target - start;
   let count = 0;
   musicState.fadeInterval = setInterval(() => {
     count += 1;
     const progress = count / steps;
     const next = start + delta * progress;
-    musicState.element.volume = Math.min(1, Math.max(0, next));
+    bgMusic.volume = Math.min(1, Math.max(0, next));
     if (count >= steps) {
       clearInterval(musicState.fadeInterval);
-      musicState.element.volume = Math.min(1, Math.max(0, target));
+      bgMusic.volume = Math.min(1, Math.max(0, target));
     }
   }, duration / steps);
 }
 
 function startMusic() {
-  if (musicState.element?.dataset.error === 'true') {
-    try { musicState.element.remove(); } catch (e) { /* noop */ }
-    musicState.element = null;
-  }
-  const audio = ensureMusicElement();
-  if (!audio) return;
+  if (!bgMusic) return;
+  bgMusic.dataset.error = 'false';
+  bgMusic.volume = 0;
   clearInterval(musicState.fadeInterval);
-  audio.play().then(() => {
+  bgMusic.play().then(() => {
     state.musicOn = true;
     updateMusicButtons(true);
+    [heroMusicToggle, gameMusicToggle].forEach((btn) => btn?.classList.remove('error'));
     fadeVolume(0.4, 600);
-  }).catch(() => {
+  }).catch((err) => {
+    console.error('Playback blocked:', err);
     state.musicOn = false;
     updateMusicButtons(false);
-    showMusicError('Playback was blocked. Make sure audio is allowed, then tap again.');
+    showMusicError('Playback was blocked. Tap again after interacting with the page.');
   });
 }
 
 function stopMusic() {
-  if (!musicState.element) {
-    state.musicOn = false;
-    updateMusicButtons(false);
-    return;
-  }
+  if (!bgMusic) { state.musicOn = false; updateMusicButtons(false); return; }
   state.musicOn = false;
   updateMusicButtons(false);
   fadeVolume(0, 400);
   setTimeout(() => {
-    musicState.element.pause();
+    bgMusic.pause();
   }, 420);
 }
 
@@ -367,18 +349,26 @@ playerCountInput.addEventListener('input', (e) => {
   renderPlayerInputs(count);
 });
 
+modePills.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    setMode(btn.dataset.mode);
+  });
+});
+
 modeSelect.addEventListener('change', () => {
   const isTimer = modeSelect.value === 'timer';
   timerWrapper.classList.toggle('hidden', !isTimer);
   pointsWrapper.classList.toggle('hidden', isTimer);
+  setupTimerOptions?.classList.toggle('hidden', !isTimer);
   state.mode = modeSelect.value;
+  modePills.forEach((btn) => btn.classList.toggle('active', btn.dataset.mode === state.mode));
   updateModeDisplay();
 });
 
 timerLengthInput.addEventListener('input', () => {
   const mins = parseInt(timerLengthInput.value, 10) || bootstrapOptions.defaultTimerMinutes;
   state.timerRemaining = mins * 60;
-  syncHeroTimerButtons(mins);
+  syncTimerButtons(mins);
   if (state.mode === 'timer') {
     updateModeDisplay();
   }
@@ -394,32 +384,11 @@ targetPointsInput.addEventListener('input', () => {
 renderPlayerInputs(parseInt(playerCountInput.value, 10));
 updateModeDisplay();
 
-function syncHeroTimerButtons(mins) {
-  heroTimerOptions.querySelectorAll('button[data-minutes]').forEach((b) => {
+function syncTimerButtons(mins) {
+  setupTimerButtons.forEach((b) => {
     b.classList.toggle('active', parseInt(b.dataset.minutes, 10) === mins);
   });
 }
-
-function setHeroMode(mode) {
-  modeSelect.value = mode;
-  modeSelect.dispatchEvent(new Event('change'));
-  heroModeButtons.forEach((btn) => {
-    btn.classList.toggle('active', btn.dataset.mode === mode);
-    btn.setAttribute('aria-pressed', btn.dataset.mode === mode ? 'true' : 'false');
-  });
-  heroTimerOptions.classList.toggle('hidden', mode !== 'timer');
-  heroTimerOptions.classList.toggle('disabled', mode !== 'timer');
-}
-
-heroTimerTrigger.addEventListener('click', (e) => {
-  e.preventDefault();
-  setHeroMode('timer');
-});
-
-heroPointsTrigger.addEventListener('click', (e) => {
-  e.preventDefault();
-  setHeroMode('points');
-});
 
 rulesToggle.addEventListener('click', () => {
   const willOpen = rulesPanel.classList.toggle('hidden');
@@ -428,21 +397,30 @@ rulesToggle.addEventListener('click', () => {
   rulesToggle.classList.toggle('open', expanded);
 });
 
-heroTimerOptions.querySelectorAll('button[data-minutes]').forEach((btn) => {
+if (exportToggle && exportContent) {
+  exportToggle.addEventListener('click', () => {
+    const willOpen = exportContent.classList.toggle('hidden');
+    const expanded = !willOpen;
+    exportToggle.setAttribute('aria-expanded', String(expanded));
+    exportToggle.classList.toggle('open', expanded);
+  });
+}
+
+setupTimerButtons.forEach((btn) => {
   btn.addEventListener('click', () => {
     const mins = parseInt(btn.dataset.minutes, 10);
     timerLengthInput.value = mins;
     state.timerRemaining = mins * 60;
-    syncHeroTimerButtons(mins);
-    if (modeSelect.value !== 'timer') {
-      modeSelect.value = 'timer';
-      modeSelect.dispatchEvent(new Event('change'));
+    syncTimerButtons(mins);
+    if (state.mode !== 'timer') {
+      setMode('timer');
     } else {
       updateModeDisplay();
     }
   });
 });
-setHeroMode(state.mode);
+setMode(state.mode);
+syncTimerButtons(bootstrapOptions.defaultTimerMinutes);
 updateMusicButtons(state.musicOn);
 
 function toggleMusic() {
@@ -519,10 +497,6 @@ function updateModeDisplay() {
       ? `Timed challenge · ${timerMins} min countdown active`
       : `Team turns points race · first to ${state.targetPoints} pts`;
   }
-  heroTimerValue.textContent = `${timerMins} min`;
-  heroTimerOptions.classList.toggle('hidden', state.mode !== 'timer');
-  heroTimerOptions.classList.toggle('disabled', state.mode !== 'timer');
-  syncHeroTimerButtons(timerMins);
   if (state.mode !== 'timer') {
     timerDisplay.textContent = `Points race: first to ${state.targetPoints} pts`;
     timerDisplay.classList.remove('low-time');

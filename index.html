@@ -43,49 +43,59 @@
         </div>
         <div class="subtitle">Choose how you want to play, then reveal the flag when everyone is ready to guess.</div>
         <div class="mode-status" id="hero-mode-status" role="status" aria-live="polite">Timed challenge · 15 min countdown active</div>
-        <div class="hero-highlights" role="group" aria-label="Choose play style">
-          <div class="mode-group">
-            <button class="pill mode-btn active" id="hero-timer-trigger" data-mode="timer">⏱️ Timed challenge · <span id="hero-timer-value">15 min</span></button>
-            <div class="timer-pills" id="hero-timer-options" aria-label="Pick timer length">
-              <button type="button" data-minutes="3">3</button>
-              <button type="button" data-minutes="5">5</button>
-              <button type="button" data-minutes="8">8</button>
-              <button type="button" data-minutes="10">10</button>
-              <button type="button" data-minutes="15" class="active">15</button>
-              <span class="micro-hint">Tap a time to set the countdown.</span>
-            </div>
+        <div class="hero-highlights" aria-label="Game ambience and setup summary">
+          <div class="hero-summary">
+            <p class="muted">Set your players and mode below in Game Setup. The hero always reflects the current choice.</p>
+            <p class="micro-hint">Timed challenge = beat the clock. Team turns = points race. Pick what fits the group.</p>
           </div>
-          <button class="pill mode-btn" id="hero-points-trigger" data-mode="points">🤝 Team turns (points race)</button>
           <div class="vibe-row" aria-label="Game ambience">
             <button id="music-toggle" type="button" class="pill ghost music-toggle">🎵 Play lo-fi mix</button>
             <span class="micro-hint">Soft lo-fi stream you can toggle anytime. If it errors, try again or open the stream link below.</span>
             <a class="micro-link" id="music-direct-link" href="https://stream.chillhop.com/lounge/128mp3" target="_blank" rel="noopener">Open stream link</a>
           </div>
-          <p class="micro-hint mode-note">Timed challenge = beat the clock. Team turns = rotating card holder racing to target points.</p>
         </div>
       </div>
       </header>
 
       <section id="setup" class="panel">
-      <h2>Start a Game</h2>
+      <div class="panel-head">
+        <div>
+          <h2>Game Setup</h2>
+          <p class="muted">Pick players, choose mode, then tap start to launch a fresh game screen.</p>
+        </div>
+        <p class="pill strong">Setup first · reveal when ready</p>
+      </div>
       <form id="setup-form">
-        <div class="grid">
-          <label>Number of Players (2–8)
-            <input type="number" id="player-count" min="2" max="8" value="2" />
-          </label>
-          <label>Mode
-            <select id="mode">
-              <option value="timer">Timed challenge (countdown)</option>
-              <option value="points">Team turns points race</option>
-            </select>
-          </label>
-          <label id="timer-wrapper">Timer length (minutes)
-            <input type="number" id="timer-length" min="3" max="45" value="15" />
-          </label>
-          <label id="points-wrapper" class="hidden">Target points
-            <input type="number" id="target-points" min="5" max="50" value="15" />
-          </label>
-          <label>Difficulty pool
+        <div class="setup-grid">
+          <div class="setup-block">
+            <p class="helper-label">Select number of players</p>
+            <label class="inline-input">Players (2–8)
+              <input type="number" id="player-count" min="2" max="8" value="2" />
+            </label>
+          </div>
+          <div class="setup-block mode-block" role="group" aria-label="Choose game mode">
+            <p class="helper-label">Mode</p>
+            <div class="pill-row" id="mode-pills">
+              <button type="button" class="pill strong active mode-pill" data-mode="timer">⏱️ Timed challenge</button>
+              <button type="button" class="pill ghost mode-pill" data-mode="points">🏁 Team turns points race</button>
+            </div>
+            <p class="micro-hint">Timed challenge = countdown; Team turns = rotate the card holder and race to the target score.</p>
+            <div class="timer-pills" id="setup-timer-options" aria-label="Pick timer length">
+              <span class="muted">Countdown length</span>
+              <div class="pill-row tight">
+                <button type="button" data-minutes="3">3</button>
+                <button type="button" data-minutes="5">5</button>
+                <button type="button" data-minutes="8">8</button>
+                <button type="button" data-minutes="10">10</button>
+                <button type="button" data-minutes="15" class="active">15</button>
+              </div>
+              <span class="micro-hint">Pick a time and keep it at the top during play.</span>
+            </div>
+            <label id="points-wrapper" class="hidden">Target points
+              <input type="number" id="target-points" min="5" max="50" value="15" />
+            </label>
+          </div>
+          <label class="setup-block">Difficulty pool
             <select id="difficulty-pool">
               <option value="all">All</option>
               <option value="easy-medium">Easy + Medium</option>
@@ -96,17 +106,29 @@
             </select>
           </label>
         </div>
-        <div class="muted helper-label">After picking the mode and player count, tap an avatar. Typing stays optional.</div>
+        <div class="muted helper-label">After picking the mode and player count, tap a name or avatar. Typing stays optional.</div>
         <div id="player-names" class="names"></div>
+        <select id="mode" class="visually-hidden" aria-hidden="true">
+          <option value="timer">Timed challenge</option>
+          <option value="points">Team turns points race</option>
+        </select>
+        <label id="timer-wrapper" class="visually-hidden">Timer length (minutes)
+          <input type="number" id="timer-length" min="3" max="45" value="15" />
+        </label>
         <button type="submit" class="cta">Start Game</button>
       </form>
       </section>
 
-      <section id="export" class="panel">
-        <h2>Export Data</h2>
-        <p>Copy JSON or download CSV for printing cards or using in your own tools.</p>
-        <textarea id="export-json" readonly></textarea>
-        <button id="download-csv" class="ghost">Download CSV</button>
+      <section id="export" class="panel collapsed">
+        <button class="accordion-toggle export-toggle" id="export-toggle" aria-expanded="false" aria-controls="export-content">
+          <span>Export data (rarely used)</span>
+          <span class="chevron" aria-hidden="true">▾</span>
+        </button>
+        <div id="export-content" class="hidden">
+          <p>Copy JSON or download CSV for printing cards or using in your own tools.</p>
+          <textarea id="export-json" readonly></textarea>
+          <button id="download-csv" class="ghost">Download CSV</button>
+        </div>
       </section>
     </div>
 
@@ -263,6 +285,9 @@
   </div>
 
   <script src="data/countries.js"></script>
+  <audio id="bg-music" loop crossorigin="anonymous" class="visually-hidden">
+    <source src="https://stream.chillhop.com/lounge/128mp3" type="audio/mpeg" />
+  </audio>
   <script src="app.js"></script>
 </body>
 </html>
