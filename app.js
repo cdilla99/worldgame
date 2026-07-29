@@ -1286,9 +1286,26 @@ function setPlayerProfileBusy(isBusy) {
   }
 }
 
+// The modal starts inert/aria-hidden during init. These helpers must clear that
+// state themselves: the click listeners below are registered before the later
+// accessibility wrappers are installed, so those wrappers never run for them.
+function setPlayerModalInteractive(interactive) {
+  if (!$playerProfileModal) return;
+  $playerProfileModal.setAttribute('aria-hidden', String(!interactive));
+  $playerProfileModal.toggleAttribute('inert', !interactive);
+  if ('inert' in $playerProfileModal) $playerProfileModal.inert = !interactive;
+
+  const screen = typeof currentScreen !== 'undefined' ? currentScreen : null;
+  if (!screen) return;
+  screen.setAttribute('aria-hidden', String(interactive));
+  screen.toggleAttribute('inert', interactive);
+  if ('inert' in screen) screen.inert = interactive;
+}
+
 function closePlayerModal() {
   if (!$playerProfileModal || $playerProfileModal.classList.contains('hidden')) return;
   $playerProfileModal.classList.add('hidden');
+  setPlayerModalInteractive(false);
   setPlayerProfileBusy(false);
   if (lastPlayerModalTrigger && typeof lastPlayerModalTrigger.focus === 'function') lastPlayerModalTrigger.focus();
 }
@@ -1299,6 +1316,8 @@ async function openPlayerModal() {
   lastPlayerModalTrigger = document.activeElement;
   setPlayerProfileStatus('', false);
   $playerProfileModal.classList.remove('hidden');
+  // Must run before any await so the dialog is clickable immediately.
+  setPlayerModalInteractive(true);
 
   let identity = { online: playerProfilesAreOnline(), claimed: false, displayName: '', email: '' };
   try {
