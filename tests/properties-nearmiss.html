@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Property 9 — Levenshtein near-miss correctness</title>
+</head>
+<body>
+  <h1>Property 9: Levenshtein near-miss detection correctness</h1>
+  <pre id="results">Running…</pre>
+  <!-- **Validates: Requirements 8.1, 8.3** -->
+  <script src="../near-miss.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var iterations = 500;
+      var output = document.getElementById('results');
+      var alphabet = Array.from(" abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.'");
+      function normalize(value) { return String(value).trim().toLowerCase(); }
+      function randomInt(max) { return Math.floor(Math.random() * max); }
+      function randomChar() { return alphabet[randomInt(alphabet.length)]; }
+      function randomString() { var value = ''; for (var i = randomInt(17); i > 0; i--) value += randomChar(); return value; }
+      function varyCaseAndPadding(value) {
+        var varied = Array.from(value, function (char) { return /[a-z]/i.test(char) && Math.random() < 0.5 ? char.toUpperCase() : char.toLowerCase(); }).join('');
+        return (Math.random() < 0.5 ? ' '.repeat(randomInt(3)) : '') + varied + (Math.random() < 0.5 ? ' '.repeat(randomInt(3)) : '');
+      }
+      function edit(value) {
+        var chars = Array.from(value), position = randomInt(chars.length + 1), operation = randomInt(3);
+        if (operation === 0 || chars.length === 0) chars.splice(position, 0, randomChar());
+        else if (operation === 1) chars.splice(Math.min(position, chars.length - 1), 1);
+        else chars[Math.min(position, chars.length - 1)] = randomChar();
+        return chars.join('');
+      }
+      function pair() {
+        var base = randomString(), mode = randomInt(3);
+        if (mode === 0) return [varyCaseAndPadding(base), varyCaseAndPadding(base)];
+        if (mode === 1) { var changed = base; for (var i = randomInt(5); i > 0; i--) changed = edit(changed); return [varyCaseAndPadding(base), varyCaseAndPadding(changed)]; }
+        return [randomString(), randomString()];
+      }
+      function referenceDistance(a, b) {
+        var row = Array.from({ length: b.length + 1 }, function (_, i) { return i; });
+        for (var i = 1; i <= a.length; i++) { var next = [i]; for (var j = 1; j <= b.length; j++) next[j] = Math.min(row[j] + 1, next[j - 1] + 1, row[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); row = next; }
+        return row[b.length];
+      }
+      function forAll(name, generator, property) {
+        for (var i = 0; i < iterations; i++) { var input = generator(); if (!property(input)) throw new Error(name + ' failed after ' + (i + 1) + ' runs; counterexample: ' + JSON.stringify(input)); }
+        return 'PASS — ' + name + ' (' + iterations + ' runs)';
+      }
+      try {
+        var results = [];
+        results.push(forAll('distance is zero iff normalized strings are equal', pair, function (p) { return (NearMiss.levenshtein(p[0], p[1]) === 0) === (normalize(p[0]) === normalize(p[1])); }));
+        results.push(forAll('empty-string distance equals normalized other length', randomString, function (s) { return NearMiss.levenshtein('', s) === normalize(s).length && NearMiss.levenshtein(s, '') === normalize(s).length; }));
+        results.push(forAll('triangle inequality', function () { return [randomString(), randomString(), randomString()]; }, function (v) { return NearMiss.levenshtein(v[0], v[2]) <= NearMiss.levenshtein(v[0], v[1]) + NearMiss.levenshtein(v[1], v[2]); }));
+        results.push(forAll('isNearMiss iff normalized Levenshtein distance is at most 2', pair, function (p) { return NearMiss.isNearMiss(p[0], p[1]) === (referenceDistance(normalize(p[0]), normalize(p[1])) <= 2); }));
+        output.textContent = results.join('\n'); console.log(output.textContent);
+      } catch (error) { output.textContent = 'FAIL — ' + error.message; console.error(error); throw error; }
+    })();
+  </script>
+</body>
+</html>

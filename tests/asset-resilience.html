@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GeoWars asset resilience tests</title>
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    body { padding: 24px; }
+    main { max-width: 1280px; margin: 0 auto; }
+    #results { display: grid; gap: 8px; margin: 16px 0; }
+    .result { padding: 10px 12px; border-radius: 8px; font-weight: 700; }
+    .pass { background: #163d2b; color: #d9ffe9; }
+    .fail { background: #4d2020; color: #ffe2df; }
+    #fixture { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+    .test-feedback { display: grid; gap: 12px; padding: 16px; border: 2px solid var(--color-success); }
+    .font-probe { width: 100%; min-height: 44px; padding: 8px 12px; }
+    #frames { display: grid; gap: 16px; }
+    .game-frame { width: 100%; height: 760px; border: 1px solid var(--color-border-strong); border-radius: 8px; background: var(--color-page); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>GeoWars asset resilience regression tests</h1>
+    <p>Forces silhouette, flag, and font failures and verifies readable fallbacks, stable reserved layout, and statistic-safe recovery.</p>
+    <!-- Validates: Requirements 10.1–10.7, 11.2–11.6 -->
+    <section id="results" aria-live="polite"><p>Running asset-resilience assertions…</p></section>
+    <section id="fixture" aria-label="Fallback test fixtures"></section>
+    <section id="frames" aria-label="Isolated application recovery test frames"></section>
+  </main>
+  <script src="../asset-fallbacks.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      var results = document.getElementById('results');
+      var fixture = document.getElementById('fixture');
+      var frames = document.getElementById('frames');
+      var passed = 0;
+      var failed = 0;
+
+      function assert(condition, message) {
+        if (!condition) throw new Error(message);
+      }
+
+      function delay(milliseconds) {
+        return new Promise(function (resolve) { window.setTimeout(resolve, milliseconds); });
+      }
+
+      function waitFor(documentRef, selector, timeout) {
+        var started = Date.now();
+        var limit = timeout || 8000;
+        return new Promise(function (resolve, reject) {
+          (function poll() {
+            var element = documentRef.querySelector(selector);
+            if (element) return resolve(element);
+            if (Date.now() - started >= limit) return reject(new Error('Timed out waiting for ' + selector));
+            window.setTimeout(poll, 25);
+          }());
+        });
+      }
+
+      function report(name, error) {
+        var item = document.createElement('p');
+        item.className = 'result ' + (error ? 'fail' : 'pass');
+        item.textContent = (error ? 'FAIL — ' : 'PASS — ') + name + (error ? ': ' + error.message : '');
+        results.appendChild(item);
+      }
+
+      function run(name, test) {
+        return Promise.resolve().then(test).then(function () {
+          passed += 1;
+          report(name);
+        }, function (error) {
+          failed += 1;
+          report(name, error);
+        });
+      }
+
+      function forceImageFailure(image) {
+        var view = image.ownerDocument && image.ownerDocument.defaultView;
+        image.dispatchEvent(new (view ? view.Event : Event)('error'));
+      }
+
+      function assertUsableReservedArea(slot, fallback, before, label) {
+        var after = slot.getBoundingClientRect();
+        var fallbackBounds = fallback.getBoundingClientRect();
+        assert(after.width > 0 && after.height > 0, label + ' slot must retain usable dimensions after failure');
+        assert(fallbackBounds.width > 0 && fallbackBounds.height > 0, label + ' fallback must occupy visible layout space');
+        assert(Math.abs(after.width - before.width) < 1, label + ' failure must not change the reserved slot width');
+      }
+
+      function createFallbackFixture() {
+        var card = document.createElement('article');
+        card.className = 'silhouette-box';
+        var image = document.createElement('img');
+        image.alt = 'Guess this country';
+        card.appendChild(image);
+        fixture.appendChild(card);
+        var before = card.getBoundingClientRect();
+        AssetFallbacks.prepareImage(image, 'silhouette', { countryCode: 'US' }, { alt: image.alt });
+        forceImageFailure(image);
+        var fallback = card.querySelector('[data-asset-fallback="silhouette"]');
+        assert(fallback, 'a failed silhouette must be replaced by an in-place fallback');
+        assert(!card.querySelector('img'), 'the failed silhouette image must not remain player-facing');
+        assert(/Silhouette unavailable/.test(fallback.textContent), 'the silhouette fallback must explain the unavailable prompt');
+        assertUsableReservedArea(card, fallback, before, 'Silhouette');
+      }
+
+      function createFlagFeedbackFixture() {
+        var feedback = document.createElement('section');
+        feedback.className = 'test-feedback';
+        feedback.innerHTML = '<p class="feedback-status">Correct. Awarded 3 points.</p><h2>Exampleland</h2><div class="feedback-flag"></div>';
+        var flagSlot = feedback.querySelector('.feedback-flag');
+        var image = document.createElement('img');
+        image.alt = 'Exampleland flag';
+        flagSlot.appendChild(image);
+        fixture.appendChild(feedback);
+        var before = flagSlot.getBoundingClientRect();
+        AssetFallbacks.prepareImage(image, 'flag', { countryCode: 'US' }, { countryName: 'Exampleland', alt: image.alt });
+        forceImageFailure(image);
+        var fallback = flagSlot.querySelector('[data-asset-fallback="flag"]');
+        assert(fallback, 'a failed feedback flag must be replaced by a text fallback');
+        assert(!flagSlot.querySelector('img'), 'the failed flag image must not remain player-facing');
+        assert(/Exampleland flag unavailable/.test(fallback.textContent), 'the flag fallback must retain the country identity');
+        assert(/Correct\. Awarded 3 points\./.test(feedback.textContent), 'flag failure must retain answer outcome comprehension');
+        assert(/Exampleland/.test(feedback.textContent), 'flag failure must retain country-name comprehension');
+        assertUsableReservedArea(flagSlot, fallback, before, 'Flag');
+      }
+
+      async function verifyFontFailure() {
+        var probe = document.createElement('button');
+        probe.type = 'button';
+        probe.className = 'font-probe';
+        probe.textContent = 'Start Sprint — readable after a font failure';
+        probe.style.fontFamily = '"GeoWarsFailedTestFont", ' + AssetFallbacks.fontFallbackStack;
+        fixture.appendChild(probe);
+        var before = probe.getBoundingClientRect();
+        assert('FontFace' in window, 'FontFace support is required to simulate a failed custom font resource');
+        var failedFace = new FontFace('GeoWarsFailedTestFont', 'url("missing-geowars-font.woff2") format("woff2")');
+        document.fonts.add(failedFace);
+        var failedToLoad = false;
+        try {
+          await failedFace.load();
+        } catch (error) {
+          failedToLoad = true;
+        }
+        assert(failedToLoad, 'the deliberately missing custom font must report a load failure');
+        var computed = window.getComputedStyle(probe).fontFamily;
+        var after = probe.getBoundingClientRect();
+        assert(/system-ui|Segoe UI|sans-serif/i.test(computed), 'font failure must retain the defined system fallback stack');
+        assert(after.width === before.width && after.height >= before.height, 'font failure must not clip or collapse a control');
+        assert(probe.scrollWidth <= probe.clientWidth, 'font fallback must keep the primary-action label readable');
+      }
+
+      async function createGameFrame(title) {
+        var frame = document.createElement('iframe');
+        frame.className = 'game-frame';
+        frame.title = title;
+        frame.src = '../index.html?asset-resilience=' + Date.now() + Math.random();
+        frames.appendChild(frame);
+        await new Promise(function (resolve, reject) {
+          var timer = window.setTimeout(function () { reject(new Error('Timed out loading the GeoWars game frame')); }, 12000);
+          frame.addEventListener('load', function () { window.clearTimeout(timer); resolve(); }, { once: true });
+        });
+        await waitFor(frame.contentDocument, '#btn-start-game');
+        return frame;
+      }
+
+      function blockRemoteImageSources(frame) {
+        var imagePrototype = frame.contentWindow.HTMLImageElement.prototype;
+        var descriptor = Object.getOwnPropertyDescriptor(imagePrototype, 'src');
+        assert(descriptor && typeof descriptor.set === 'function', 'the image source setter must be available for deterministic failure simulation');
+        Object.defineProperty(imagePrototype, 'src', {
+          configurable: true,
+          enumerable: descriptor.enumerable,
+          get: descriptor.get,
+          set: function (source) {
+            if (/^https?:\/\//i.test(String(source))) {
+              this.setAttribute('data-asset-resilience-blocked', String(source));
+              return;
+            }
+            descriptor.set.call(this, source);
+          }
+        });
+        return function restoreImageSourceSetter() {
+          Object.defineProperty(imagePrototype, 'src', descriptor);
+        };
+      }
+
+      async function bootRecoveryFrame() {
+        var frame = await createGameFrame('Isolated GeoWars silhouette recovery test');
+        var gameDocument = frame.contentDocument;
+        var storedStats = JSON.stringify({ played: 73, bestStreak: 12, totalCorrect: 41, totalScore: 129 });
+        frame.contentWindow.localStorage.setItem('geowars-stats', storedStats);
+        gameDocument.getElementById('btn-start-game').click();
+        var silhouette = await waitFor(gameDocument, '#silhouette-img, [data-asset-fallback="silhouette"]');
+        if (silhouette.matches('img')) forceImageFailure(silhouette);
+        var fallback = await waitFor(gameDocument, '#silhouette-box [data-asset-fallback="silhouette"]');
+        var recovery = await waitFor(gameDocument, '#asset-recovery:not(.hidden)');
+        var stage = gameDocument.getElementById('silhouette-box');
+        assert(recovery.textContent.indexOf('will not be saved') !== -1, 'recovery copy must state that the failed round is excluded');
+        assert(stage.getBoundingClientRect().width > 0 && stage.getBoundingClientRect().height > 0, 'recovery must retain a usable silhouette stage');
+        assert(fallback.getBoundingClientRect().width > 0 && fallback.getBoundingClientRect().height > 0, 'recovery fallback must remain visible');
+        assert(!gameDocument.querySelector('#silhouette-box > img#silhouette-img'), 'the game stage must not expose a broken silhouette image');
+        assert(!Array.from(gameDocument.images).some(function (image) { return image.complete && image.naturalWidth === 0 && image.getBoundingClientRect().width > 0; }), 'the failed silhouette must not remain as a player-facing broken image');
+        return { frame: frame, document: gameDocument, storedStats: storedStats };
+      }
+
+      async function bootFeedbackFrame() {
+        var frame = await createGameFrame('Isolated GeoWars feedback flag failure test');
+        var restoreImageSourceSetter = blockRemoteImageSources(frame);
+        var gameDocument = frame.contentDocument;
+        var storedStats = JSON.stringify({ played: 73, bestStreak: 12, totalCorrect: 41, totalScore: 129 });
+        frame.contentWindow.localStorage.setItem('geowars-stats', storedStats);
+        gameDocument.getElementById('btn-showoff').click();
+        gameDocument.getElementById('btn-start-game').click();
+        var silhouette = await waitFor(gameDocument, '#silhouette-img');
+        silhouette.dispatchEvent(new frame.contentWindow.Event('load'));
+        gameDocument.getElementById('btn-show-options').click();
+        var choice = await waitFor(gameDocument, '#choices:not(.hidden) .choice-btn');
+        choice.click();
+        await waitFor(gameDocument, '#feedback:not(.hidden)');
+        var flag = await waitFor(gameDocument, '#feedback-flag img, #feedback-flag [data-asset-fallback="flag"]');
+        if (flag.matches('img')) forceImageFailure(flag);
+        var fallback = await waitFor(gameDocument, '#feedback-flag [data-asset-fallback="flag"]');
+        restoreImageSourceSetter();
+        var feedback = gameDocument.getElementById('feedback');
+        var countryName = gameDocument.getElementById('feedback-country-name').textContent.trim();
+        assert(countryName, 'feedback must identify the country even when its flag fails');
+        assert(/Correct|Incorrect|Answer revealed/.test(gameDocument.getElementById('feedback-heading').textContent), 'feedback must retain an explicit answer outcome');
+        assert(fallback.textContent.indexOf('flag unavailable') !== -1, 'failed feedback flag must explain the unavailable asset');
+        assert(feedback.textContent.indexOf(countryName) !== -1, 'failed feedback flag must preserve country-name comprehension');
+        assert(!gameDocument.querySelector('#feedback-flag img'), 'the failed feedback flag must not remain player-facing');
+        assert(fallback.getBoundingClientRect().width > 0 && fallback.getBoundingClientRect().height > 0, 'failed feedback flag must retain a usable reserved area');
+        return { frame: frame, document: gameDocument, storedStats: storedStats };
+      }
+
+      async function verifyLandingDoesNotRequireRemoteAssets() {
+        var frame = await createGameFrame('Isolated GeoWars landing asset test');
+        try {
+          var gameDocument = frame.contentDocument;
+          var landing = gameDocument.getElementById('landing');
+          assert(!landing.classList.contains('hidden'), 'landing must be visible before a session starts');
+          ['landing-title', 'btn-start-game', 'btn-sprint', 'btn-showoff'].forEach(function (id) {
+            assert(gameDocument.getElementById(id), 'landing must expose ' + id + ' without a remote asset');
+          });
+          assert(/Identify the country behind the silhouette/.test(landing.textContent), 'landing proposition must remain text-comprehensible without artwork');
+          assert(!Array.from(landing.querySelectorAll('img')).some(function (image) {
+            return image.getBoundingClientRect().width > 0 && image.complete && image.naturalWidth === 0;
+          }), 'landing must not expose a broken essential image');
+          assert(gameDocument.getElementById('btn-start-game').getBoundingClientRect().width > 0, 'landing primary action must remain usable without remote artwork');
+        } finally {
+          frame.remove();
+        }
+      }
+
+      async function verifyRecoveryAction(id, expectedScreen) {
+        var session = await bootRecoveryFrame();
+        try {
+          session.document.getElementById(id).click();
+          await delay(100);
+          assert(session.frame.contentWindow.localStorage.getItem('geowars-stats') === session.storedStats, id + ' must not mutate stored statistics');
+          if (expectedScreen === 'landing') {
+            assert(!session.document.getElementById('landing').classList.contains('hidden'), 'return-home recovery must return the player to landing');
+          } else if (id === 'btn-retry-silhouette') {
+            assert(session.document.getElementById(id).disabled, 'retry must provide immediate disabled-state acknowledgement');
+          } else {
+            assert(!session.document.getElementById('game').classList.contains('hidden'), 'next-country recovery must keep the player in the game flow');
+          }
+        } finally {
+          session.frame.remove();
+        }
+      }
+
+      async function execute() {
+        await run('landing remains complete without remote essential assets', verifyLandingDoesNotRequireRemoteAssets);
+        await run('failed silhouette uses a reserved, readable in-place fallback', createFallbackFixture);
+        await run('failed flag preserves country identity and answer feedback', createFlagFeedbackFixture);
+        await run('failed feedback flag preserves the real outcome and country identity', async function () {
+          var session = await bootFeedbackFrame();
+          try {
+            assert(session.frame.contentWindow.localStorage.getItem('geowars-stats') === session.storedStats, 'failed feedback flag handling must not mutate stored statistics');
+          } finally {
+            session.frame.remove();
+          }
+        });
+        await run('failed custom font retains the readable system fallback stack', verifyFontFailure);
+        await run('retry silhouette recovery does not mutate stored statistics', function () { return verifyRecoveryAction('btn-retry-silhouette'); });
+        await run('next-country recovery does not mutate stored statistics', function () { return verifyRecoveryAction('btn-recover-next'); });
+        await run('return-home recovery does not mutate stored statistics', function () { return verifyRecoveryAction('btn-recover-home', 'landing'); });
+        var summary = document.createElement('p');
+        summary.className = 'result ' + (failed ? 'fail' : 'pass');
+        summary.textContent = failed ? ('FAIL — ' + failed + ' of ' + (passed + failed) + ' assertions failed.') : ('PASS — all ' + passed + ' asset-resilience assertions passed.');
+        results.appendChild(summary);
+        window.__ASSET_RESILIENCE_RESULT__ = { passed: failed === 0, passedCount: passed, failedCount: failed };
+        if (failed) throw new Error(failed + ' asset-resilience assertion(s) failed');
+      }
+
+      execute().catch(function (error) {
+        console.error(error);
+        window.__ASSET_RESILIENCE_RESULT__ = { passed: false, passedCount: passed, failedCount: failed, error: error.message };
+      });
+    }());
+  </script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GeoWars landing start-flow regression</title>
+  <style>
+    body { font: 16px/1.5 system-ui, sans-serif; margin: 2rem; color: #12151f; }
+    .pass { color: #087830; } .fail { color: #b00020; }
+    #game-frame { position: absolute; width: 1px; height: 1px; border: 0; clip: rect(0 0 0 0); clip-path: inset(50%); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>GeoWars landing start-flow regression</h1>
+    <!-- **Validates: Requirements 3.3–3.7, 4.2–4.8** -->
+    <p id="results">Loading the production game…</p>
+  </main>
+  <iframe id="game-frame" title="GeoWars application under test" src="../index.html"></iframe>
+  <script>
+    'use strict';
+
+    const results = document.getElementById('results');
+    const frame = document.getElementById('game-frame');
+    const WAIT_TIMEOUT = 4000;
+
+    function assert(condition, message) {
+      if (!condition) throw new Error(message);
+    }
+
+    function waitFor(predicate, description) {
+      const started = performance.now();
+      return new Promise((resolve, reject) => {
+        function poll() {
+          if (predicate()) return resolve();
+          if (performance.now() - started >= WAIT_TIMEOUT) {
+            return reject(new Error('Timed out waiting for ' + description));
+          }
+          setTimeout(poll, 20);
+        }
+        poll();
+      });
+    }
+
+    function isVisible(element) {
+      return !!element && !element.classList.contains('hidden');
+    }
+
+    function activeButton(doc, selector) {
+      return doc.querySelector(selector + '.active[aria-pressed="true"]');
+    }
+
+    function click(doc, selector, description) {
+      const control = doc.querySelector(selector);
+      assert(control, description + ' should exist');
+      control.click();
+      return control;
+    }
+
+    function assertLandingDefaults(doc) {
+      assert(isVisible(doc.getElementById('landing')), 'landing should be visible on first load');
+      assert(!isVisible(doc.getElementById('game')), 'game should be hidden before Start');
+      assert(isVisible(doc.getElementById('btn-start-game')), 'the primary Start action should be visible before Start');
+      assert(activeButton(doc, '#btn-sprint'), 'Sprint should be the valid default mode');
+      assert(activeButton(doc, '.diff-btn[data-diff="all"]'), 'Any difficulty should be the valid default');
+      assert(activeButton(doc, '#continent-row .diff-btn[data-continent="all"]'), 'Worldwide should be the valid default region');
+      assert(doc.getElementById('mode-summary').textContent.trim().indexOf('Sprint selected') === 0, 'default mode summary should describe Sprint');
+      assert(doc.getElementById('filter-summary').textContent.trim() === 'Any difficulty · Worldwide', 'default filter summary should describe the default filters');
+      assert(doc.getElementById('start-game-label').textContent.trim() === 'Start Sprint', 'default Start label should match the selected mode');
+    }
+
+    function assertSelectionSummaries(doc) {
+      click(doc, '#btn-showoff', 'Practice mode control');
+      assert(activeButton(doc, '#btn-showoff'), 'Practice should become selected');
+      assert(doc.getElementById('mode-summary').textContent.trim().indexOf('Practice selected') === 0, 'mode summary should update to Practice');
+      assert(doc.getElementById('start-game-label').textContent.trim() === 'Start Practice', 'Start label should update to Practice');
+
+      click(doc, '.diff-btn[data-diff="medium"]', 'Medium difficulty control');
+      assert(activeButton(doc, '.diff-btn[data-diff="medium"]'), 'Medium should become selected');
+      assert(doc.getElementById('filter-summary').textContent.trim() === 'Medium · Worldwide', 'filter summary should show the selected difficulty');
+
+      click(doc, '#continent-row .diff-btn[data-continent="Europe"]', 'Europe region control');
+      assert(activeButton(doc, '#continent-row .diff-btn[data-continent="Europe"]'), 'Europe should become selected');
+      assert(doc.getElementById('filter-summary').textContent.trim() === 'Medium · Europe', 'filter summary should show the selected region');
+    }
+
+    async function assertModeControlsDoNotStartSession(doc) {
+      click(doc, '#btn-sprint', 'Sprint mode control');
+      await new Promise(resolve => setTimeout(resolve, 50));
+      assert(isVisible(doc.getElementById('landing')), 'selecting Sprint must not start a session');
+      assert(!isVisible(doc.getElementById('game')), 'selecting Sprint must leave the game hidden');
+
+      click(doc, '#btn-showoff', 'Practice mode control');
+      await new Promise(resolve => setTimeout(resolve, 50));
+      assert(isVisible(doc.getElementById('landing')), 'selecting Practice must not start a session');
+      assert(!isVisible(doc.getElementById('game')), 'selecting Practice must leave the game hidden');
+    }
+
+    async function assertStartUsesDisplayedSelections(doc) {
+      const startActions = Array.from(doc.querySelectorAll('button')).filter(button => /^start\b/i.test(button.textContent.trim()));
+      assert(startActions.length === 1 && startActions[0].id === 'btn-start-game', 'there should be exactly one Start primary action');
+
+      // Re-apply the displayed selections after the mode-only no-start check.
+      click(doc, '#btn-showoff', 'Practice mode control');
+      click(doc, '.diff-btn[data-diff="medium"]', 'Medium difficulty control');
+      click(doc, '#continent-row .diff-btn[data-continent="Europe"]', 'Europe region control');
+      assert(doc.getElementById('mode-summary').textContent.trim().indexOf('Practice selected') === 0, 'Practice must remain visibly selected at the start boundary');
+      assert(doc.getElementById('filter-summary').textContent.trim() === 'Medium · Europe', 'filters must remain visibly selected at the start boundary');
+
+      click(doc, '#btn-start-game', 'Start action');
+      await waitFor(() => isVisible(doc.getElementById('game')), 'the game screen after Start');
+
+      assert(!isVisible(doc.getElementById('landing')), 'Start should leave the landing screen');
+      assert(!isVisible(doc.getElementById('timer-container')), 'Practice selection should initialize an untimed session');
+      assert(isVisible(doc.getElementById('btn-reveal')), 'Practice selection should initialize the reveal action');
+      assert(!isVisible(doc.getElementById('btn-skip')), 'Practice selection should not initialize Sprint skip controls');
+
+      const difficultyHint = doc.getElementById('difficulty-hint');
+      assert(difficultyHint.textContent.trim() === '2★', 'the first round should come from the displayed Medium difficulty filter');
+
+      click(doc, '#btn-show-region', 'Show region control');
+      assert(doc.getElementById('continent-hint').textContent.trim().indexOf('Europe · ') === 0, 'the first round should come from the displayed Europe region filter');
+    }
+
+    async function run() {
+      const doc = frame.contentDocument;
+      await waitFor(() => doc && doc.getElementById('btn-start-game'), 'the production landing screen');
+      assertLandingDefaults(doc);
+      assertSelectionSummaries(doc);
+      await assertModeControlsDoNotStartSession(doc);
+      await assertStartUsesDisplayedSelections(doc);
+    }
+
+    frame.addEventListener('load', () => {
+      run().then(() => {
+        results.className = 'pass';
+        results.textContent = 'PASS — defaults, displayed selection summaries, mode-only no-start behavior, and selected-mode/filter session initialization all passed.';
+        document.body.dataset.testStatus = 'passed';
+        window.__LANDING_START_FLOW_RESULT__ = { passed: true, requirements: ['3.3–3.7', '4.2–4.8'] };
+      }).catch(error => {
+        results.className = 'fail';
+        results.textContent = 'FAIL — ' + error.message;
+        document.body.dataset.testStatus = 'failed';
+        window.__LANDING_START_FLOW_RESULT__ = { passed: false, error: error.message };
+        throw error;
+      });
+    }, { once: true });
+  </script>
+</body>
+</html>

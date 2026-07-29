@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Streak Visual Escalation Property Test</title>
+</head>
+<body>
+  <h1>Streak visual escalation property test</h1>
+  <pre id="results">Running…</pre>
+
+  <script src="../streak-tracker.js"></script>
+  <script>
+    'use strict';
+
+    // Feature: game-polish-10x, Property 7: Streak visual escalation activates at threshold
+    // **Validates: Requirements 7.3, 7.4**
+
+    function forAll(generator, property, iterations) {
+      for (var i = 0; i < iterations; i++) {
+        var input = generator(i);
+        if (!property(input)) {
+          throw new Error('Property failed on input: ' + JSON.stringify(input));
+        }
+      }
+    }
+
+    var thresholdCases = [0, 1, 2, 3, 4, 5];
+
+    function streakGenerator(iteration) {
+      if (iteration < thresholdCases.length) return thresholdCases[iteration];
+      return Math.floor(Math.random() * 16);
+    }
+
+    function observeStreak(streak) {
+      document.body.querySelectorAll('.test-fixture').forEach(function (fixture) {
+        fixture.remove();
+      });
+
+      var fixture = document.createElement('div');
+      fixture.className = 'test-fixture';
+
+      var gamePanel = document.createElement('div');
+      gamePanel.id = 'game';
+      var hud = document.createElement('div');
+      fixture.appendChild(gamePanel);
+      fixture.appendChild(hud);
+      document.body.appendChild(fixture);
+
+      window.StreakTracker.init(hud);
+      for (var i = 0; i < streak; i++) window.StreakTracker.increment();
+
+      var pill = document.getElementById('streak-display');
+      var shadow = gamePanel.style.boxShadow;
+      var shadowMatch = shadow.match(/0px 0px ([\d.]+)px rgba?\(255,\s*160,\s*50(?:,\s*([\d.]+))?\)/);
+
+      return {
+        hasGlowClass: gamePanel.classList.contains('streak-hot'),
+        hasGlowStyle: shadow.length > 0,
+        hasFirePrefix: pill.textContent.indexOf('\u{1F525}') === 0,
+        spread: shadowMatch ? Number(shadowMatch[1]) : 0,
+        alpha: shadowMatch && shadowMatch[2] !== undefined ? Number(shadowMatch[2]) : 0
+      };
+    }
+
+    function visualEscalationProperty(streak) {
+      var observed = observeStreak(streak);
+      var shouldEscalate = streak >= 3;
+
+      if (observed.hasGlowClass !== shouldEscalate ||
+          observed.hasGlowStyle !== shouldEscalate ||
+          observed.hasFirePrefix !== shouldEscalate) {
+        return false;
+      }
+
+      if (streak > 3) {
+        var previous = observeStreak(streak - 1);
+        return observed.spread > previous.spread && observed.alpha >= previous.alpha;
+      }
+
+      return true;
+    }
+
+    var results = document.getElementById('results');
+    try {
+      forAll(streakGenerator, visualEscalationProperty, 200);
+      results.textContent = 'PASS: Property 7 held for 200 generated streak values.';
+      results.dataset.status = 'passed';
+    } catch (error) {
+      results.textContent = 'FAIL: ' + error.message;
+      results.dataset.status = 'failed';
+      throw error;
+    }
+
+    // Feature: game-polish-10x, Property 8: Streak reset produces zero
+    // **Validates: Requirements 7.5**
+
+    function resetStreakGenerator() {
+      // Generate random streak values 1-20
+      return Math.floor(Math.random() * 20) + 1;
+    }
+
+    function streakResetProperty(streakValue) {
+      // Clean up any previous test fixtures
+      document.body.querySelectorAll('.test-fixture').forEach(function (fixture) {
+        fixture.remove();
+      });
+
+      // Set up DOM fixture
+      var fixture = document.createElement('div');
+      fixture.className = 'test-fixture';
+
+      var gamePanel = document.createElement('div');
+      gamePanel.id = 'game';
+      var hud = document.createElement('div');
+      fixture.appendChild(gamePanel);
+      fixture.appendChild(hud);
+      document.body.appendChild(fixture);
+
+      // Initialize and increment to the target streak value
+      window.StreakTracker.init(hud);
+      for (var i = 0; i < streakValue; i++) {
+        window.StreakTracker.increment();
+      }
+
+      // Verify we reached the expected streak before reset
+      if (window.StreakTracker.getCount() !== streakValue) {
+        return false;
+      }
+
+      // Call reset
+      window.StreakTracker.reset();
+
+      // Assert: getCount() === 0
+      if (window.StreakTracker.getCount() !== 0) {
+        return false;
+      }
+
+      // Assert: streak-hot class removed from game panel
+      if (gamePanel.classList.contains('streak-hot')) {
+        return false;
+      }
+
+      // Assert: box-shadow cleared on game panel
+      if (gamePanel.style.boxShadow !== '') {
+        return false;
+      }
+
+      return true;
+    }
+
+    var results8 = document.createElement('pre');
+    results8.id = 'results8';
+    results8.textContent = 'Running Property 8…';
+    document.body.appendChild(results8);
+
+    try {
+      forAll(resetStreakGenerator, streakResetProperty, 100);
+      results8.textContent = 'PASS: Property 8 held for 100 generated streak values (1-20).';
+      results8.dataset.status = 'passed';
+    } catch (error) {
+      results8.textContent = 'FAIL: ' + error.message;
+      results8.dataset.status = 'failed';
+      throw error;
+    }
+  </script>
+</body>
+</html>

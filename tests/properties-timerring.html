@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Timer ring property tests</title>
+  <style>
+    body { font: 16px/1.5 system-ui, sans-serif; margin: 2rem; }
+    #fixture { position: absolute; left: -9999px; }
+    .pass { color: #087830; }
+    .fail { color: #b00020; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Timer ring property tests</h1>
+    <section>
+      <h2>Feature: game-polish-10x, Property 5: Timer ring depletion formula</h2>
+      <!-- **Validates: Requirements 6.1** -->
+      <p id="depletion-result">Running 500 randomized cases…</p>
+    </section>
+    <section>
+      <h2>Feature: game-polish-10x, Property 6: Timer ring color matches percentage bracket</h2>
+      <!-- **Validates: Requirements 6.2, 6.3, 6.4** -->
+      <p id="color-result">Running 500 randomized cases…</p>
+    </section>
+    <div id="fixture" aria-hidden="true"></div>
+  </main>
+  <script src="../timer-ring.js"></script>
+  <script>
+    'use strict';
+    const RADIUS = 24;
+    const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+    function forAll(generator, property, iterations = 100) {
+      for (let index = 0; index < iterations; index += 1) {
+        const input = generator(index);
+        if (!property(input)) throw new Error(`Property failed: ${JSON.stringify(input)}`);
+      }
+    }
+
+    function timerInput(index) {
+      const total = 10 ** (-3 + Math.random() * 8);
+      const ratio = index % 25 === 0 ? 0 : index % 25 === 1 ? 1 : Math.random();
+      return { total, remaining: total * ratio };
+    }
+
+    function percentageInput(index) {
+      const boundaryCases = [0, 19.999999, 20, 50, 50.000001, 100];
+      return index < boundaryCases.length ? boundaryCases[index] : Math.random() * 100;
+    }
+
+    function expectedColorClass(percentage) {
+      if (percentage > 50) return 'timer-ring--green';
+      if (percentage >= 20) return 'timer-ring--yellow';
+      return 'timer-ring--red';
+    }
+
+    const depletionResult = document.getElementById('depletion-result');
+    const colorResult = document.getElementById('color-result');
+    const fixture = document.getElementById('fixture');
+    try {
+      forAll(timerInput, ({ total, remaining }) => {
+        fixture.replaceChildren();
+        TimerRing.create(fixture, total);
+        TimerRing.update(remaining);
+        const actual = Number(fixture.querySelector('.timer-ring__progress').getAttribute('stroke-dashoffset'));
+        const expected = CIRCUMFERENCE * (1 - remaining / total);
+        const tolerance = 1e-10 * Math.max(1, Math.abs(expected));
+        return Number.isFinite(actual) && Math.abs(actual - expected) <= tolerance;
+      }, 500);
+      depletionResult.className = 'pass';
+      depletionResult.textContent = 'PASS — 500 randomized cases satisfied the depletion formula.';
+
+      forAll(percentageInput, (percentage) => {
+        fixture.replaceChildren();
+        TimerRing.create(fixture, 100);
+        TimerRing.update(percentage);
+
+        const ring = fixture.querySelector('.timer-ring');
+        const colorClasses = [
+          'timer-ring--green',
+          'timer-ring--yellow',
+          'timer-ring--red'
+        ];
+        const appliedClasses = colorClasses.filter((className) => ring.classList.contains(className));
+
+        return appliedClasses.length === 1 && appliedClasses[0] === expectedColorClass(percentage);
+      }, 500);
+      colorResult.className = 'pass';
+      colorResult.textContent = 'PASS — 500 randomized percentages received the correct color class.';
+      window.__PBT_RESULT__ = { passed: true, properties: [5, 6], iterations: 500 };
+    } catch (error) {
+      depletionResult.className = depletionResult.className || 'fail';
+      colorResult.className = colorResult.className || 'fail';
+      if (!depletionResult.textContent.startsWith('PASS')) depletionResult.textContent = `FAIL — ${error.message}`;
+      if (!colorResult.textContent.startsWith('PASS')) colorResult.textContent = `FAIL — ${error.message}`;
+      window.__PBT_RESULT__ = { passed: false, error: error.message };
+      throw error;
+    }
+  </script>
+</body>
+</html>

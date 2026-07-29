@@ -3,166 +3,302 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Geo Game Table</title>
-  <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="styles.css" />
+  <meta name="theme-color" content="#12151f" />
+  <title>GeoWars</title>
+  <link rel="stylesheet" href="styles.css?v=20260721-player-context" />
 </head>
 <body>
   <div class="app">
-    <header class="hero">
-      <div>
-        <p class="tiny">Name ideas: "Around the World in 10 Questions", "Globetrotter Clue Clash", "Cartographer's Showdown".</p>
-        <h1>Geo Game Table</h1>
-        <p class="subtitle">Fast question-based geography cards for bright teens & curious adults.</p>
-      </div>
-      <div class="pill">Recommended 3–6 players (2–8 supported)</div>
-    </header>
 
-    <section id="setup" class="panel">
-      <h2>Start a Game</h2>
-      <form id="setup-form">
-        <div class="grid">
-          <label>Number of Players (2–8)
-            <input type="number" id="player-count" min="2" max="8" value="4" />
-          </label>
-          <label>Mode
-            <select id="mode">
-              <option value="timer">15-minute timer (default)</option>
-              <option value="points">Race to points</option>
-            </select>
-          </label>
-          <label id="timer-wrapper">Timer length (minutes)
-            <input type="number" id="timer-length" min="5" max="45" value="15" />
-          </label>
-          <label id="points-wrapper" class="hidden">Target points
-            <input type="number" id="target-points" min="5" max="50" value="15" />
-          </label>
-          <label>Difficulty pool
-            <select id="difficulty-pool">
-              <option value="all">All</option>
-              <option value="easy-medium">Easy + Medium</option>
-              <option value="medium-hard">Medium + Hard</option>
-              <option value="easy">Easy only</option>
-              <option value="medium">Medium only</option>
-              <option value="hard">Hard only</option>
-            </select>
-          </label>
+    <!-- Landing / Mode Select -->
+    <section id="landing" class="screen landing" aria-labelledby="landing-title">
+      <header class="landing-utility-header landing-top">
+        <div class="brand" aria-label="GeoWars">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" focusable="false">
+              <use href="assets/geowars-icons.svg#icon-geowars-mark"></use>
+            </svg>
+          </span>
+          <span class="brand-name">GeoWars</span>
         </div>
-        <div id="player-names" class="names"></div>
-        <button type="submit" class="cta">Start Game</button>
-      </form>
-      <div class="rules-box">
-        <h3>Quick Rules</h3>
-        <ul>
-          <li>Clue-giver sees the country card; others ask up to 10 questions total.</li>
-          <li>On your turn, ask <strong>one</strong> question or make <strong>one</strong> guess.</li>
-          <li>Special clues: built-in clue & nearby country hint (once each).</li>
-          <li>Scoring: Easy 1★ = 1 pt, Medium 2★ = 2 pts, Hard 3★ = 3 pts.</li>
-          <li>Forbidden: direct giveaways like capital city or spelling hints.</li>
-        </ul>
-      </div>
-    </section>
+        <p class="landing-utility-copy">Country silhouette quiz</p>
+      </header>
 
-    <section id="game" class="panel hidden">
-      <div class="top-row">
-        <div>
-          <h2>Current Card</h2>
-          <p id="current-turn" class="pill muted"></p>
+      <section class="landing-proposition" aria-labelledby="landing-title">
+        <p class="landing-eyebrow">Geographic recognition under pressure</p>
+        <h1 id="landing-title" class="landing-tagline">Identify the country behind the silhouette.</h1>
+        <p class="landing-objective">Choose a mode, set the field, then name as many country shapes as you can.</p>
+      </section>
+
+      <section class="landing-setup-panel" aria-labelledby="setup-title">
+        <div class="landing-setup-heading">
+          <h2 id="setup-title">Set your run</h2>
+          <p>Every mode keeps the same country-silhouette objective.</p>
         </div>
-        <div class="stats-row">
-          <div class="pill" id="timer-display">Timer: 15:00</div>
-          <div class="pill" id="score-display">Scoreboard ready</div>
+
+        <div class="mode-select" role="group" aria-labelledby="mode-title">
+          <h3 id="mode-title" class="setup-subheading">Choose a mode</h3>
+          <button id="btn-sprint" class="mode-card mode-secondary active" type="button" aria-pressed="true" aria-describedby="sprint-description">
+            <svg class="mode-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <use href="assets/geowars-icons.svg#icon-mode-sprint"></use>
+            </svg>
+            <span class="mode-title">Sprint</span>
+            <span id="sprint-description" class="mode-desc">60 seconds. Type an answer or use options before time runs out.</span>
+          </button>
+          <button id="btn-showoff" class="mode-card mode-secondary" type="button" aria-pressed="false" aria-describedby="practice-description">
+            <svg class="mode-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <use href="assets/geowars-icons.svg#icon-mode-practice"></use>
+            </svg>
+            <span class="mode-title">Practice</span>
+            <span id="practice-description" class="mode-desc">No timer. Reveal each answer and advance at your own pace.</span>
+          </button>
         </div>
-      </div>
-      <div class="card-layout">
-        <div class="card-detail">
-          <div class="card-header">
-            <div>
-              <div id="card-flag" class="flag">🏳️</div>
-              <h3 id="card-name">Country</h3>
-              <p id="card-stars" class="stars">★</p>
-              <p id="card-meta" class="muted">Continent • Subregion</p>
+
+        <div class="game-setup-wrap">
+          <div class="game-setup">
+            <div class="game-setup-content">
+              <fieldset class="setup-group">
+                <legend>Difficulty</legend>
+                <div class="option-grid difficulty-grid">
+                  <button type="button" class="diff-btn active" data-diff="all" aria-pressed="true">Any difficulty</button>
+                  <button type="button" class="diff-btn" data-diff="easy" aria-pressed="false">Easy</button>
+                  <button type="button" class="diff-btn" data-diff="medium" aria-pressed="false">Medium</button>
+                  <button type="button" class="diff-btn" data-diff="hard" aria-pressed="false">Hard</button>
+                  <button type="button" class="diff-btn" data-diff="expert" aria-pressed="false">Expert</button>
+                </div>
+              </fieldset>
+              <fieldset class="setup-group">
+                <legend>Region</legend>
+                <div id="continent-row" class="option-grid region-grid">
+                  <button type="button" class="diff-btn active" data-continent="all" aria-pressed="true">Worldwide</button>
+                  <button type="button" class="diff-btn" data-continent="Africa" aria-pressed="false">Africa</button>
+                  <button type="button" class="diff-btn" data-continent="Asia" aria-pressed="false">Asia</button>
+                  <button type="button" class="diff-btn" data-continent="Europe" aria-pressed="false">Europe</button>
+                  <button type="button" class="diff-btn" data-continent="North America" aria-pressed="false">Americas</button>
+                  <button type="button" class="diff-btn" data-continent="Oceania" aria-pressed="false">Oceania</button>
+                </div>
+              </fieldset>
             </div>
-            <div class="tags" id="card-tags"></div>
-          </div>
-          <div class="info-grid">
-            <div><strong>Capital:</strong> <span id="card-capital"></span></div>
-            <div><strong>Population:</strong> <span id="card-pop"></span></div>
-            <div><strong>Area:</strong> <span id="card-area"></span></div>
-            <div><strong>Size:</strong> <span id="card-size"></span></div>
-            <div><strong>Hemisphere:</strong> <span id="card-hemi"></span></div>
-            <div><strong>Coast:</strong> <span id="card-coast"></span></div>
-            <div><strong>Languages:</strong> <span id="card-lang"></span></div>
-            <div><strong>Currency:</strong> <span id="card-currency"></span></div>
-            <div><strong>Neighbors:</strong> <span id="card-neighbors"></span></div>
-          </div>
-          <div class="pill inline" id="difficulty-label"></div>
-          <div>
-            <h4>Landmarks</h4>
-            <ul id="card-landmarks"></ul>
-          </div>
-          <div>
-            <h4>Fun Facts</h4>
-            <ul id="card-facts"></ul>
-          </div>
-          <div class="clue-row">
-            <button id="reveal-clue" class="ghost">Reveal Special Clue</button>
-            <span id="built-in-clue" class="hidden"></span>
-          </div>
-          <div class="clue-row">
-            <button id="reveal-nearby" class="ghost">Nearby Country Hint</button>
-            <span id="nearby-clue" class="hidden"></span>
           </div>
         </div>
 
-        <div class="card-shared">
-          <div class="question-head">
-            <div class="pill">Questions used: <span id="question-count">0</span>/10</div>
-            <div class="pill">Difficulty: <span id="shared-stars">★</span></div>
+        <div class="landing-selection-status" role="status" aria-live="polite">
+          <p id="mode-summary">Sprint selected — 60 seconds to answer by typing or options.</p>
+          <p id="filter-summary" class="filter-summary">Any difficulty · Worldwide</p>
+        </div>
+        <button id="btn-start-game" class="cta landing-start-action" type="button">
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <use href="assets/geowars-icons.svg#icon-next"></use>
+          </svg>
+          <span id="start-game-label">Start Sprint</span>
+        </button>
+      </section>
+
+      <aside class="landing-statistics" aria-labelledby="statistics-title">
+        <h2 id="statistics-title" class="statistics-heading">Your records</h2>
+        <section id="player-context" class="player-context" aria-labelledby="player-context-title">
+          <div class="player-context-copy">
+            <p id="player-context-title" class="player-context-eyebrow">Playing as</p>
+            <p id="player-context-name" class="player-context-name">Guest</p>
+            <p id="player-context-detail" class="player-context-detail">Guest stats are shared on this browser/device.</p>
           </div>
-          <div class="question-log" id="qa-log"></div>
-          <form id="qa-form" class="qa-form">
-            <label>Who is speaking?
-              <select id="qa-player"></select>
-            </label>
-            <label>Type
-              <select id="qa-type">
-                <option value="question">Ask Question</option>
-                <option value="guess">Make Guess</option>
-              </select>
-            </label>
-            <label>Text
-              <input type="text" id="qa-text" required maxlength="140" />
-            </label>
-            <button type="submit">Submit</button>
-          </form>
-          <div class="helper">
-            <p><strong>Allowed:</strong> yes/no, multiple-choice, short factual questions.</p>
-            <p><strong>Forbidden:</strong> capitals, spelling hints, or directly reading the card.</p>
+          <button id="btn-choose-player" class="player-context-action" type="button">Choose player</button>
+        </section>
+
+        <dl id="stats-bar" class="stats-bar" aria-label="Player statistics">
+          <div class="stat"><dt>Games</dt><dd id="stat-played">0</dd></div>
+          <div class="stat"><dt>Best streak</dt><dd id="stat-best">0</dd></div>
+          <div class="stat"><dt>Correct</dt><dd id="stat-total">0</dd></div>
+        </dl>
+        <div id="player-badge" class="player-badge hidden" aria-hidden="true"></div>
+      </aside>
+    </section>
+
+    <!-- Game Screen -->
+    <section id="game" class="screen hidden game-layout-region" aria-labelledby="game-title" aria-describedby="game-stage-title" data-layout="desktop-mobile">
+      <header id="game-utility-region" class="game-utility" aria-label="Game utility and HUD region">
+        <h1 id="game-title" class="game-screen-title" tabindex="-1">GeoWars game</h1>
+        <div class="game-hud">
+          <div class="game-hud-status" aria-label="Round status">
+            <div class="hud-left">
+              <div id="streak-display" class="streak-pill hidden" aria-label="Current streak">0</div>
+              <div id="score-display" class="score-pill" aria-label="Current score">0</div>
+            </div>
+            <div id="timer-container" class="timer-container" role="timer" aria-label="Sprint timer">
+              <svg id="timer-ring" class="timer-ring" width="64" height="64" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+                <circle cx="32" cy="32" r="28" fill="none" stroke="#1c2133" stroke-width="4"/>
+                <circle id="timer-progress" cx="32" cy="32" r="28" fill="none" stroke="var(--green)" stroke-width="4" stroke-dasharray="175.93" stroke-dashoffset="0" stroke-linecap="round" transform="rotate(-90 32 32)"/>
+              </svg>
+              <span id="timer-text" class="timer-text">60</span>
+            </div>
+          </div>
+          <div class="game-utility-actions" aria-label="Game utilities">
+            <button id="btn-mute" class="ghost-sm" type="button" aria-label="Mute sound" aria-pressed="false">
+              <svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-sound"></use></svg>
+              <span>Sound</span>
+            </button>
+            <button id="btn-quit" class="ghost-sm" type="button">
+              <svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-quit"></use></svg>
+              <span>Quit</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <section id="game-stage-region" class="game-stage" aria-labelledby="game-stage-title" aria-label="Prompt stage region">
+        <h2 id="game-stage-title" class="game-stage-title">Identify the country silhouette</h2>
+        <div id="silhouette-box" class="silhouette-box">
+          <img id="silhouette-img" src="" alt="Guess this country" />
+          <div id="flag-hint" class="flag-hint flag-blurred" aria-label="Country flag hint"><img id="flag-img" src="" alt="" /></div>
+        </div>
+        <div class="game-prompt-context">
+          <div class="round-info" aria-label="Round information">
+            <span id="continent-hint" class="pill-sm"></span>
+            <span id="difficulty-hint" class="pill-sm"></span>
+          </div>
+          <div id="clue-area" class="clue-area hidden" aria-live="polite"><p id="clue-text" class="clue-text"></p></div>
+        </div>
+        <section id="asset-recovery" class="asset-recovery hidden" aria-labelledby="asset-recovery-title" aria-live="polite">
+          <h3 id="asset-recovery-title">Country shape unavailable</h3>
+          <p id="asset-recovery-message">The country silhouette could not be loaded. Retry, move on, or return home without saving this round.</p>
+          <div class="asset-recovery-actions">
+            <button id="btn-retry-silhouette" class="ghost-sm" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-retry"></use></svg><span>Retry</span></button>
+            <button id="btn-recover-next" class="ghost-sm" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-next"></use></svg><span>Next country</span></button>
+            <button id="btn-recover-home" class="ghost-sm" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-geowars-mark"></use></svg><span>Return home</span></button>
+          </div>
+        </section>
+      </section>
+
+      <section id="answer-interaction-panel" class="answer-interaction-panel" aria-labelledby="answer-panel-title" aria-label="Answer interaction region">
+        <h2 id="answer-panel-title" class="answer-panel-title">Choose your answer path</h2>
+        <div id="answer-section" class="answer-section" role="group" aria-label="Answer path">
+          <button id="btn-i-know" class="know-btn" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-mode-practice"></use></svg><span>Type answer</span><span class="know-pts">3× pts</span></button>
+          <button id="btn-show-options" class="options-btn" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-next"></use></svg><span>Show options</span><span class="options-pts">1× pts</span></button>
+        </div>
+
+        <div id="type-answer" class="type-answer hidden" role="group" aria-label="Typed answer">
+          <div class="autocomplete-wrap">
+            <input id="answer-input" type="text" placeholder="Type the country..." autocomplete="off" autocapitalize="words" role="combobox" aria-label="Country name" aria-autocomplete="list" aria-controls="autocomplete-list" aria-expanded="false" />
+            <div id="autocomplete-list" class="autocomplete-list hidden" role="listbox" aria-label="Country suggestions"></div>
+          </div>
+          <button id="btn-submit-answer" class="cta" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-next"></use></svg><span>Lock in</span></button>
+          <button id="btn-bail" class="bail-btn" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-next"></use></svg><span>Show options (2×)</span></button>
+        </div>
+
+        <div id="choices" class="choices hidden" role="group" aria-label="Multiple-choice answers">
+          <button class="choice-btn" type="button" data-idx="0"></button>
+          <button class="choice-btn" type="button" data-idx="1"></button>
+          <button class="choice-btn" type="button" data-idx="2"></button>
+          <button class="choice-btn" type="button" data-idx="3"></button>
+          <button class="choice-btn" type="button" data-idx="4"></button>
+          <button class="choice-btn" type="button" data-idx="5"></button>
+        </div>
+
+        <div class="hint-row" role="group" aria-label="Hints">
+          <button id="btn-show-flag" class="hint-btn" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-flag"></use></svg><span>Show flag</span></button>
+          <button id="btn-show-region" class="hint-btn" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-region"></use></svg><span>Show region</span></button>
+        </div>
+
+        <button id="btn-reveal" class="reveal-btn hidden" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-flag"></use></svg><span>Reveal answer</span></button>
+        <button id="btn-skip" class="bail-btn hidden" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-next"></use></svg><span>Skip</span></button>
+
+        <section id="feedback" class="feedback hidden" role="status" aria-live="polite" aria-atomic="true" aria-labelledby="feedback-heading" tabindex="-1">
+          <div class="reveal-card">
+            <div id="feedback-icon" class="feedback-icon" aria-hidden="true"></div>
+            <h2 id="feedback-heading" class="feedback-outcome" tabindex="-1">Round feedback</h2>
+            <p id="feedback-status" class="feedback-status" tabindex="-1">Your answer outcome will appear here.</p>
+            <div id="feedback-score" class="feedback-score"></div>
+            <h3 id="feedback-country-name" class="reveal-name"></h3>
+            <div id="feedback-flag" class="feedback-flag"></div>
+            <p id="feedback-region" class="reveal-meta"></p>
+            <div class="feedback-facts-heading"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-region"></use></svg><span>Country facts</span></div>
+            <div id="feedback-details" class="feedback-details" aria-label="Country facts"></div>
+            <div id="feedback-actions" class="feedback-actions hidden" aria-label="Practice session actions">
+              <button id="btn-feedback-next" class="feedback-next-btn" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-next"></use></svg><span>Next country</span></button>
+              <button id="btn-feedback-results" class="feedback-results-btn" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-score"></use></svg><span>View results</span></button>
+              <button id="btn-feedback-home" class="feedback-home-btn" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-geowars-mark"></use></svg><span>Home</span></button>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <div id="quit-confirm" class="quit-confirm hidden" role="dialog" aria-modal="true" aria-labelledby="quit-confirm-title">
+        <div class="quit-confirm-card">
+          <h2 id="quit-confirm-title" tabindex="-1">End this run?</h2>
+          <p>Current progress will be saved to your session results.</p>
+          <div class="quit-confirm-btns">
+            <button id="btn-quit-yes" class="cta" type="button" style="max-width:140px;padding:14px;">End run</button>
+            <button id="btn-quit-no" class="ghost-sm" type="button">Keep playing</button>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="scoreboard" class="panel hidden">
-      <h2>Scoreboard</h2>
-      <table>
-        <thead>
-          <tr><th>Player</th><th>Points</th><th>Easy</th><th>Medium</th><th>Hard</th></tr>
-        </thead>
-        <tbody id="score-rows"></tbody>
-      </table>
+    <!-- Results Screen -->
+    <section id="results" class="screen hidden results-screen" aria-labelledby="results-title" aria-describedby="results-status">
+      <div class="results-card">
+        <header class="results-heading">
+          <p id="results-status" class="results-status" role="status" aria-live="polite" tabindex="-1">Session complete. Review your results and choose what to do next.</p>
+          <h2 id="results-title" tabindex="-1">Done.</h2>
+        </header>
+        <section class="results-summary" aria-labelledby="results-summary-title">
+          <h3 id="results-summary-title">Run results</h3>
+          <div class="results-stats">
+            <div class="result-stat"><strong id="res-score">0</strong><span>Score</span></div>
+            <div class="result-stat"><strong id="res-streak">0</strong><span>Best streak</span></div>
+            <div class="result-stat"><strong id="res-correct">0/0</strong><span>Correct</span></div>
+          </div>
+        </section>
+
+        <!-- Save progress prompt (shown for anonymous users) -->
+        <section id="save-progress" class="save-progress hidden" aria-labelledby="save-progress-title">
+          <h3 id="save-progress-title" class="save-prompt">Save your stats across devices?</h3>
+          <form id="claim-form" class="claim-form">
+            <input id="claim-name" type="text" placeholder="Display name" autocomplete="name" maxlength="20" />
+            <input id="claim-email" type="email" placeholder="your@email.com" autocomplete="email" required />
+            <button type="submit" class="claim-btn">Send link</button>
+          </form>
+          <p id="claim-status" class="claim-status hidden" role="status" aria-live="polite"></p>
+          <button id="btn-dismiss-save" class="bail-btn" type="button" style="margin-top:8px;">Not now</button>
+        </section>
+
+        <div id="logged-in-badge" class="logged-in-badge hidden" role="status"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-geowars-mark"></use></svg><span>Stats synced</span></div>
+
+        <div id="game-review" class="game-review hidden"></div>
+        <div class="results-actions" aria-label="Next actions">
+          <button id="btn-again" class="cta" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-retry"></use></svg><span>Replay</span></button>
+          <button id="btn-home" class="ghost-sm" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-geowars-mark"></use></svg><span>Home</span></button>
+        </div>
+      </div>
     </section>
 
-    <section id="export" class="panel hidden">
-      <h2>Export Data</h2>
-      <p>Copy JSON or download CSV for printing cards or using in your own tools.</p>
-      <textarea id="export-json" readonly></textarea>
-      <button id="download-csv" class="ghost">Download CSV</button>
-    </section>
+    <div id="player-profile-modal" class="profile-modal hidden" role="dialog" aria-modal="true" aria-labelledby="player-profile-title" aria-describedby="player-profile-description">
+      <div class="profile-modal-card">
+        <button id="btn-close-player-modal" class="profile-modal-close" type="button" aria-label="Close player chooser">×</button>
+        <p class="profile-modal-eyebrow">PLAYER PROFILE</p>
+        <h2 id="player-profile-title">Choose a player</h2>
+        <p id="player-profile-description" class="profile-modal-description">Enter an email to create a personal profile or switch to an existing one. Opening the magic link will switch this browser to that player’s saved record.</p>
+        <form id="player-profile-form" class="profile-form">
+          <label for="player-profile-name">Display name <span>(optional)</span></label>
+          <input id="player-profile-name" type="text" autocomplete="name" maxlength="80" />
+          <label for="player-profile-email">Email</label>
+          <input id="player-profile-email" type="email" autocomplete="email" required />
+          <p id="player-profile-status" class="profile-status hidden" role="status" aria-live="polite"></p>
+          <div class="profile-modal-actions">
+            <button id="btn-cancel-player-modal" class="profile-cancel" type="button">Cancel</button>
+            <button id="btn-send-player-link" class="profile-submit" type="submit">Send magic link</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 
-  <script src="data/countries.js"></script>
-  <script src="app.js"></script>
+  <script src="data/countries.js?v=20260719-2"></script>
+  <script src="anthems.js"></script>
+  <script src="supabase-client.js?v=20260720-1"></script>
+  <script src="audio-engine.js"></script>
+  <script src="background-music.js?v=20260720-1"></script>
+  <script src="asset-fallbacks.js"></script>
+  <script src="app.js?v=20260720-1"></script>
 </body>
 </html>

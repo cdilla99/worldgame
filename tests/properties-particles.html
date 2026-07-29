@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Particle System Property Tests</title>
+  <style>
+    /* Minimal particle styles so animationend fires in test environment */
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: particle-fly var(--duration, 1800ms) ease-out forwards;
+    }
+    @keyframes particle-fly {
+      0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+      100% { transform: translate(var(--x, 50px), var(--y, -100px)) rotate(var(--r, 360deg)); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Particle System Property Tests</h1>
+  <pre id="results">Running…</pre>
+  <div id="particle-container" style="position: relative; width: 400px; height: 400px;"></div>
+
+  <script src="../particles.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      var results = document.getElementById('results');
+      var container = document.getElementById('particle-container');
+      var MAX_CAP = 30;
+
+      var passedProperties = [];
+
+      function property(name, fn) {
+        fn();
+        passedProperties.push('PASS: ' + name);
+        results.textContent = passedProperties.join('\n');
+        results.dataset.status = 'passed';
+      }
+
+      try {
+        // Feature: game-polish-10x, Property 14: Particle count cap invariant
+        // **Validates: Requirements 11.1**
+        property('Property 14: Particle count cap invariant', function () {
+          var burstCount = 5;
+          var maxObserved = 0;
+
+          // Call burst multiple times rapidly to try to exceed the cap
+          for (var i = 0; i < burstCount; i++) {
+            Particles.burst(container);
+
+            // Count active particle elements in the DOM
+            var particleElements = container.querySelectorAll('.particle');
+            var count = particleElements.length;
+
+            if (count > maxObserved) {
+              maxObserved = count;
+            }
+
+            if (count > MAX_CAP) {
+              throw new Error(
+                'Particle count exceeded cap of ' + MAX_CAP +
+                ' after burst ' + (i + 1) + ': found ' + count + ' particles'
+              );
+            }
+          }
+
+          // If prefers-reduced-motion is active, burst() is a no-op, so 0 particles is valid (0 <= 30).
+          // If reduced motion is not active, we expect particles were created but capped at 30.
+          var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+          if (reducedMotion) {
+            // Trivial pass: no particles created due to reduced motion preference
+            if (maxObserved !== 0) {
+              throw new Error(
+                'Expected 0 particles with prefers-reduced-motion active, but found ' + maxObserved
+              );
+            }
+          } else {
+            // Particles were created — verify cap was respected across all bursts
+            if (maxObserved > MAX_CAP) {
+              throw new Error(
+                'Max observed particle count ' + maxObserved + ' exceeds cap of ' + MAX_CAP
+              );
+            }
+            // Also verify at least some particles were created (burst is not silently broken)
+            if (maxObserved === 0) {
+              throw new Error(
+                'No particles were created despite reduced motion being inactive'
+              );
+            }
+          }
+        });
+      } catch (error) {
+        results.textContent = 'FAIL: ' + error.message;
+        results.dataset.status = 'failed';
+        console.error(error);
+      }
+    })();
+  </script>
+</body>
+</html>

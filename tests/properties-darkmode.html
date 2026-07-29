@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Dark Mode Property Tests</title>
+</head>
+<body>
+  <h1>Dark Mode Property Tests</h1>
+  <pre id="results">Running…</pre>
+
+  <script src="../dark-mode.js"></script>
+  <script>
+    'use strict';
+
+    function forAll(generator, property, iterations) {
+      for (var i = 0; i < iterations; i += 1) {
+        var input = generator();
+        if (!property(input)) {
+          throw new Error('Property failed on input: ' + JSON.stringify(input));
+        }
+      }
+    }
+
+    // Feature: game-polish-10x, Property 12: Dark mode toggle round-trip
+    // **Validates: Requirements 10.3**
+    function darkModeRoundTrip(initialState) {
+      document.body.classList.toggle('dark', initialState);
+      var originalState = window.DarkMode.isActive();
+
+      window.DarkMode.toggle();
+      window.DarkMode.toggle();
+
+      return originalState === initialState &&
+        window.DarkMode.isActive() === originalState;
+    }
+
+    // Feature: game-polish-10x, Property 13: Dark mode persists to localStorage
+    // **Validates: Requirements 10.4**
+    function darkModePersistsImmediately(initialState) {
+      var storageKey = 'geo-game-dark-mode';
+      document.body.classList.toggle('dark', initialState);
+      localStorage.setItem(storageKey, String(initialState));
+
+      window.DarkMode.toggle();
+
+      var resultingState = window.DarkMode.isActive();
+      return resultingState === !initialState &&
+        localStorage.getItem(storageKey) === String(resultingState);
+    }
+
+    try {
+      forAll(function () { return Math.random() < 0.5; }, darkModeRoundTrip, 100);
+      forAll(function () { return Math.random() < 0.5; }, darkModePersistsImmediately, 100);
+      document.getElementById('results').textContent =
+        'PASS: Properties 12 and 13 each held for 100 generated initial states.';
+      document.body.dataset.testStatus = 'passed';
+    } catch (error) {
+      document.getElementById('results').textContent = 'FAIL: ' + error.message;
+      document.body.dataset.testStatus = 'failed';
+      throw error;
+    }
+  </script>
+</body>
+</html>

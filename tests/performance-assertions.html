@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GeoWars performance assertions</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    body { margin: 0; background: #0b1220; color: #f7f9fc; }
+    main { max-width: 58rem; margin: 0 auto; padding: 1.5rem; }
+    h1 { margin: 0 0 .5rem; } .profile, .note { color: #b5c0d2; }
+    #results { display: grid; gap: .5rem; padding: 0; list-style: none; }
+    .pass, .fail { border-left: 4px solid; padding: .6rem .8rem; background: #172235; }
+    .pass { border-color: #63d39c; } .fail { border-color: #ff8f87; }
+    iframe { width: 390px; max-width: 100%; height: 844px; border: 1px solid #526178; background: #0b1220; }
+  </style>
+</head>
+<body data-test-status="running">
+  <main>
+    <h1>GeoWars performance assertions</h1>
+    <!-- Validates: Requirements 11.1, 11.2, 11.3, 11.4, 11.5, 11.6 -->
+    <p class="profile"><strong>Required profile:</strong> cold cache, mid-range mobile viewport, 4× CPU slowdown, and simulated Slow 4G. Configure this in browser DevTools before opening this file.</p>
+    <p class="note">The embedded 390×844 application run measures the largest landing candidate, initial unexpected layout shift, mode-selection acknowledgement, and the reserved game artwork slots.</p>
+    <ul id="results" aria-live="polite"><li>Running assertions…</li></ul>
+    <iframe id="app-frame" src="../index.html" title="GeoWars performance test target"></iframe>
+  </main>
+  <script>
+    'use strict';
+    const BUDGETS = Object.freeze({ largestContentfulPaint: 3500, cumulativeLayoutShift: 0.1, acknowledgement: 200 });
+    const PROFILE = Object.freeze({ cache: 'cold', device: 'mid-range mobile', cpuSlowdown: '4×', network: 'Slow 4G', viewport: '390×844' });
+    const results = document.getElementById('results');
+    const frame = document.getElementById('app-frame');
+    const report = [];
+    const wait = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
+    const nextFrame = view => new Promise(resolve => view.requestAnimationFrame(resolve));
+    function addResult(name, value, budget, unit = 'ms') { report.push({ name, value, budget, unit, passed: value <= budget }); }
+    function assert(condition, message) { if (!condition) throw new Error(message); }
+    function render(passed, error) {
+      results.replaceChildren(...report.map(item => { const row = document.createElement('li'); row.className = item.passed ? 'pass' : 'fail'; const metric = item.unit === 'assertion' ? '' : `: ${item.value.toFixed(2)} ${item.unit} (budget ${item.budget.toFixed(2)} ${item.unit})`; row.textContent = `${item.passed ? 'PASS' : 'FAIL'} — ${item.name}${metric}`; return row; }));
+      if (error) { const row = document.createElement('li'); row.className = 'fail'; row.textContent = `FAIL — ${error.message}`; results.appendChild(row); }
+      document.body.dataset.testStatus = passed ? 'passed' : 'failed';
+      window.__PERFORMANCE_ASSERTIONS__ = { passed, profile: PROFILE, budgets: BUDGETS, results: report, error: error && error.message };
+    }
+    function observeInitialMetrics(view) {
+      const supported = view.PerformanceObserver && Array.isArray(view.PerformanceObserver.supportedEntryTypes)
+        ? view.PerformanceObserver.supportedEntryTypes
+        : [];
+      if (!view.PerformanceObserver || supported.indexOf('largest-contentful-paint') === -1 || supported.indexOf('layout-shift') === -1) {
+        throw new Error('Largest-contentful-paint and layout-shift PerformanceObserver support are required.');
+      }
+      const metrics = { lcp: [], cls: 0, observers: [] };
+      const lcpObserver = new view.PerformanceObserver(list => metrics.lcp.push(...list.getEntries()));
+      const clsObserver = new view.PerformanceObserver(list => list.getEntries().forEach(entry => {
+        if (!entry.hadRecentInput) metrics.cls += entry.value;
+      }));
+      lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+      clsObserver.observe({ type: 'layout-shift', buffered: true });
+      metrics.observers.push(lcpObserver, clsObserver);
+      return metrics;
+    }
+    function landingLcpEntry(metrics, view) {
+      return metrics.lcp
+        .filter(entry => {
+          const element = entry.element;
+          if (!element || !element.closest || !element.closest('#landing')) return false;
+          const rect = element.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0 && rect.top < view.innerHeight && rect.bottom > 0;
+        })
+        .at(-1);
+    }
+    async function settleInitialMetrics(metrics, view) {
+      const navigation = view.performance.getEntriesByType('navigation')[0];
+      const loadEventEnd = navigation && Number.isFinite(navigation.loadEventEnd) ? navigation.loadEventEnd : 0;
+      const settleAt = Math.min(BUDGETS.largestContentfulPaint + 100, Math.max(750, loadEventEnd + 750));
+      const deadline = BUDGETS.largestContentfulPaint + 100;
+      while (view.performance.now() < settleAt) {
+        await wait(Math.min(50, settleAt - view.performance.now()));
+      }
+      while (!landingLcpEntry(metrics, view) && view.performance.now() < deadline) {
+        await wait(Math.min(50, deadline - view.performance.now()));
+      }
+      return landingLcpEntry(metrics, view);
+    }
+    async function measureAcknowledgement(doc, view) {
+      const control = doc.getElementById('btn-showoff');
+      const summary = doc.getElementById('mode-summary');
+      assert(control && summary, 'Mode controls and their acknowledgement summary must exist.');
+      const startedAt = view.performance.now(); let mutationAt = 0;
+      const observer = new view.MutationObserver(() => { if (!mutationAt) mutationAt = view.performance.now(); });
+      observer.observe(control, { attributes: true, attributeFilter: ['class', 'aria-pressed'] });
+      observer.observe(summary, { childList: true, characterData: true, subtree: true });
+      control.click(); const frameAt = await nextFrame(view); observer.disconnect();
+      assert(control.classList.contains('active') && control.getAttribute('aria-pressed') === 'true' && /Practice selected/.test(summary.textContent), 'Practice selection did not produce visible acknowledgement.');
+      return Math.max(frameAt, mutationAt || startedAt) - startedAt;
+    }
+    function assertLandingAssetDeferral(view) {
+      const deferredAssetRequests = view.performance.getEntriesByType('resource').filter(entry => ['img', 'audio', 'video'].includes(entry.initiatorType));
+      assert(deferredAssetRequests.length === 0, `Landing loaded nonessential media: ${deferredAssetRequests.map(entry => entry.name).join(', ')}`);
+      return deferredAssetRequests.length;
+    }
+    function delayArtworkLoads(view, delay = 1250) {
+      const prototype = view.HTMLImageElement.prototype;
+      const descriptor = Object.getOwnPropertyDescriptor(prototype, 'src');
+      assert(descriptor && typeof descriptor.set === 'function', 'The image source setter is unavailable for delayed-artwork instrumentation.');
+      let delayed = 0;
+      Object.defineProperty(prototype, 'src', {
+        configurable: true, enumerable: descriptor.enumerable, get: descriptor.get,
+        set(source) { const image = this; delayed += 1; view.setTimeout(() => descriptor.set.call(image, source), delay); }
+      });
+      return { count: () => delayed, restore: () => Object.defineProperty(prototype, 'src', descriptor) };
+    }
+    async function assertReservedArtwork(doc, view) {
+      const sprint = doc.getElementById('btn-sprint'); const start = doc.getElementById('btn-start-game');
+      assert(sprint && start, 'Sprint and Start controls are missing.'); sprint.click();
+      const delayedArtwork = delayArtworkLoads(view); try { start.click(); } finally { delayedArtwork.restore(); }
+      const stage = doc.getElementById('silhouette-box'); const flag = doc.querySelector('.flag-hint'); const timer = doc.getElementById('timer-text'); const answerControl = doc.getElementById('btn-i-know');
+      assert(stage && flag && timer && answerControl, 'Game artwork, timer, or answer controls are missing.');
+      const stageRect = stage.getBoundingClientRect(); const flagRect = flag.getBoundingClientRect(); const initialTimer = Number(timer.textContent); const reservedStageHeight = Number.parseFloat(view.getComputedStyle(stage).minHeight);
+      assert(delayedArtwork.count() >= 2, 'The silhouette and flag sources were not delayed for reservation testing.');
+      assert(Number.isFinite(reservedStageHeight) && stageRect.height >= reservedStageHeight && flagRect.width >= 56 && flagRect.height >= 40, 'Game artwork space was not reserved before image completion.');
+      assert(answerControl.getClientRects().length && !answerControl.disabled, 'Answer input was unavailable while artwork was loading.');
+      await wait(1050); assert(Number(timer.textContent) < initialTimer, 'Timer updates stopped while artwork was loading.');
+      return { stage: { width: stageRect.width, height: stageRect.height }, flag: { width: flagRect.width, height: flagRect.height } };
+    }
+    frame.addEventListener('load', async () => {
+      let metrics;
+      try {
+        const view = frame.contentWindow; const doc = frame.contentDocument;
+        assert(view && doc && doc.getElementById('landing'), 'The GeoWars landing page did not load in the test frame.');
+        metrics = observeInitialMetrics(view);
+        const landingLcp = await settleInitialMetrics(metrics, view);
+        assert(landingLcp, 'No visible largest above-fold landing-content entry was observed before the performance budget deadline.');
+        addResult('largest above-fold landing content', landingLcp.startTime, BUDGETS.largestContentfulPaint);
+        addResult('cumulative unexpected layout shift', metrics.cls, BUDGETS.cumulativeLayoutShift, 'score');
+        const deferredCount = assertLandingAssetDeferral(view);
+        report.push({ name: `landing deferred nonessential media (${deferredCount} requests)`, unit: 'assertion', passed: true });
+        const acknowledgement = await measureAcknowledgement(doc, view);
+        addResult('local-control visual acknowledgement', acknowledgement, BUDGETS.acknowledgement);
+        const reservation = await assertReservedArtwork(doc, view);
+        report.push({ name: `reserved artwork slots (${reservation.stage.width.toFixed(0)}×${reservation.stage.height.toFixed(0)} stage; ${reservation.flag.width.toFixed(0)}×${reservation.flag.height.toFixed(0)} flag)`, unit: 'assertion', passed: true });
+        report.push({ name: 'answer control and timer remained available while artwork was delayed', unit: 'assertion', passed: true });
+        const failed = report.find(item => !item.passed);
+        if (failed) throw new Error(`${failed.name} exceeded its budget.`);
+        render(true);
+      } catch (error) {
+        render(false, error);
+        throw error;
+      } finally {
+        if (metrics) metrics.observers.forEach(observer => observer.disconnect());
+      }
+    }, { once: true });
+  </script>
+</body>
+</html>

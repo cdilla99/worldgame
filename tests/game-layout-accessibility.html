@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GeoWars layout and accessibility regression</title>
+  <style>
+    body { font: 16px/1.5 system-ui, sans-serif; margin: 2rem; color: #12151f; }
+    .pass { color: #087830; } .fail { color: #b00020; }
+    #game-frame { position: absolute; width: 1px; height: 1px; border: 0; clip: rect(0 0 0 0); clip-path: inset(50%); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>GeoWars layout and accessibility regression</h1>
+    <!-- **Validates: Requirements 6.1–6.8, 7.1–7.8, 8.1–8.10, 12.5** -->
+    <p id="results">Loading the production game…</p>
+  </main>
+  <iframe id="game-frame" title="GeoWars application under test" src="../index.html"></iframe>
+  <script>
+    'use strict';
+
+    const results = document.getElementById('results');
+    const frame = document.getElementById('game-frame');
+    const WAIT_TIMEOUT = 4000;
+
+    function assert(condition, message) {
+      if (!condition) throw new Error(message);
+    }
+
+    function waitFor(predicate, description) {
+      const start = performance.now();
+      return new Promise((resolve, reject) => {
+        function poll() {
+          if (predicate()) return resolve();
+          if (performance.now() - start >= WAIT_TIMEOUT) {
+            return reject(new Error('Timed out waiting for ' + description));
+          }
+          setTimeout(poll, 20);
+        }
+        poll();
+      });
+    }
+
+    function nextFrame(win) {
+      return new Promise(resolve => win.requestAnimationFrame(() => win.requestAnimationFrame(resolve)));
+    }
+
+    function isVisible(element) {
+      return !!element && !element.classList.contains('hidden');
+    }
+
+    function namedLandmark(screen) {
+      return screen.tagName === 'MAIN' || screen.getAttribute('role') === 'main' ||
+        (screen.tagName === 'SECTION' && !!screen.getAttribute('aria-labelledby')) ||
+        screen.getAttribute('role') === 'region';
+    }
+
+    function assertVisibleScreen(doc, screenId, titleId) {
+      const screen = doc.getElementById(screenId);
+      const title = doc.getElementById(titleId);
+      assert(isVisible(screen), screenId + ' should be visible');
+      assert(screen.getAttribute('aria-hidden') === 'false', screenId + ' should be exposed to assistive technology');
+      assert(!screen.hasAttribute('inert'), screenId + ' should not be inert');
+      assert(namedLandmark(screen), screenId + ' should expose a named landmark');
+      assert(screen.getAttribute('aria-labelledby') === titleId, screenId + ' should reference its visible heading');
+      assert(/^H[1-6]$/.test(title.tagName) && title.textContent.trim(), screenId + ' should expose a non-empty heading');
+    }
+
+    function assertHiddenScreenCannotReceiveFocus(doc, screenId, controlSelector) {
+      const screen = doc.getElementById(screenId);
+      const control = screen.querySelector(controlSelector);
+      assert(!isVisible(screen), screenId + ' should be hidden');
+      assert(screen.getAttribute('aria-hidden') === 'true', screenId + ' should be hidden from assistive technology');
+      assert(screen.hasAttribute('inert'), screenId + ' should be inert while hidden');
+      control.focus();
+      assert(doc.activeElement !== control, controlSelector + ' should not receive programmatic focus while ' + screenId + ' is hidden');
+    }
+
+    function accessibleName(control) {
+      const labelledBy = control.getAttribute('aria-labelledby');
+      if (labelledBy) {
+        return labelledBy.split(/\s+/).map(id => {
+          const label = control.ownerDocument.getElementById(id);
+          return label ? label.textContent.trim() : '';
+        }).join(' ').trim();
+      }
+      return (control.getAttribute('aria-label') || control.textContent || '').replace(/\s+/g, ' ').trim();
+    }
+
+    function assertIconControlsHaveNames(doc) {
+      const iconControls = Array.from(doc.querySelectorAll('button')).filter(button =>
+        button.querySelector('svg, use') || /^[×✕]$/.test(button.textContent.trim())
+      );
+      assert(iconControls.length > 0, 'the fixture should contain icon-bearing controls');
+      iconControls.forEach(control => {
+        assert(accessibleName(control), '#' + control.id + ' should have an accessible name');
+      });
+    }
+
+    function keyboardActivate(doc, control, description) {
+      control.focus();
+      assert(doc.activeElement === control, description + ' should be reachable by keyboard focus');
+      control.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', bubbles: true }));
+      control.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', code: 'Enter', bubbles: true }));
+      // Native buttons are keyboard-operable. click() makes this browser-only harness deterministic
+      // while retaining the same focused native control and application event path.
+      control.click();
+    }
+
+
+    function assertFeedbackState(doc) {
+      const feedback = doc.getElementById('feedback');
+      const heading = doc.getElementById('feedback-heading');
+      assert(isVisible(feedback), 'feedback should be visible after an answer');
+      assert(feedback.getAttribute('aria-hidden') === 'false', 'feedback should be exposed to assistive technology');
+      assert(!feedback.hasAttribute('inert'), 'feedback should not be inert while visible');
+      assert(feedback.getAttribute('role') === 'region', 'feedback should expose a named region');
+      assert(feedback.getAttribute('aria-labelledby') === 'feedback-heading', 'feedback should reference its outcome heading');
+      assert(heading.textContent.trim(), 'feedback should include an outcome heading');
+      assert(doc.activeElement === heading, 'focus should move to the feedback outcome heading');
+    }
+
+    function assertInertControlCannotReceiveFocus(doc, selector, description) {
+      const control = doc.querySelector(selector);
+      assert(control.closest('[inert]'), description + ' should be inside an inert region');
+      control.focus();
+      assert(doc.activeElement !== control, description + ' should not receive focus');
+    }
+
+    async function run() {
+      const win = frame.contentWindow;
+      const doc = frame.contentDocument;
+      await waitFor(() => doc.getElementById('btn-start-game'), 'the production game to initialize');
+
+      assertVisibleScreen(doc, 'landing', 'landing-title');
+      assertHiddenScreenCannotReceiveFocus(doc, 'game', '#btn-quit');
+      assertHiddenScreenCannotReceiveFocus(doc, 'results', '#btn-home');
+      assertIconControlsHaveNames(doc);
+
+      keyboardActivate(doc, doc.getElementById('btn-showoff'), 'Practice mode control');
+      assert(doc.getElementById('btn-showoff').getAttribute('aria-pressed') === 'true', 'Practice should become the selected mode');
+      keyboardActivate(doc, doc.getElementById('btn-start-game'), 'Start Practice control');
+      await waitFor(() => isVisible(doc.getElementById('game')), 'the game screen');
+      await nextFrame(win);
+
+      assertVisibleScreen(doc, 'game', 'game-title');
+      assert(doc.activeElement === doc.getElementById('game-title'), 'focus should move to the game heading');
+      assertHiddenScreenCannotReceiveFocus(doc, 'landing', '#btn-start-game');
+      assertHiddenScreenCannotReceiveFocus(doc, 'results', '#btn-home');
+
+      keyboardActivate(doc, doc.getElementById('btn-show-options'), 'Show options control');
+      await nextFrame(win);
+      const firstChoice = doc.querySelector('.choice-btn:not([disabled])');
+      assert(isVisible(doc.getElementById('choices')), 'multiple-choice answers should be visible');
+      assert(doc.activeElement === firstChoice, 'focus should move to the first answer choice');
+
+      keyboardActivate(doc, firstChoice, 'First answer choice');
+      await waitFor(() => isVisible(doc.getElementById('feedback')), 'round feedback');
+      await nextFrame(win);
+      assertFeedbackState(doc);
+      assertInertControlCannotReceiveFocus(doc, '#btn-quit', 'game controls behind feedback');
+
+      keyboardActivate(doc, doc.getElementById('btn-feedback-results'), 'View results control');
+      await waitFor(() => isVisible(doc.getElementById('results')), 'the results screen');
+      await nextFrame(win);
+      assertVisibleScreen(doc, 'results', 'results-title');
+      assert(doc.activeElement === doc.getElementById('results-title'), 'focus should move to the results heading');
+      assertHiddenScreenCannotReceiveFocus(doc, 'game', '#btn-quit');
+
+      keyboardActivate(doc, doc.getElementById('btn-home'), 'Return home control');
+      await waitFor(() => isVisible(doc.getElementById('landing')), 'the landing screen');
+      await nextFrame(win);
+      assertVisibleScreen(doc, 'landing', 'landing-title');
+      assert(doc.activeElement === doc.getElementById('landing-title'), 'focus should return to the landing heading');
+      assertHiddenScreenCannotReceiveFocus(doc, 'game', '#btn-quit');
+      assertHiddenScreenCannotReceiveFocus(doc, 'results', '#btn-home');
+    }
+
+    frame.addEventListener('load', () => {
+      run().then(() => {
+        results.className = 'pass';
+        results.textContent = 'PASS — screen semantics, hidden-focus protection, icon names, focus transitions, and one keyboard round all passed.';
+        document.body.dataset.testStatus = 'passed';
+        window.__TEST_RESULT__ = { passed: true, requirements: ['6.1–6.8', '7.1–7.8', '8.1–8.10', '12.5'] };
+      }).catch(error => {
+        results.className = 'fail';
+        results.textContent = 'FAIL — ' + error.message;
+        document.body.dataset.testStatus = 'failed';
+        window.__TEST_RESULT__ = { passed: false, error: error.message };
+        throw error;
+      });
+    }, { once: true });
+  </script>
+</body>
+</html>

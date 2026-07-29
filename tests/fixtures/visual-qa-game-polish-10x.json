@@ -1,0 +1,71 @@
+{
+  "representativeViewports": [
+    { "id": "1440x900", "width": 1440, "height": 900 },
+    { "id": "1024x768", "width": 1024, "height": 768 },
+    { "id": "768x1024", "width": 768, "height": 1024 },
+    { "id": "390x844", "width": 390, "height": 844 },
+    { "id": "360x800", "width": 360, "height": 800 }
+  ],
+  "zoomViewports": [
+    { "id": "1280x900-zoom-200", "width": 1280, "height": 900, "pageScaleFactor": 2 },
+    { "id": "390x844-zoom-200", "width": 390, "height": 844, "pageScaleFactor": 2 }
+  ],
+  "states": [
+    {
+      "id": "landing",
+      "title": "Landing",
+      "motionBearing": true,
+      "primaryControl": "#btn-start-game",
+      "requiredControls": ["#btn-sprint", "#btn-showoff", "#btn-start-game"],
+      "requiredText": ["GeoWars", "Identify the country behind the silhouette"]
+    },
+    {
+      "id": "unanswered-stage",
+      "title": "Unanswered stage",
+      "motionBearing": true,
+      "primaryControl": "#btn-i-know",
+      "requiredControls": ["#btn-i-know", "#btn-show-options", "#btn-show-flag", "#btn-show-region"],
+      "requiredText": ["Identify the country silhouette", "Choose your answer path"]
+    },
+    {
+      "id": "typed-answer",
+      "title": "Typed answer",
+      "motionBearing": true,
+      "primaryControl": "#btn-submit-answer",
+      "requiredControls": ["#answer-input", "#btn-submit-answer", "#btn-bail"],
+      "requiredText": ["Lock in", "Show options (2×)"]
+    },
+    {
+      "id": "choices",
+      "title": "Multiple-choice answers",
+      "motionBearing": true,
+      "primaryControl": "#choices .choice-btn:first-child",
+      "requiredControls": ["#choices .choice-btn:nth-child(1)", "#choices .choice-btn:nth-child(6)"],
+      "requiredText": []
+    },
+    {
+      "id": "correct-feedback",
+      "title": "Correct feedback",
+      "motionBearing": true,
+      "primaryControl": "#btn-feedback-next",
+      "requiredControls": ["#feedback", "#feedback-heading", "#feedback-country-name", "#btn-feedback-next", "#btn-feedback-results", "#btn-feedback-home"],
+      "requiredText": ["Correct", "Awarded:"]
+    },
+    {
+      "id": "incorrect-feedback",
+      "title": "Incorrect feedback",
+      "motionBearing": true,
+      "primaryControl": "#btn-feedback-next",
+      "requiredControls": ["#feedback", "#feedback-heading", "#feedback-country-name", "#btn-feedback-next", "#btn-feedback-results", "#btn-feedback-home"],
+      "requiredText": ["Incorrect", "No points were awarded"]
+    },
+    {
+      "id": "results",
+      "title": "Results",
+      "motionBearing": true,
+      "primaryControl": "#btn-again",
+      "requiredControls": ["#results-title", "#res-score", "#res-streak", "#res-correct", "#btn-again", "#btn-home"],
+      "requiredText": ["Practice complete.", "Replay", "Home"]
+    }
+  ]
+}

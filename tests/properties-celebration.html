@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Celebration Text Property Tests</title>
+</head>
+<body>
+  <h1>Celebration Text Property Tests</h1>
+  <pre id="results">Running…</pre>
+  <div id="celebration-container" hidden></div>
+
+  <script src="../celebration-text.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      var results = document.getElementById('results');
+      var container = document.getElementById('celebration-container');
+
+      var passedProperties = [];
+
+      function property(name, iterations, assertion) {
+        for (var iteration = 0; iteration < iterations; iteration += 1) {
+          assertion(iteration);
+        }
+        passedProperties.push('PASS: ' + name + ' (' + iterations + ' invocations)');
+        results.textContent = passedProperties.join('\n');
+        results.dataset.status = 'passed';
+      }
+
+      try {
+        var phrasePool = window.CelebrationText._getPhrases().slice();
+
+        // Feature: game-polish-10x, Property 10: Celebration phrase pool membership
+        // **Validates: Requirements 9.1**
+        property('Property 10: Celebration phrase pool membership', 200, function (iteration) {
+          window.CelebrationText.show(container);
+          var selected = container.lastElementChild;
+
+          if (!selected) {
+            throw new Error('No celebration phrase was created at invocation ' + (iteration + 1));
+          }
+
+          var phrase = selected.textContent;
+          if (phrasePool.indexOf(phrase) === -1) {
+            throw new Error('Selected phrase is not in the predefined pool: ' + JSON.stringify(phrase));
+          }
+
+          container.removeChild(selected);
+        });
+
+        var previousPhrase = null;
+
+        // Feature: game-polish-10x, Property 11: Celebration phrases never repeat consecutively
+        // **Validates: Requirements 9.3**
+        property('Property 11: Celebration phrases never repeat consecutively', 200, function (iteration) {
+          window.CelebrationText.show(container);
+          var selected = container.lastElementChild;
+
+          if (!selected) {
+            throw new Error('No celebration phrase was created at invocation ' + (iteration + 1));
+          }
+
+          var phrase = selected.textContent;
+          if (previousPhrase !== null && phrase === previousPhrase) {
+            throw new Error('Consecutive repeat at invocations ' + iteration + ' and ' + (iteration + 1) + ': ' + JSON.stringify(phrase));
+          }
+
+          previousPhrase = phrase;
+          container.removeChild(selected);
+        });
+      } catch (error) {
+        results.textContent = 'FAIL: ' + error.message;
+        results.dataset.status = 'failed';
+        console.error(error);
+      }
+    })();
+  </script>
+</body>
+</html>
