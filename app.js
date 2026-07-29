@@ -1252,7 +1252,11 @@ async function renderPlayerContext() {
 }
 
 function playerProfilesAreOnline() {
-  return !!(window.GeoWarsDB && typeof GeoWarsDB.isOnline === 'function' && GeoWarsDB.isOnline());
+  if (!window.GeoWarsDB) return false;
+  // Magic links only need a reachable client. Falling back to isOnline() keeps
+  // older builds working, but readiness is the accurate gate.
+  if (typeof GeoWarsDB.isReady === 'function') return GeoWarsDB.isReady();
+  return typeof GeoWarsDB.isOnline === 'function' && GeoWarsDB.isOnline();
 }
 
 function setPlayerProfileStatus(message, isError) {
@@ -1319,6 +1323,12 @@ async function openPlayerModal() {
   // Must run before any await so the dialog is clickable immediately.
   setPlayerModalInteractive(true);
 
+  // Wait for the client so opening the dialog during startup does not leave the
+  // submit button permanently disabled.
+  try {
+    if (window.GeoWarsDB && GeoWarsDB.init) await GeoWarsDB.init();
+  } catch (error) {}
+
   let identity = { online: playerProfilesAreOnline(), claimed: false, displayName: '', email: '' };
   try {
     if (window.GeoWarsDB && GeoWarsDB.getIdentity) {
@@ -1327,7 +1337,8 @@ async function openPlayerModal() {
     }
   } catch (error) {}
 
-  setPlayerProfileAvailability(!!identity.online);
+  // identity.online reflects the guest session; readiness is what magic links need.
+  setPlayerProfileAvailability(playerProfilesAreOnline() || !!identity.online);
   if (identity.claimed) {
     if ($playerProfileName) $playerProfileName.value = identity.displayName || '';
     if ($playerProfileEmail) $playerProfileEmail.value = identity.email || '';

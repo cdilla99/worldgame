@@ -15,6 +15,9 @@
   var supabase = null;
   var currentUser = null;
   var online = false;
+  // Client reachability is tracked separately from the anonymous session:
+  // sending a magic link needs a working client, not a signed-in guest.
+  var ready = false;
   var initPromise = null;
   var cachedProfileName = null;
   var cachedProfileUserId = null;
@@ -40,6 +43,7 @@
 
     try {
       supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      ready = true;
       supabase.auth.onAuthStateChange(function (_event, session) {
         setCurrentUser(session && session.user ? session.user : null);
       });
@@ -181,6 +185,14 @@
     return online;
   }
 
+  /**
+   * True when the Supabase client exists, even if no guest session was created.
+   * Magic-link sign-in works in this state; anonymous sign-in may not.
+   */
+  function isReady() {
+    return ready && !!supabase;
+  }
+
   function isClaimed() {
     return !!(currentUser && currentUser.email && !currentUser.is_anonymous);
   }
@@ -194,7 +206,12 @@
    * personal profile. The active guest remains unchanged until the link opens.
    */
   async function sendPlayerMagicLink(email, displayName) {
-    if (!online || !supabase) return { error: 'You are offline. Reconnect to choose a player.' };
+    // Only the client is required here. Requiring `online` would block this
+    // whenever anonymous sign-in is unavailable, which is unrelated.
+    try {
+      await init();
+    } catch (e) {}
+    if (!supabase) return { error: 'Cannot reach the player service. Check your connection and retry.' };
 
     var normalizedEmail = String(email || '').trim();
     if (!normalizedEmail) return { error: 'Enter an email address.' };
@@ -317,6 +334,7 @@
     getIdentity: getIdentity,
     saveGameSession: saveGameSession,
     isOnline: isOnline,
+    isReady: isReady,
     isClaimed: isClaimed,
     getEmail: getEmail,
     sendPlayerMagicLink: sendPlayerMagicLink,
