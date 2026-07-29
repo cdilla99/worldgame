@@ -141,6 +141,10 @@ svg.icon,
 
 .hidden { display: none !important; }
 
+/* Decorative hero globe. Hidden by default; the wide-viewport rules below give
+   it the artwork slot that the narrow layout does not reserve. */
+.landing-globe { display: none; }
+
 /* ============================================================
    LANDING
    ============================================================ */
@@ -1433,25 +1437,80 @@ summary.game-setup-summary::-moz-list-bullet { list-style-type: none; }
     right: 0;
     width: clamp(190px, 27vw, 390px);
     aspect-ratio: 1;
-    border: 1px solid var(--color-border-strong);
+    border: 1px solid var(--color-success);
     border-radius: 50%;
-    box-shadow: inset 0 0 0 20px var(--color-page), inset 0 0 0 21px var(--color-border), inset 0 0 0 40px var(--color-page), inset 0 0 0 41px var(--color-border);
+    box-shadow: inset 0 0 0 20px var(--color-page), inset 0 0 0 21px var(--color-focus), inset 0 0 0 40px var(--color-page), inset 0 0 0 41px var(--color-success);
     content: "";
-    opacity: 0.76;
+    opacity: 0.5;
     transform: translateY(-50%);
   }
 
-  .landing-proposition::after {
+  /* The globe sits inside the innermost ring of the ::before orbit rings. */
+  .landing-globe {
     position: absolute;
     top: 50%;
-    right: clamp(34px, 6vw, 100px);
-    width: clamp(88px, 12vw, 174px);
-    aspect-ratio: 0.82;
-    background: var(--color-primary);
-    clip-path: polygon(46% 0, 68% 12%, 88% 28%, 74% 48%, 92% 66%, 60% 100%, 36% 75%, 5% 67%, 24% 44%, 10% 20%);
-    content: "";
-    opacity: 0.4;
+    right: clamp(45px, 6.6vw, 111px);
+    display: block;
+    width: clamp(100px, 13.8vw, 208px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    isolation: isolate;
     transform: translateY(-50%);
+    box-shadow: 0 0 34px rgba(46, 232, 154, 0.2), 0 0 12px rgba(159, 192, 255, 0.26);
+  }
+
+  .landing-globe > * {
+    position: absolute;
+    inset: 0;
+    display: block;
+    border-radius: 50%;
+  }
+
+  /* Ocean base: blue core deepening at the limb for a lit-sphere read. */
+  .landing-globe-sphere {
+    background:
+      radial-gradient(circle at 34% 30%, #6ea6ff 0%, #2f6fd0 42%, #14356e 78%, #0d2450 100%);
+  }
+
+  /* Landmasses. The doubled band lets the texture wrap seamlessly while it spins. */
+  .landing-globe-land {
+    background-repeat: repeat-x;
+    background-size: 50% 100%;
+    background-image:
+      radial-gradient(ellipse 13% 19% at 12% 34%, var(--color-success) 0 68%, transparent 70%),
+      radial-gradient(ellipse 9% 13% at 22% 62%, var(--color-success) 0 68%, transparent 70%),
+      radial-gradient(ellipse 15% 12% at 37% 28%, var(--color-success) 0 68%, transparent 70%),
+      radial-gradient(ellipse 8% 16% at 44% 66%, var(--color-success) 0 68%, transparent 70%),
+      radial-gradient(ellipse 11% 10% at 30% 82%, var(--color-success) 0 68%, transparent 70%);
+    opacity: 0.85;
+    animation: landing-globe-spin 22s linear infinite;
+  }
+
+  /* Meridians and latitudes read as the graticule over both ocean and land. */
+  .landing-globe-grid {
+    background-image:
+      repeating-linear-gradient(to right, rgba(159, 192, 255, 0.36) 0 1px, transparent 1px 12.5%),
+      repeating-linear-gradient(to bottom, rgba(159, 192, 255, 0.26) 0 1px, transparent 1px 20%);
+    opacity: 0.55;
+    animation: landing-globe-spin 22s linear infinite;
+  }
+
+  /* Specular highlight plus limb darkening, so the sphere does not look flat. */
+  .landing-globe-shine {
+    background:
+      radial-gradient(circle at 30% 26%, rgba(255, 255, 255, 0.38) 0%, transparent 42%),
+      radial-gradient(circle at 50% 50%, transparent 58%, rgba(6, 12, 26, 0.62) 100%);
+  }
+
+  @keyframes landing-globe-spin {
+    from { background-position-x: 0%; }
+    to { background-position-x: 100%; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .landing-globe-land,
+    .landing-globe-grid { animation: none; }
   }
 
   .landing-tagline {
