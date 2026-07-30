@@ -13,7 +13,7 @@
       source: 'MapsIcon country-outline collection',
       documentationUrl: 'https://github.com/djaiss/mapsicon',
       urlTemplate: 'https://raw.githubusercontent.com/djaiss/mapsicon/master/all/{code}/vector.svg',
-      aspectRatio: '1 / 1', fallbackIcon: 'region', fallback: 'Local SVG and “Silhouette unavailable” state.'
+      aspectRatio: '1 / 1', fallbackIcon: 'region', fallback: 'Local SVG and “Shape unavailable” state.'
     }),
     flag: Object.freeze({
       source: 'FlagCDN country flags',
@@ -33,7 +33,7 @@
     })
   });
   var FALLBACK_COPY = Object.freeze({
-    silhouette: Object.freeze({ title: 'Silhouette unavailable', detail: 'The country shape could not be loaded.' }),
+    silhouette: Object.freeze({ title: 'Shape unavailable', detail: 'The country shape could not be loaded.' }),
     flag: Object.freeze({ title: 'Flag unavailable', detail: 'The country name and answer result are still available.' })
   });
 

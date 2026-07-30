@@ -259,7 +259,7 @@ Restructure GeoWars to achieve ~70% token reduction while maintaining full backw
     - _Requirements: 13.2_
 
 
-- [ ] 7. Extract Scoring Feature Module
+- [x] 7. Extract Scoring Feature Module
   - [x] 7.1 Create `src/features/scoring/index.js` with scoring logic
     - Subscribe to `answer:correct` and `answer:incorrect` events
     - Implement point calculation: base × multiplier
@@ -275,7 +275,7 @@ Restructure GeoWars to achieve ~70% token reduction while maintaining full backw
     - **Property 15: Cumulative scores correct in score:update events** - Simulate game, track all score updates, verify cumulative sum
     - **Validates: Requirements 5.2**
 
-  - [ ] 7.3 Implement streak tracking
+  - [x] 7.3 Implement streak tracking
     - Increment streak on correct answer
     - Emit `streak:hot` when streak >= 3
     - Reset streak to 0 on incorrect answer
@@ -284,24 +284,24 @@ Restructure GeoWars to achieve ~70% token reduction while maintaining full backw
     - **Completion criteria:** Streak tracking works correctly
     - _Requirements: 5.3, 5.4, 5.5_
 
-  - [ ] 7.4 Write property test for best streak tracking
+  - [x] 7.4 Write property test for best streak tracking
     - **Property 16: Best streak = max achieved streak** - Generate random answer sequences, verify best streak equals maximum
     - **Validates: Requirements 5.5**
 
-  - [ ] 7.5 Implement final score calculation
+  - [x] 7.5 Implement final score calculation
     - Subscribe to `game:end` event
     - Calculate session statistics: total score, correct count, total rounds, best streak
     - Emit `score:final` with complete session stats
     - **Completion criteria:** Final stats emitted at game end
     - _Requirements: 5.6_
 
-  - [ ] 7.6 Create scoring facade in app.js
+  - [x] 7.6 Create scoring facade in app.js
     - Export scoring functions matching existing signatures
     - **Completion criteria:** Existing scoring code works
     - _Requirements: 13.2_
 
-- [ ] 8. Extract Hints Feature Module
-  - [ ] 8.1 Create `src/features/hints/index.js` with hint logic
+- [x] 8. Extract Hints Feature Module
+  - [x] 8.1 Create `src/features/hints/index.js` with hint logic
     - Subscribe to hint button click events
     - Track hint state per round: flagUsed, regionUsed
     - Emit `hint:reveal` with `{ type: 'flag' | 'region' }`
@@ -309,7 +309,7 @@ Restructure GeoWars to achieve ~70% token reduction while maintaining full backw
     - **Completion criteria:** Hints reveal correctly, one per type per round
     - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-  - [ ] 8.2 Implement hint button state management
+  - [x] 8.2 Implement hint button state management
     - Set button to disabled after hint used
     - Update `aria-pressed="true"` after use
     - Reset both hint states on `round:start`
@@ -317,13 +317,13 @@ Restructure GeoWars to achieve ~70% token reduction while maintaining full backw
     - **Completion criteria:** Button states update correctly
     - _Requirements: 6.5, 6.6_
 
-  - [ ] 8.3 Create hints facade in app.js
+  - [x] 8.3 Create hints facade in app.js
     - Export hint functions matching existing signatures
     - **Completion criteria:** Existing hint code works
     - _Requirements: 13.2_
 
-- [ ] 9. Extract Silhouette Feature Module
-  - [ ] 9.1 Create `src/features/silhouette/index.js` with silhouette logic
+- [x] 9. Extract Silhouette Feature Module
+  - [x] 9.1 Create `src/features/silhouette/index.js` with silhouette logic
     - Subscribe to `round:start` event
     - Load silhouette image for current country
     - Clean up previous silhouette element before loading new
@@ -331,29 +331,29 @@ Restructure GeoWars to achieve ~70% token reduction while maintaining full backw
     - **Completion criteria:** Silhouettes load on each round
     - _Requirements: 7.1, 7.2, 7.6_
 
-  - [ ] 9.2 Write property tests for silhouette loading
+  - [x] 9.2 Write property tests for silhouette loading
     - **Property 17: round:start triggers silhouette load** - Emit round:start events, verify silhouette loading initiated
     - **Validates: Requirements 7.1**
     - **Property 19: Only one silhouette element exists at a time** - Multiple round:starts, verify single silhouette element
     - **Validates: Requirements 7.6**
 
-  - [ ] 9.3 Implement silhouette error handling
+  - [x] 9.3 Implement silhouette error handling
     - Emit `silhouette:error` with `{ countryId, error }` on load failure
     - Integrate with AssetFallbacks system for graceful degradation
     - Show recovery UI for missing silhouettes
     - **Completion criteria:** Errors handled with fallback UI
     - _Requirements: 7.3, 7.4_
 
-  - [ ] 9.4 Write property test for silhouette error events
+  - [x] 9.4 Write property test for silhouette error events
     - **Property 18: Error events contain country ID** - Simulate silhouette failures, verify country ID in error payload
     - **Validates: Requirements 7.3**
 
-  - [ ] 9.5 Create silhouette facade in app.js
+  - [x] 9.5 Create silhouette facade in app.js
     - Export silhouette functions matching existing signatures
     - **Completion criteria:** Existing silhouette code works
     - _Requirements: 13.2_
 
-- [ ] 10. Checkpoint - Feature Modules Complete
+- [x] 10. Checkpoint - Feature Modules Complete
   - Test timer countdown, warnings, and expiration
   - Test autocomplete with keyboard navigation
   - Test scoring and streak calculations

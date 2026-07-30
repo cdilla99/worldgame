@@ -196,6 +196,16 @@ assert.deepEqual(autocomplete.getSuggestions(), [], 'selection dismisses current
 assert.equal(list.children.length, 0);
 assert.equal(list.classList.contains('hidden'), true);
 
+input.value = 'ca';
+input.dispatch('input');
+const pointerOption = list.children[0];
+const pointerEvent = pointerOption.dispatch('pointerdown');
+assert.equal(pointerEvent.defaultPrevented, true, 'pointer selection prevents the input blur race');
+assert.equal(input.value, 'Canada', 'pointer-down selection fills the answer before the popup can close');
+assert.strictEqual(selectedPayload.country, sampleCountries[0], 'pointer selection emits the selected country');
+assert.equal(list.children.length, 0, 'pointer selection dismisses the popup immediately');
+assert.equal(list.classList.contains('hidden'), true);
+
 input.value = 'me';
 input.dispatch('input');
 assert.equal(list.children.length, 2, 'later input events refresh suggestions');

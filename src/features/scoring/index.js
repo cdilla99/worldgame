@@ -23,6 +23,8 @@ export function createScoring({ events = eventBus } = {}) {
   let score = 0;
   let streak = 0;
   let bestStreak = 0;
+  let correctCount = 0;
+  let totalRounds = 0;
   let hotStreakEmitted = false;
 
   function emitUpdate(delta) {
@@ -44,6 +46,8 @@ export function createScoring({ events = eventBus } = {}) {
     const delta = calculatePoints(payload.difficulty, answerType);
     score += delta;
     streak += 1;
+    correctCount += 1;
+    totalRounds += 1;
     if (streak >= 3 && !hotStreakEmitted) {
       emitHotStreak();
       hotStreakEmitted = true;
@@ -57,6 +61,7 @@ export function createScoring({ events = eventBus } = {}) {
   function handleIncorrect() {
     const previousStreak = streak;
     streak = 0;
+    totalRounds += 1;
     hotStreakEmitted = false;
     if (previousStreak > 0) {
       emitStreakReset(previousStreak);
@@ -64,9 +69,21 @@ export function createScoring({ events = eventBus } = {}) {
     return emitUpdate(0);
   }
 
+  function handleGameEnd() {
+    const finalStats = Object.freeze({
+      totalScore: score,
+      correctCount,
+      totalRounds,
+      bestStreak
+    });
+    events.emit('score:final', finalStats);
+    return finalStats;
+  }
+
   const unsubscribers = [
     events.on('answer:correct', handleCorrect),
-    events.on('answer:incorrect', handleIncorrect)
+    events.on('answer:incorrect', handleIncorrect),
+    events.on('game:end', handleGameEnd)
   ];
 
   function getState() {

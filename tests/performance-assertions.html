@@ -90,7 +90,7 @@
       observer.observe(control, { attributes: true, attributeFilter: ['class', 'aria-pressed'] });
       observer.observe(summary, { childList: true, characterData: true, subtree: true });
       control.click(); const frameAt = await nextFrame(view); observer.disconnect();
-      assert(control.classList.contains('active') && control.getAttribute('aria-pressed') === 'true' && /Practice selected/.test(summary.textContent), 'Practice selection did not produce visible acknowledgement.');
+      assert(control.classList.contains('active') && control.getAttribute('aria-pressed') === 'true' && /Practice · No timer/.test(summary.textContent), 'Practice selection did not produce visible acknowledgement.');
       return Math.max(frameAt, mutationAt || startedAt) - startedAt;
     }
     function assertLandingAssetDeferral(view) {

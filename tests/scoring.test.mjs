@@ -31,10 +31,47 @@ test('calculates base points times the answer multiplier', () => {
   assert.equal(calculatePoints('hard', 'options'), 200);
 });
 
-test('subscribes to correct and incorrect answer events', () => {
+test('subscribes to answer and game-end events', () => {
   const { events, scoring } = setup();
   assert.equal(events.handlerCount('answer:correct'), 1);
   assert.equal(events.handlerCount('answer:incorrect'), 1);
+  assert.equal(events.handlerCount('game:end'), 1);
+  scoring.dispose();
+});
+
+test('game:end emits complete final session statistics', () => {
+  const { events, scoring } = setup();
+  const finalEvents = [];
+  events.on('score:final', stats => finalEvents.push(stats));
+
+  events.emit('answer:correct', { difficulty: 'easy', answerType: 'typed' });
+  events.emit('answer:incorrect');
+  events.emit('answer:correct', { difficulty: 'hard', answerType: 'bail' });
+  events.emit('game:end');
+
+  assert.deepEqual(finalEvents, [{
+    totalScore: 700,
+    correctCount: 2,
+    totalRounds: 3,
+    bestStreak: 1
+  }]);
+  assert.ok(Object.isFrozen(finalEvents[0]));
+  scoring.dispose();
+});
+
+test('game:end emits zero-valued statistics when no rounds were answered', () => {
+  const { events, scoring } = setup();
+  const finalEvents = [];
+  events.on('score:final', stats => finalEvents.push(stats));
+
+  events.emit('game:end');
+
+  assert.deepEqual(finalEvents, [{
+    totalScore: 0,
+    correctCount: 0,
+    totalRounds: 0,
+    bestStreak: 0
+  }]);
   scoring.dispose();
 });
 
@@ -175,15 +212,20 @@ test('streak:reset only fires when streak was positive (not on initial incorrect
   scoring.dispose();
 });
 
-test('dispose removes only the scoring answer subscriptions', () => {
+test('dispose removes all scoring subscriptions', () => {
   const { events, scoring, updates } = setup();
+  const finalEvents = [];
+  events.on('score:final', stats => finalEvents.push(stats));
   scoring.dispose();
   scoring.dispose();
   events.emit('answer:correct', { difficulty: 'easy', answerType: 'typed' });
   events.emit('answer:incorrect');
+  events.emit('game:end');
   assert.deepEqual(updates, []);
+  assert.deepEqual(finalEvents, []);
   assert.equal(events.handlerCount('answer:correct'), 0);
   assert.equal(events.handlerCount('answer:incorrect'), 0);
+  assert.equal(events.handlerCount('game:end'), 0);
 });
 
 let passed = 0;

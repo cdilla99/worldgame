@@ -91,6 +91,7 @@ function pickDistractors(correctCard, pool) {
 // ============================================================
 
 const $landing = document.getElementById('landing');
+const $explorer = document.getElementById('explorer');
 const $game = document.getElementById('game');
 const $results = document.getElementById('results');
 
@@ -100,7 +101,7 @@ const $flagImg = document.getElementById('flag-img');
 const $continentHint = document.getElementById('continent-hint');
 const $difficultyHint = document.getElementById('difficulty-hint');
 const $choices = document.getElementById('choices');
-const $choiceBtns = document.querySelectorAll('.choice-btn');
+const $choiceBtns = Array.from(document.querySelectorAll('.choice-btn'));
 const $feedback = document.getElementById('feedback');
 const $feedbackIcon = document.getElementById('feedback-icon');
 const $feedbackText = document.getElementById('feedback-details');
@@ -117,6 +118,11 @@ const $timerProgress = document.getElementById('timer-progress');
 const $timerContainer = document.getElementById('timer-container');
 const $streakDisplay = document.getElementById('streak-display');
 const $scoreDisplay = document.getElementById('score-display');
+const $roundDisplay = document.getElementById('round-display');
+const $gameModeLabel = document.getElementById('game-mode-label');
+const $gameHomeLogo = document.getElementById('btn-game-home');
+const $feedbackContinueHint = document.getElementById('feedback-continue-hint');
+const $globeSelectionLabel = document.getElementById('globe-selection-label');
 const $btnShowFlag = document.getElementById('btn-show-flag');
 const $btnShowRegion = document.getElementById('btn-show-region');
 const $btnReveal = document.getElementById('btn-reveal');
@@ -167,7 +173,7 @@ function handleSilhouetteAssetFailure(card) {
   clearTimeout(state.feedbackTimeout);
   state.feedbackTimeout = null;
   if ($assetRecoveryMessage) {
-    $assetRecoveryMessage.textContent = 'The country silhouette could not be loaded. Retry, move on, or return home. This round will not be saved.';
+    $assetRecoveryMessage.textContent = 'The country shape could not be loaded. Retry, move on, or return home. This round will not be saved.';
   }
   setControlDisabled($btnRetrySilhouette, false);
   setAssetRecoveryVisible(true);
@@ -229,7 +235,7 @@ function renderFeedbackFlagAsset(card) {
 function retrySilhouetteRecovery() {
   if (!state.assetFailure || state.assetFailure.type !== 'silhouette' || state.gameOver) return;
   setControlDisabled($btnRetrySilhouette, true);
-  if ($assetRecoveryMessage) $assetRecoveryMessage.textContent = 'Retrying the country silhouette. This round remains excluded until the image loads.';
+  if ($assetRecoveryMessage) $assetRecoveryMessage.textContent = 'Retrying the country shape. This round remains excluded until the image loads.';
   renderSilhouetteAsset(state.currentCard);
 }
 
@@ -336,6 +342,8 @@ const $resCorrect = document.getElementById('res-correct');
 const $statPlayed = document.getElementById('stat-played');
 const $statBest = document.getElementById('stat-best');
 const $statTotal = document.getElementById('stat-total');
+const $statsBar = document.getElementById('stats-bar');
+const $recordsEmpty = document.getElementById('records-empty');
 const $playerContextName = document.getElementById('player-context-name');
 const $playerContextDetail = document.getElementById('player-context-detail');
 const $choosePlayerButton = document.getElementById('btn-choose-player');
@@ -352,7 +360,7 @@ const $sendPlayerLinkButton = document.getElementById('btn-send-player-link');
 // ============================================================
 
 function showScreen(screen) {
-  [$landing, $game, $results].forEach(s => s.classList.add('hidden'));
+  [$landing, $explorer, $game, $results].forEach(s => s.classList.add('hidden'));
   screen.classList.remove('hidden');
 }
 
@@ -381,6 +389,8 @@ function updateFilterSummary() {
     ? 'Worldwide'
     : (state.continent === 'North America' ? 'Americas' : state.continent);
   $summary.textContent = diffLabel + ' · ' + continentLabel;
+  if ($globeSelectionLabel) $globeSelectionLabel.textContent = continentLabel;
+  updateModeSummary();
 }
 
 function selectFilterOption(buttons, selectedButton) {
@@ -413,12 +423,18 @@ const $startGameLabel = document.getElementById('start-game-label');
 
 function updateModeSummary() {
   const isSprint = state.mode === 'sprint';
+  const diffLabel = state.difficulty === 'all'
+    ? 'Any difficulty'
+    : state.difficulty.charAt(0).toUpperCase() + state.difficulty.slice(1);
+  const continentLabel = state.continent === 'all'
+    ? 'Worldwide'
+    : (state.continent === 'North America' ? 'Americas' : state.continent);
   if ($modeSummary) {
     $modeSummary.textContent = isSprint
-      ? 'Sprint selected — 60 seconds to answer by typing or options.'
-      : 'Practice selected — No timer. Reveal each answer and advance at your own pace.';
+      ? `Sprint · 60 seconds · ${diffLabel} · ${continentLabel}`
+      : `Practice · No timer · ${diffLabel} · ${continentLabel}`;
   }
-  if ($startGameLabel) $startGameLabel.textContent = isSprint ? 'Start Sprint' : 'Start Practice';
+  if ($startGameLabel) $startGameLabel.textContent = isSprint ? 'Start sprint' : 'Start practice';
 }
 
 function selectModeOption(selectedButton) {
@@ -478,6 +494,9 @@ async function loadStats() {
   $statPlayed.textContent = stats.played || 0;
   $statBest.textContent = stats.bestStreak || 0;
   $statTotal.textContent = stats.totalCorrect || 0;
+  const hasRecords = (stats.played || 0) > 0 || (stats.bestStreak || 0) > 0 || (stats.totalCorrect || 0) > 0;
+  if ($statsBar) $statsBar.classList.toggle('hidden', !hasRecords);
+  if ($recordsEmpty) $recordsEmpty.classList.toggle('hidden', hasRecords);
   await renderPlayerContext();
 }
 
@@ -531,6 +550,7 @@ function startGame() {
   clearAssetRecovery();
 
   showScreen($game);
+  if ($gameModeLabel) $gameModeLabel.textContent = state.mode === 'sprint' ? 'Sprint run' : 'Practice session';
   updateHUD();
 
   if (state.mode === 'sprint') {
@@ -617,6 +637,11 @@ function animateScore(target) {
 
 function updateHUD() {
   animateScore(state.score);
+  if ($roundDisplay) {
+    const roundNumber = Math.max(1, state.total);
+    $roundDisplay.textContent = 'Round ' + roundNumber;
+    $roundDisplay.setAttribute('aria-label', 'Current round: ' + roundNumber);
+  }
   $scoreDisplay.setAttribute('aria-label', 'Current score: ' + state.score);
   if (state.streak > 0) {
     $streakDisplay.classList.remove('hidden');
@@ -645,6 +670,7 @@ function nextRound() {
   state.answered = false;
   state.total++;
   state.roundCounted = true;
+  updateHUD();
   clearAssetRecovery();
 
   const card = state.currentCard;
@@ -696,6 +722,7 @@ function nextRound() {
   state.choices = options;
 
   // Hide feedback until an answer or reveal has been evaluated.
+  $answerInteractionPanel.classList.remove('has-feedback');
   $feedback.classList.add('hidden');
   $feedbackActions.classList.add('hidden');
 
@@ -783,6 +810,7 @@ function dismissAutocomplete() {
   activeSuggestionIndex = -1;
   $autocompleteList.replaceChildren();
   $autocompleteList.classList.add('hidden');
+  $answerInteractionPanel.classList.remove('has-autocomplete');
   $autocompleteList.setAttribute('aria-hidden', 'true');
   $answerInput.setAttribute('aria-expanded', 'false');
   $answerInput.removeAttribute('aria-activedescendant');
@@ -822,7 +850,8 @@ function renderAutocomplete() {
 
   const options = document.createDocumentFragment();
   autocompleteMatches.forEach((name, index) => {
-    const option = document.createElement('div');
+    const option = document.createElement('button');
+    option.type = 'button';
     const matchStart = name.toLowerCase().indexOf(query);
     const matchEnd = matchStart + query.length;
     option.id = 'autocomplete-option-' + index;
@@ -836,13 +865,17 @@ function renderAutocomplete() {
 
     // Keeping input focus lets aria-activedescendant expose selection while
     // pointer users can still choose an option without a blur race.
-    option.addEventListener('pointerdown', event => event.preventDefault());
+    option.addEventListener('pointerdown', event => {
+      event.preventDefault();
+      selectAutocompleteSuggestion(index);
+    });
     option.addEventListener('click', () => selectAutocompleteSuggestion(index));
     options.appendChild(option);
   });
 
   $autocompleteList.appendChild(options);
   $autocompleteList.classList.remove('hidden');
+  $answerInteractionPanel.classList.add('has-autocomplete');
   $autocompleteList.setAttribute('aria-hidden', 'false');
   $answerInput.setAttribute('aria-expanded', 'true');
 }
@@ -1047,10 +1080,10 @@ function showFeedback(correct, isReveal) {
   const outcome = isReveal ? 'Answer revealed' : (correct ? 'Correct' : 'Incorrect');
   const scoreBefore = correct && !isReveal ? state.score - points : state.score;
   const statusMessage = isReveal
-    ? 'Answer revealed. No points were awarded.'
+    ? 'Explore the answer, then continue when you are ready.'
     : correct
-      ? 'Correct. Awarded ' + points + ' points. Score changed from ' + scoreBefore + ' to ' + state.score + '.'
-      : 'Incorrect. No points were awarded. Score remains ' + state.score + '.';
+      ? 'You read the shape correctly — ' + points + ' points added.'
+      : 'Not this time — learn the shape and keep going.';
   const fact = card.fun_facts && card.fun_facts.length > 0
     ? card.fun_facts[Math.floor(Math.random() * card.fun_facts.length)]
     : '';
@@ -1059,6 +1092,7 @@ function showFeedback(correct, isReveal) {
     : '';
   const showPracticeRoutes = state.mode === 'showoff';
 
+  $answerInteractionPanel.classList.add('has-feedback');
   $feedback.className = 'feedback ' + statusClass;
   $feedbackHeading.textContent = outcome;
   $feedbackStatus.textContent = statusMessage;
@@ -1070,8 +1104,8 @@ function showFeedback(correct, isReveal) {
   $feedbackFlag.replaceChildren();
 
   if (correct && !isReveal) {
-    appendFeedbackDetail($feedbackScore, 'reveal-points', 'Awarded: +' + points + ' points');
-    appendFeedbackDetail($feedbackScore, 'reveal-score-change', 'Score: ' + scoreBefore + ' → ' + state.score);
+    appendFeedbackDetail($feedbackScore, 'reveal-points', '+' + points + ' points earned');
+    appendFeedbackDetail($feedbackScore, 'reveal-score-change', 'Total score ' + scoreBefore + ' → ' + state.score);
   }
   if (assetFallbacks) renderFeedbackFlagAsset(card);
   if (landmark) appendFeedbackDetail($feedbackText, 'reveal-fact', 'Landmark: ' + landmark);
@@ -1081,6 +1115,7 @@ function showFeedback(correct, isReveal) {
   setControlLabel($feedbackNext, 'Next country');
   setControlDisabled($feedbackNext, false);
   $feedbackActions.classList.toggle('hidden', !showPracticeRoutes);
+  if ($feedbackContinueHint) $feedbackContinueHint.classList.toggle('hidden', showPracticeRoutes);
 
   // Reveal the flag on the stage as supporting information.
   $flagHint.classList.remove('flag-blurred');
@@ -1147,6 +1182,18 @@ function endGame() {
   buildReview();
   Promise.resolve(savePromise).then(() => loadStats());
   setTimeout(() => showScreen($results), 800);
+}
+
+if ($gameHomeLogo) {
+  $gameHomeLogo.addEventListener('click', () => {
+    clearTimeout(state.feedbackTimeout);
+    state.feedbackTimeout = null;
+    clearInterval(state.timer);
+    state.gameOver = true;
+    invokeBackgroundMusic('stop');
+    if (state.total > 0) Promise.resolve(saveStats()).then(() => loadStats());
+    showScreen($landing);
+  });
 }
 
 $btnQuit.addEventListener('click', () => {
@@ -1246,7 +1293,7 @@ async function renderPlayerContext() {
     $playerContextDetail.textContent = 'Guest stats are shared on this browser/device. Choose a player for a personal saved record.';
   }
 
-  $choosePlayerButton.textContent = identity.claimed ? 'Switch player' : 'Choose player';
+  $choosePlayerButton.textContent = identity.claimed ? 'Switch' : 'Choose';
   $choosePlayerButton.disabled = false;
   $choosePlayerButton.setAttribute('aria-label', identity.claimed ? 'Switch to another player' : 'Choose a player');
 }
@@ -1508,6 +1555,7 @@ document.addEventListener('keydown', (e) => {
 // ============================================================
 
 const $landingTitle = document.getElementById('landing-title');
+const $explorerTitle = document.getElementById('explorer-title');
 const $gameTitle = document.getElementById('game-title');
 const $quitConfirm = document.getElementById('quit-confirm');
 const $quitConfirmTitle = document.getElementById('quit-confirm-title');
@@ -1535,6 +1583,7 @@ function focusElement(element) {
 
 function getScreenFocusTarget(screen) {
   if (screen === $landing) return $landingTitle;
+  if (screen === $explorer) return $explorerTitle;
   if (screen === $game) return $gameTitle;
   if (screen === $results) return $resultsTitle;
   return null;
@@ -1640,11 +1689,18 @@ showScreen = function(screen) {
   if ($quitConfirm && isVisible($quitConfirm)) closeQuitDialog(false);
 
   renderScreen(screen);
+  window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   currentScreen = screen;
-  [$landing, $game, $results].forEach(candidate => setAccessibilityAvailability(candidate, candidate === screen));
+  [$landing, $explorer, $game, $results].forEach(candidate => setAccessibilityAvailability(candidate, candidate === screen));
   syncFeedbackAccessibility(false);
   focusElement(getScreenFocusTarget(screen));
 };
+
+window.GeoWars = window.GeoWars || {};
+window.GeoWars.navigate = Object.freeze({
+  showHome: () => showScreen($landing),
+  showExplorer: () => showScreen($explorer)
+});
 
 const renderNextRound = nextRound;
 nextRound = function() {
@@ -1722,7 +1778,7 @@ document.addEventListener('keydown', event => {
 });
 
 // Initialize semantic visibility after all controls and wrappers are available.
-[$landing, $game, $results].forEach(screen => setAccessibilityAvailability(screen, screen === currentScreen));
+[$landing, $explorer, $game, $results].forEach(screen => setAccessibilityAvailability(screen, screen === currentScreen));
 $feedback.setAttribute('role', 'region');
 $feedback.removeAttribute('aria-live');
 syncFeedbackAccessibility(false);
@@ -1967,3 +2023,227 @@ setAccessibilityAvailability($playerProfileModal, false);
   facade.ready = Promise.all([priorReady, autocompleteReady]).then(() => facade);
 }(window));
 /* AUTOCOMPLETE_FACADE_END */
+
+
+// ============================================================
+// SCORING COMPATIBILITY FACADE
+// ============================================================
+
+/* SCORING_FACADE_START */
+(function installScoringCompatibilityFacade(root) {
+  const facade = root.GeoWars || {};
+  let scoringApi = null;
+  let scoringModule = null;
+  let loadSettled = false;
+
+  function install(source) {
+    const candidate = source && (source.scoring || source.default);
+    if (!candidate || typeof candidate.getState !== 'function' ||
+        typeof source.calculatePoints !== 'function' || typeof source.createScoring !== 'function') {
+      throw new TypeError('Scoring module is unavailable');
+    }
+    scoringApi = candidate;
+    scoringModule = source;
+    facade.scoring = scoringApi;
+    return facade;
+  }
+
+  function callScoring(action, legacyName, args = []) {
+    if (scoringModule) return action();
+    const useLegacy = () => typeof root[legacyName] === 'function'
+      ? root[legacyName](...args)
+      : undefined;
+    if (loadSettled) return useLegacy();
+    return scoringReady.then(() => scoringModule ? action() : useLegacy());
+  }
+
+  function calculatePointsFacade(difficulty, answerType) {
+    return callScoring(
+      () => scoringModule.calculatePoints(difficulty, answerType),
+      'calculatePoints',
+      [difficulty, answerType]
+    );
+  }
+
+  function createScoringFacade(options) {
+    return callScoring(
+      () => scoringModule.createScoring(options),
+      'createScoring',
+      [options]
+    );
+  }
+
+  function getScoringStateFacade() {
+    return callScoring(() => scoringApi.getState(), 'getScoringState');
+  }
+
+  Object.assign(facade, {
+    calculatePoints: calculatePointsFacade,
+    createScoring: createScoringFacade,
+    getScoringState: getScoringStateFacade
+  });
+  root.GeoWars = facade;
+
+  const priorReady = facade.ready || Promise.resolve(facade);
+  const module = root.GeoWarsScoring
+    ? Promise.resolve(root.GeoWarsScoring)
+    : import('./src/features/scoring/index.js');
+  const scoringReady = module
+    .then(install)
+    .catch(() => facade)
+    .then(value => {
+      loadSettled = true;
+      return value;
+    });
+
+  facade.scoringReady = scoringReady;
+  facade.ready = Promise.all([priorReady, scoringReady]).then(() => facade);
+}(window));
+/* SCORING_FACADE_END */
+
+
+// ============================================================
+// HINTS COMPATIBILITY FACADE
+// ============================================================
+
+/* HINTS_FACADE_START */
+(function installHintsCompatibilityFacade(root) {
+  const facade = root.GeoWars || {};
+  let hintsApi = null;
+  let hintsModule = null;
+  let loadSettled = false;
+
+  function install(source) {
+    const candidate = source && (source.hintsModule || source.hints || source.default || source);
+    if (!candidate || typeof candidate.reveal !== 'function' ||
+        typeof candidate.getState !== 'function') {
+      throw new TypeError('Hints module is unavailable');
+    }
+    hintsApi = candidate;
+    hintsModule = source;
+    facade.hints = hintsApi;
+    return facade;
+  }
+
+  function callHints(action, legacyName, args = []) {
+    if (hintsApi) return action();
+    const useLegacy = () => typeof root[legacyName] === 'function'
+      ? root[legacyName](...args)
+      : undefined;
+    if (loadSettled) return useLegacy();
+    return hintsReady.then(() => hintsApi ? action() : useLegacy());
+  }
+
+  function revealHintFacade(type) {
+    return callHints(() => hintsApi.reveal(type), 'revealHint', [type]);
+  }
+
+  function createHintsFacade(options) {
+    return callHints(() => {
+      const createHints = hintsModule && (hintsModule.createHints || hintsModule.hintsModule?.createHints);
+      return typeof createHints === 'function' ? createHints(options) : undefined;
+    }, 'createHints', [options]);
+  }
+
+  function getHintsStateFacade() {
+    return callHints(() => hintsApi.getState(), 'getHintsState');
+  }
+
+  Object.assign(facade, {
+    revealHint: revealHintFacade,
+    createHints: createHintsFacade,
+    getHintsState: getHintsStateFacade
+  });
+  root.GeoWars = facade;
+
+  const priorReady = facade.ready || Promise.resolve(facade);
+  const module = root.GeoWarsHints
+    ? Promise.resolve(root.GeoWarsHints)
+    : import('./src/features/hints/index.js');
+  const hintsReady = module
+    .then(install)
+    .catch(() => facade)
+    .then(value => {
+      loadSettled = true;
+      return value;
+    });
+
+  facade.hintsReady = hintsReady;
+  facade.ready = Promise.all([priorReady, hintsReady]).then(() => facade);
+}(window));
+/* HINTS_FACADE_END */
+
+
+// ============================================================
+// SILHOUETTE COMPATIBILITY FACADE
+// ============================================================
+
+/* SILHOUETTE_FACADE_START */
+(function installSilhouetteCompatibilityFacade(root) {
+  const facade = root.GeoWars || {};
+  let silhouetteApi = null;
+  let silhouetteModule = null;
+  let loadSettled = false;
+
+  function install(source) {
+    const moduleSource = source && (source.silhouetteModule || source);
+    const candidate = moduleSource && (moduleSource.silhouette || moduleSource.default || moduleSource);
+    if (!candidate || typeof candidate.load !== 'function' ||
+        typeof candidate.getElement !== 'function' ||
+        typeof moduleSource.createSilhouette !== 'function') {
+      throw new TypeError('Silhouette module is unavailable');
+    }
+    silhouetteApi = candidate;
+    silhouetteModule = moduleSource;
+    facade.silhouette = silhouetteApi;
+    return facade;
+  }
+
+  function callSilhouette(action, legacyName, args = []) {
+    if (silhouetteApi) return action();
+    const useLegacy = () => typeof root[legacyName] === 'function'
+      ? root[legacyName](...args)
+      : undefined;
+    if (loadSettled) return useLegacy();
+    return silhouetteReady.then(() => silhouetteApi ? action() : useLegacy());
+  }
+
+  function renderSilhouetteAssetFacade(card) {
+    return callSilhouette(() => silhouetteApi.load(card), 'renderSilhouetteAsset', [card]);
+  }
+
+  function createSilhouetteFacade(options) {
+    return callSilhouette(
+      () => silhouetteModule.createSilhouette(options),
+      'createSilhouette',
+      [options]
+    );
+  }
+
+  function getSilhouetteElementFacade() {
+    return callSilhouette(() => silhouetteApi.getElement(), 'getSilhouetteElement');
+  }
+
+  Object.assign(facade, {
+    renderSilhouetteAsset: renderSilhouetteAssetFacade,
+    createSilhouette: createSilhouetteFacade,
+    getSilhouetteElement: getSilhouetteElementFacade
+  });
+  root.GeoWars = facade;
+
+  const priorReady = facade.ready || Promise.resolve(facade);
+  const module = root.GeoWarsSilhouette
+    ? Promise.resolve(root.GeoWarsSilhouette)
+    : import('./src/features/silhouette/index.js');
+  const silhouetteReady = module
+    .then(install)
+    .catch(() => facade)
+    .then(value => {
+      loadSettled = true;
+      return value;
+    });
+
+  facade.silhouetteReady = silhouetteReady;
+  facade.ready = Promise.all([priorReady, silhouetteReady]).then(() => facade);
+}(window));
+/* SILHOUETTE_FACADE_END */

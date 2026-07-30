@@ -103,7 +103,7 @@
         var fallback = card.querySelector('[data-asset-fallback="silhouette"]');
         assert(fallback, 'a failed silhouette must be replaced by an in-place fallback');
         assert(!card.querySelector('img'), 'the failed silhouette image must not remain player-facing');
-        assert(/Silhouette unavailable/.test(fallback.textContent), 'the silhouette fallback must explain the unavailable prompt');
+        assert(/Shape unavailable/.test(fallback.textContent), 'the silhouette fallback must explain the unavailable prompt');
         assertUsableReservedArea(card, fallback, before, 'Silhouette');
       }
 
@@ -245,7 +245,7 @@
           ['landing-title', 'btn-start-game', 'btn-sprint', 'btn-showoff'].forEach(function (id) {
             assert(gameDocument.getElementById(id), 'landing must expose ' + id + ' without a remote asset');
           });
-          assert(/Identify the country behind the silhouette/.test(landing.textContent), 'landing proposition must remain text-comprehensible without artwork');
+          assert(/Name the country./.test(landing.textContent), 'landing proposition must remain text-comprehensible without artwork');
           assert(!Array.from(landing.querySelectorAll('img')).some(function (image) {
             return image.getBoundingClientRect().width > 0 && image.complete && image.naturalWidth === 0;
           }), 'landing must not expose a broken essential image');

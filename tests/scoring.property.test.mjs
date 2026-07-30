@@ -84,10 +84,61 @@ function runProperty15({ seed, cases, roundsPerGame }) {
   console.log(`Property 15 passed (${cases} games, ${roundsPerGame} rounds each, seed=0x${seed.toString(16)})`);
 }
 
+// Property 16: Best streak = max achieved streak
+// **Validates: Requirements 5.5**
+function runProperty16({ seed, cases, maxSequenceLength }) {
+  const random = createRandom(seed);
+
+  for (let iteration = 0; iteration < cases; iteration += 1) {
+    const events = new EventBus();
+    const scoring = createScoring({ events });
+    const sequenceLength = Math.floor(random() * (maxSequenceLength + 1));
+    const answerSequence = [];
+    let currentStreak = 0;
+    let expectedBestStreak = 0;
+
+    for (let round = 0; round < sequenceLength; round += 1) {
+      const isCorrect = random() < 0.6;
+      answerSequence.push(isCorrect);
+
+      if (isCorrect) {
+        events.emit('answer:correct', {
+          difficulty: 'easy',
+          answerType: 'options'
+        });
+        currentStreak += 1;
+        expectedBestStreak = Math.max(expectedBestStreak, currentStreak);
+      } else {
+        events.emit('answer:incorrect');
+        currentStreak = 0;
+      }
+    }
+
+    try {
+      assert.equal(
+        scoring.getState().bestStreak,
+        expectedBestStreak,
+        'best streak should equal the longest consecutive run of correct answers'
+      );
+    } catch (error) {
+      const counterexample = answerSequence.map(answer => answer ? 'correct' : 'incorrect').join(',');
+      error.message = `Property 16 failed (seed=0x${seed.toString(16)}, iteration=${iteration}, sequence=[${counterexample}]): ${error.message}`;
+      throw error;
+    } finally {
+      scoring.dispose();
+    }
+  }
+
+  console.log(`Property 16 passed (${cases} sequences, max length ${maxSequenceLength}, seed=0x${seed.toString(16)})`);
+}
+
 console.log('Running Property 14: Points = base × multiplier for any difficulty and answerType');
 runProperty14({ seed: 0x7213040f, cases: 500 });
 
 console.log('Running Property 15: Cumulative scores correct in score:update events');
 runProperty15({ seed: 0x72150417, cases: 200, roundsPerGame: 10 });
 
-console.log('Scoring properties 14-15 passed (700 generated cases total)');
+console.log('Running Property 16: Best streak = max achieved streak');
+runProperty16({ seed: 0x72160505, cases: 300, maxSequenceLength: 50 });
+
+console.log('Scoring properties 14-16 passed (1,000 generated cases total)');

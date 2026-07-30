@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+  <defs>
+    <radialGradient id="ocean" cx="32%" cy="25%" r="78%"><stop offset="0" stop-color="#78aefe"/><stop offset=".4" stop-color="#326fca"/><stop offset=".78" stop-color="#153d7d"/><stop offset="1" stop-color="#091d42"/></radialGradient>
+    <linearGradient id="land" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#82f0c4"/><stop offset=".55" stop-color="#35cc96"/><stop offset="1" stop-color="#177b67"/></linearGradient>
+    <radialGradient id="shade"><stop offset=".55" stop-color="#07152f" stop-opacity="0"/><stop offset=".82" stop-color="#07152f" stop-opacity=".22"/><stop offset="1" stop-color="#020916" stop-opacity=".72"/></radialGradient>
+    <linearGradient id="glint"><stop stop-color="#fff" stop-opacity=".32"/><stop offset=".48" stop-color="#fff" stop-opacity=".03"/><stop offset=".7" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <clipPath id="clip"><circle cx="120" cy="120" r="91"/></clipPath>
+    <filter id="shadow" x="-35%" y="-35%" width="170%" height="180%"><feDropShadow dy="8" stdDeviation="10" flood-color="#020916" flood-opacity=".72"/><feDropShadow stdDeviation="8" flood-color="#4bd6a1" flood-opacity=".26"/></filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <circle cx="120" cy="120" r="92" fill="url(#ocean)" stroke="#86aef0" stroke-width="1.2"/>
+    <g clip-path="url(#clip)">
+      <g fill="none" stroke="#d0e0ff" stroke-opacity=".18" stroke-width=".8"><ellipse cx="120" cy="120" rx="89" ry="24"/><ellipse cx="120" cy="120" rx="90" ry="49"/><ellipse cx="120" cy="120" rx="89" ry="70"/><ellipse cx="120" cy="120" rx="30" ry="90"/><ellipse cx="120" cy="120" rx="61" ry="90"/><path d="M30 120h180"/></g>
+      <g class="continents" fill="url(#land)" stroke="#b2f8dc" stroke-opacity=".34" stroke-width=".8" stroke-linejoin="round">
+        <path d="M30 73 39 59 54 48 68 43 82 47 90 55 84 63 73 66 68 74 59 77 56 87 48 91 44 102 36 98 39 88 33 83Z"/><path d="m55 95 8-8 10 2 7 8-2 8-9 1-4-6-8 1Z"/><path d="m76 104 8 3 4 8 8 5-2 5-10-6-5-9Z"/>
+        <path d="m93 122 12-5 18 3 12 10-2 13-8 13-3 17-10 18-7 4-3-18-7-14-4-17-7-12Z"/><path d="m82 39 11-10 18 3 6 10-7 13-14 4-11-8Z"/>
+        <path d="m132 75 8-8 8 2 5-5 10 3 2 7-7 6-8-1-4 7-10-2Z"/><path d="m137 89 16-7 18 5 8 12-5 18-8 10-4 20-9 12-8-5-3-18-8-13-4-17Z"/><path d="m173 145 6-9 4 8-2 13-6 7-4-7Z"/>
+        <path d="m158 67 12-9 17-2 18 7 12 13-3 12-13 1-8 8-12-5-9 5-8-9-11-5 4-8Z"/><path d="m184 96 9 4 4 11 8 7-4 7-7-8-6-5Z"/><path d="m207 94 5 5-2 10-5-4Z"/>
+        <path d="m190 139 13-7 16 5 6 12-8 13-18 3-11-8-4-10Z"/><path d="m221 169 5-2 3 8-4 7-4-5Z"/>
+      </g>
+      <circle cx="120" cy="120" r="92" fill="url(#shade)"/><ellipse cx="89" cy="80" rx="54" ry="43" fill="url(#glint)" transform="rotate(-18 89 80)"/>
+    </g>
+    <circle cx="120" cy="120" r="88.5" fill="none" stroke="#d7e6ff" stroke-opacity=".2"/>
+  </g>
+  <style>.continents{transform-box:fill-box;transform-origin:center;animation:drift 14s ease-in-out infinite}@keyframes drift{0%,100%{transform:translateX(-1.5px)}50%{transform:translateX(2.5px)}}@media(prefers-reduced-motion:reduce){.continents{animation:none}}</style>
+</svg>

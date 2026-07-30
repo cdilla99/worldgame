@@ -30,6 +30,7 @@ export function createAutocomplete(options = {}) {
   const list = options.list ?? documentRef?.getElementById?.('autocomplete-list');
   const countryIndex = options.countryIndex ?? getIndex();
   const events = options.events ?? eventBus;
+  const panel = typeof list?.closest === 'function' ? list.closest('.answer-interaction-panel') : null;
 
   if (!input || typeof input.addEventListener !== 'function' ||
       typeof input.removeEventListener !== 'function') {
@@ -61,6 +62,7 @@ export function createAutocomplete(options = {}) {
 
   function setListVisibility(visible) {
     list.classList.toggle('hidden', !visible);
+    panel?.classList.toggle('has-autocomplete', visible);
     input.setAttribute('aria-expanded', String(visible));
   }
 
@@ -112,6 +114,10 @@ export function createAutocomplete(options = {}) {
       suggestion.textContent = country.name;
       suggestion.setAttribute('role', 'option');
       suggestion.setAttribute('aria-selected', 'false');
+      suggestion.addEventListener('pointerdown', event => {
+        event.preventDefault();
+        select(country);
+      });
       suggestion.addEventListener('click', () => select(country));
       renderedOptions.push(suggestion);
       list.appendChild(suggestion);

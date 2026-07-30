@@ -17,7 +17,7 @@
       "motionBearing": true,
       "primaryControl": "#btn-start-game",
       "requiredControls": ["#btn-sprint", "#btn-showoff", "#btn-start-game"],
-      "requiredText": ["GeoWars", "Identify the country behind the silhouette"]
+      "requiredText": ["GeoWars", "Name the country."]
     },
     {
       "id": "unanswered-stage",
@@ -25,7 +25,7 @@
       "motionBearing": true,
       "primaryControl": "#btn-i-know",
       "requiredControls": ["#btn-i-know", "#btn-show-options", "#btn-show-flag", "#btn-show-region"],
-      "requiredText": ["Identify the country silhouette", "Choose your answer path"]
+      "requiredText": ["Name this country", "Choose your answer"]
     },
     {
       "id": "typed-answer",
@@ -49,7 +49,7 @@
       "motionBearing": true,
       "primaryControl": "#btn-feedback-next",
       "requiredControls": ["#feedback", "#feedback-heading", "#feedback-country-name", "#btn-feedback-next", "#btn-feedback-results", "#btn-feedback-home"],
-      "requiredText": ["Correct", "Awarded:"]
+      "requiredText": ["Correct", "points earned"]
     },
     {
       "id": "incorrect-feedback",
@@ -57,7 +57,7 @@
       "motionBearing": true,
       "primaryControl": "#btn-feedback-next",
       "requiredControls": ["#feedback", "#feedback-heading", "#feedback-country-name", "#btn-feedback-next", "#btn-feedback-results", "#btn-feedback-home"],
-      "requiredText": ["Incorrect", "No points were awarded"]
+      "requiredText": ["Incorrect", "Not this time"]
     },
     {
       "id": "results",
