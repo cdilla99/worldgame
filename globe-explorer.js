@@ -8,7 +8,8 @@
  * landing globe's region-selection responsibility.
  */
 (function installGlobeExplorer(root) {
-  const geometryUrl = 'assets/globe-countries.js?v=20260730-explorer2';
+  const geometryUrl = 'assets/globe-countries.js?v=20260730-territories3';
+  const territoryGeometryUrl = 'assets/globe-territories.js?v=20260730-territories3';
   const clamp = (value, minimum, maximum) =>
     Math.min(maximum, Math.max(minimum, value));
   const toRadians = degrees => degrees * Math.PI / 180;
@@ -37,6 +38,8 @@
     const flag = document.getElementById('explorer-country-flag');
     const name = document.getElementById('explorer-country-name');
     const region = document.getElementById('explorer-country-region');
+    const identityKicker = document.getElementById('explorer-country-kicker');
+    const territoryStatus = document.getElementById('explorer-country-status');
     const capital = document.getElementById('explorer-country-capital');
     const population = document.getElementById('explorer-country-population');
     const languages = document.getElementById('explorer-country-languages');
@@ -83,6 +86,10 @@
     const cards = typeof countryCards !== 'undefined' && Array.isArray(countryCards)
       ? countryCards
       : [];
+    const territoryCards = Array.isArray(root.GeoWarsExplorerTerritories)
+      ? root.GeoWarsExplorerTerritories
+      : [];
+    const explorerCards = [...cards, ...territoryCards];
 
     if (
       !screen || !openButton || !canvas || !globeFrame || !status ||
@@ -94,7 +101,7 @@
     const hitContext = hitCanvas.getContext('2d', { willReadFrequently: true });
     if (!context || !hitContext) return;
 
-    const cardsById = new Map(cards.map(card => [card.id, card]));
+    const cardsById = new Map(explorerCards.map(card => [card.id, card]));
     const geometryById = new Map();
     const pointers = new Map();
     const prefersReducedMotion = root.matchMedia('(prefers-reduced-motion: reduce)');
@@ -473,22 +480,29 @@
       setLoading(true);
       error.classList.add('hidden');
 
-      geometryPromise = new Promise((resolve, reject) => {
-        if (Array.isArray(root.GeoWarsGlobeCountries)) {
-          resolve(root.GeoWarsGlobeCountries);
-          return;
-        }
-        const script = document.createElement('script');
-        script.src = geometryUrl;
-        script.async = true;
-        script.onload = () => resolve(root.GeoWarsGlobeCountries);
-        script.onerror = () => reject(new Error('Country geometry failed to load'));
-        document.head.appendChild(script);
-      }).then(data => {
-        if (!Array.isArray(data) || data.length !== cards.length) {
+      function loadGeometryAsset(globalName, url, errorMessage) {
+        if (Array.isArray(root[globalName])) return Promise.resolve(root[globalName]);
+        return new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = url;
+          script.async = true;
+          script.onload = () => resolve(root[globalName]);
+          script.onerror = () => reject(new Error(errorMessage));
+          document.head.appendChild(script);
+        });
+      }
+
+      geometryPromise = Promise.all([
+        loadGeometryAsset('GeoWarsGlobeCountries', geometryUrl, 'Country geometry failed to load'),
+        loadGeometryAsset('GeoWarsGlobeTerritories', territoryGeometryUrl, 'Territory geometry failed to load')
+      ]).then(([countryData, territoryData]) => {
+        if (!Array.isArray(countryData) || countryData.length !== cards.length) {
           throw new Error('Country geometry is incomplete');
         }
-        countries = data;
+        if (!Array.isArray(territoryData) || territoryData.length !== territoryCards.length) {
+          throw new Error('Territory geometry is incomplete');
+        }
+        countries = [...countryData, ...territoryData];
         countries.forEach(country => geometryById.set(country.i, country));
         drawOrder = [...countries].sort((first, second) => first.s - second.s);
         setLoading(false);
@@ -499,7 +513,7 @@
         setLoading(false);
         canvas.classList.add('hidden');
         error.classList.remove('hidden');
-        setStatus('The interactive globe is unavailable. Search for a country instead.');
+        setStatus('The interactive globe is unavailable. Search for a country or territory instead.');
         return [];
       });
 
@@ -644,7 +658,16 @@
       if (!country) return;
       emptyCard.classList.add('hidden');
       countryCard.classList.remove('hidden');
-flag.replaceChildren();
+      const isTerritory = country.kind === 'territory';
+      if (identityKicker) identityKicker.textContent = isTerritory ? 'Territory selected' : 'Country selected';
+      if (territoryStatus) {
+        const relationship = country.parentName ? ` · Connected to ${country.parentName}` : '';
+        territoryStatus.textContent = isTerritory ? `${country.status}${relationship}. ${country.flagNote}` : '';
+        territoryStatus.classList.toggle('hidden', !isTerritory);
+      }
+      const detailsSummary = details?.querySelector('summary');
+      if (detailsSummary) detailsSummary.textContent = isTerritory ? 'More territory details' : 'More country details';
+      flag.replaceChildren();
       const flagImage = document.createElement('img');
       flagImage.alt = `${country.name} flag`;
       flag.appendChild(flagImage);
@@ -657,7 +680,8 @@ flag.replaceChildren();
         flagImage.remove();
         flag.textContent = country.flag;
         flag.setAttribute('aria-label', `${country.name} flag`);
-      }      name.textContent = country.name;
+      }
+      name.textContent = country.name;
       region.textContent = `${country.continent} · ${country.subregion}`;
       setDetailValue(capital, country.capital);
       setDetailValue(population, country.population_hint);
@@ -686,12 +710,12 @@ flag.replaceChildren();
       renderCountryCard(country);
       dismissSearch();
       searchInput.value = country.name;
-      setStatus(`${country.name} selected.`);
+      setStatus(`${country.name} ${country.kind === 'territory' ? 'territory' : 'country'} selected.`);
       live.textContent = `${country.name} selected. Capital: ${country.capital}.`;
       if (options.animate !== false) animateToCountry(country);
       else draw();
       root.dispatchEvent(new CustomEvent('geowars:explorer-country', {
-        detail: { countryId: country.id, source: options.source || 'globe' }
+        detail: { countryId: country.id, placeId: country.id, kind: country.kind || 'country', source: options.source || 'globe' }
       }));
     }
 
@@ -703,7 +727,7 @@ flag.replaceChildren();
       huntModeButton?.setAttribute('aria-pressed', String(isHunt));
       screen.classList.toggle('is-hunt-active', isHunt);
       huntHud?.classList.toggle('hidden', !isHunt);
-      if (stageTitle) stageTitle.textContent = isHunt ? 'Country Hunt' : 'Choose a country';
+      if (stageTitle) stageTitle.textContent = isHunt ? 'Country Hunt' : 'Explore the world';
       if (stageHeadingCopy) {
         stageHeadingCopy.textContent = isHunt
           ? 'Find as many countries as you can.'
@@ -807,10 +831,10 @@ flag.replaceChildren();
       } else {
         emptyCard.classList.remove('hidden');
         countryCard.classList.add('hidden');
-        if (emptyCardTitle) emptyCardTitle.textContent = 'Select a country';
-        if (emptyCardCopy) emptyCardCopy.textContent = 'Its flag, capital, and essential facts will appear here.';
+        if (emptyCardTitle) emptyCardTitle.textContent = 'Select a country or territory';
+        if (emptyCardCopy) emptyCardCopy.textContent = 'Its flag, capital, status, and essential facts will appear here.';
       }
-      setStatus('Drag to explore. Select a country to learn more.');
+      setStatus('Drag to explore. Select a country or territory to learn more.');
       canvas.focus({ preventScroll: true });
     }
 
@@ -878,7 +902,7 @@ flag.replaceChildren();
         return;
       }
 
-      searchMatches = cards
+      searchMatches = explorerCards
         .filter(country => country.name.toLocaleLowerCase('en').includes(query))
         .sort((first, second) => {
           const firstStarts = first.name.toLocaleLowerCase('en').startsWith(query) ? 0 : 1;
@@ -890,7 +914,7 @@ flag.replaceChildren();
       if (!searchMatches.length) {
         const noResults = document.createElement('p');
         noResults.className = 'explorer-search-empty';
-        noResults.textContent = 'No countries found.';
+        noResults.textContent = 'No countries or territories found.';
         searchList.appendChild(noResults);
       } else {
         searchMatches.forEach((country, index) => {
@@ -900,7 +924,10 @@ flag.replaceChildren();
           option.className = 'explorer-search-option';
           option.setAttribute('role', 'option');
           option.setAttribute('aria-selected', 'false');
-          option.innerHTML = `<span aria-hidden="true">${country.flag}</span><strong>${country.name}</strong><small>${country.continent}</small>`;
+          const resultType = country.kind === 'territory'
+            ? `Territory · ${country.parentName || country.subregion}`
+            : country.continent;
+          option.innerHTML = `<span aria-hidden="true">${country.flag}</span><strong>${country.name}</strong><small>${resultType}</small>`;
           option.addEventListener('pointerdown', event => {
             event.preventDefault();
             chooseSearchResult(index);
@@ -992,7 +1019,7 @@ flag.replaceChildren();
       try { root.AudioEngine?.init?.(); } catch (audioError) {}
       startExplorerMusic();
       navigation?.showExplorer?.();
-      setStatus('Drag to explore. Select a country to learn more.');
+      setStatus('Drag to explore. Select a country or territory to learn more.');
       loadGeometry().then(() => requestAnimationFrame(() => {
         resize();
         if (selectedCountryId) animateToCountry(cardsById.get(selectedCountryId));
@@ -1052,7 +1079,7 @@ flag.replaceChildren();
         ? `Find ${getCountryName(huntTargetId)}.`
         : selectedCountryId
           ? `${getCountryName(selectedCountryId)} selected.`
-          : 'Drag to explore. Select a country to learn more.');
+          : 'Drag to explore. Select a country or territory to learn more.');
       draw();
       canvas.focus({ preventScroll: true });
     });
@@ -1141,7 +1168,7 @@ flag.replaceChildren();
               ? `${getCountryName(nextHovered)}. Select to learn more.`
               : selectedCountryId
                 ? `${getCountryName(selectedCountryId)} selected.`
-                : 'Drag to explore. Select a country to learn more.');
+                : 'Drag to explore. Select a country or territory to learn more.');
           }
           draw();
         }
@@ -1172,7 +1199,7 @@ flag.replaceChildren();
             ? `Find ${getCountryName(huntTargetId)}. Press Enter to choose the centered country.`
             : centeredCountryId
               ? `${getCountryName(centeredCountryId)} centered. Press Enter to select.`
-              : 'Drag to explore. Select a country to learn more.');
+              : 'Drag to explore. Select a country or territory to learn more.');
         }
       } else if (wasPrimary) {
         const [nextPointerId, nextPointer] = pointers.entries().next().value;
@@ -1191,7 +1218,7 @@ flag.replaceChildren();
         ? `Find ${getCountryName(huntTargetId)}.`
         : selectedCountryId
           ? `${getCountryName(selectedCountryId)} selected.`
-          : 'Drag to explore. Select a country to learn more.');
+          : 'Drag to explore. Select a country or territory to learn more.');
       draw();
     });
     canvas.addEventListener('wheel', event => {
@@ -1260,7 +1287,7 @@ flag.replaceChildren();
         huntTimeLeft,
         huntScore,
         huntTargetId,
-        geometryReady: countries.length === cards.length
+        geometryReady: countries.length === explorerCards.length
       })
     };
   }

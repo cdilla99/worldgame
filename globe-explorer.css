@@ -700,6 +700,20 @@
   font-weight: 650;
 }
 
+.explorer-country-status {
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 9px;
+  padding: 6px 9px;
+  border: 1px solid rgba(84, 221, 161, 0.32);
+  border-radius: 8px;
+  background: rgba(84, 221, 161, 0.08);
+  color: #bfe8d7;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
 .explorer-fact {
   position: relative;
   margin: 20px 0;

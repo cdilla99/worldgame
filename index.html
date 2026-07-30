@@ -7,7 +7,7 @@
   <title>GeoWars</title>
   <link rel="stylesheet" href="styles.css?v=20260729-world-stage" />
   <link rel="stylesheet" href="ux-polish.css?v=20260729-editorial-layout3" />
-  <link rel="stylesheet" href="globe-explorer.css?v=20260730-explorer2" />
+  <link rel="stylesheet" href="globe-explorer.css?v=20260730-territories3" />
 </head>
 <body>
   <div class="app">
@@ -255,19 +255,19 @@
           </section>
 
           <div class="explorer-search">
-            <label for="explorer-country-search">Find a country</label>
+            <label for="explorer-country-search">Find a country or territory</label>
             <div class="explorer-search-input-wrap">
               <svg class="explorer-search-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 4 4"></path></svg>
-              <input id="explorer-country-search" class="explorer-country-search" type="search" autocomplete="off" placeholder="Search 195 countries" role="combobox" aria-autocomplete="list" aria-controls="explorer-search-results" aria-expanded="false">
+              <input id="explorer-country-search" class="explorer-country-search" type="search" autocomplete="off" placeholder="Search countries and territories" role="combobox" aria-autocomplete="list" aria-controls="explorer-search-results" aria-expanded="false">
             </div>
-            <div id="explorer-search-results" class="explorer-search-results hidden" role="listbox" aria-label="Country search results"></div>
+            <div id="explorer-search-results" class="explorer-search-results hidden" role="listbox" aria-label="Place search results"></div>
           </div>
 
           <div class="explorer-globe-wrap">
             <div id="explorer-globe-frame" class="explorer-globe-frame">
-              <canvas id="explorer-globe-canvas" class="explorer-globe-canvas" width="720" height="720" tabindex="0" aria-describedby="explorer-globe-status" aria-label="Interactive country globe. Use arrow keys to rotate, plus or minus to zoom, and Enter to select."></canvas>
+              <canvas id="explorer-globe-canvas" class="explorer-globe-canvas" width="720" height="720" tabindex="0" aria-describedby="explorer-globe-status" aria-label="Interactive world globe. Use arrow keys to rotate, plus or minus to zoom, and Enter to select."></canvas>
               <div id="explorer-globe-loading" class="explorer-globe-loading hidden" role="status">Loading the world…</div>
-              <div id="explorer-globe-error" class="explorer-globe-error hidden" role="status">The interactive globe is unavailable. Search for a country instead.</div>
+              <div id="explorer-globe-error" class="explorer-globe-error hidden" role="status">The interactive globe is unavailable. Search for a country or territory instead.</div>
               <div id="explorer-hunt-celebration" class="explorer-hunt-celebration hidden" aria-hidden="true">
                 <span class="explorer-hunt-celebration-check">✓</span>
                 <strong>Correct!</strong>
@@ -282,15 +282,15 @@
           </div>
 
           <footer class="explorer-stage-footer">
-            <p id="explorer-globe-status" class="explorer-globe-status" role="status" aria-live="polite">Drag to explore. Select a country to learn more.</p>
+            <p id="explorer-globe-status" class="explorer-globe-status" role="status" aria-live="polite">Drag to explore. Select a country or territory to learn more.</p>
           </footer>
         </section>
 
-        <aside class="explorer-info-panel" aria-label="Country information">
+        <aside class="explorer-info-panel" aria-label="Place information">
           <div id="explorer-empty-card" class="explorer-empty-card">
             <span class="explorer-empty-mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="8.5"></circle><path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.3 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.8 8.6 12s1.2 6.1 3.4 8.5"></path></svg></span>
-            <h2>Select a country</h2>
-            <p>Its flag, capital, and essential facts will appear here.</p>
+            <h2>Select a country or territory</h2>
+            <p>Its flag, capital, status, and essential facts will appear here.</p>
           </div>
           <section id="explorer-hunt-compare" class="explorer-hunt-compare hidden" aria-label="Country Hunt selection feedback">
             <article class="explorer-hunt-compare-card explorer-hunt-target-card">
@@ -328,9 +328,10 @@
             <header class="explorer-country-identity">
               <span id="explorer-country-flag" class="explorer-country-flag"></span>
               <div>
-                <p class="explorer-country-kicker">Country selected</p>
+                <p id="explorer-country-kicker" class="explorer-country-kicker">Country selected</p>
                 <h2 id="explorer-country-name"></h2>
                 <p id="explorer-country-region" class="explorer-country-region"></p>
+                <p id="explorer-country-status" class="explorer-country-status hidden"></p>
               </div>
             </header>
             <p id="explorer-country-fact" class="explorer-fact"></p>
@@ -580,6 +581,7 @@
   </div>
 
   <script src="data/countries.js?v=20260730-encoding1"></script>
+  <script src="data/territories.js?v=20260730-territories3"></script>
   <script src="anthems.js"></script>
   <script src="supabase-client.js?v=20260722-magic-link"></script>
   <script src="audio-engine.js"></script>
@@ -590,6 +592,6 @@
   <script src="app.js?v=20260730-explorer2"></script>
   <script src="assets/globe-data.js?v=20260729-natural-earth"></script>
   <script src="interactive-globe.js?v=20260729-editorial-layout3"></script>
-  <script src="globe-explorer.js?v=20260730-explorer2"></script>
+  <script src="globe-explorer.js?v=20260730-territories3"></script>
 </body>
 </html>
