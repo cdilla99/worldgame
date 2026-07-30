@@ -279,19 +279,43 @@
           land.addColorStop(1, '#176c5a');
         }
         targetContext.fillStyle = land;
-        targetContext.strokeStyle = selected
-          ? 'rgba(239, 255, 246, 0.96)'
-          : hovered
-            ? 'rgba(224, 255, 238, 0.78)'
-            : 'rgba(202, 255, 228, 0.3)';
-        targetContext.lineWidth = selected ? 1.65 : hovered ? 1.05 : 0.48;
         if (selected) {
           targetContext.shadowColor = 'rgba(86, 240, 166, 0.72)';
           targetContext.shadowBlur = 12;
         }
         targetContext.fill('evenodd');
-        targetContext.stroke();
       }
+      targetContext.restore();
+    }
+
+    function drawCountryOutline(targetContext, country) {
+      const selected = country.i === selectedCountryId;
+      const hovered = country.i === hoveredCountryId;
+      const compactBoost = size <= 430 ? 0.16 : 0;
+      const zoomBoost = Math.min(0.36, Math.max(0, zoom - 1) * 0.085);
+
+      targetContext.save();
+      targetContext.beginPath();
+      appendCountryPath(targetContext, country);
+      targetContext.lineJoin = 'round';
+      targetContext.lineCap = 'round';
+
+      if (selected) {
+        targetContext.strokeStyle = 'rgba(244, 255, 249, 0.98)';
+        targetContext.lineWidth = 2.05 + compactBoost;
+        targetContext.shadowColor = 'rgba(86, 240, 166, 0.76)';
+        targetContext.shadowBlur = 8;
+      } else if (hovered) {
+        targetContext.strokeStyle = 'rgba(224, 255, 238, 0.94)';
+        targetContext.lineWidth = 1.45 + compactBoost;
+        targetContext.shadowColor = 'rgba(72, 227, 160, 0.48)';
+        targetContext.shadowBlur = 5;
+      } else {
+        targetContext.strokeStyle = 'rgba(3, 38, 52, 0.76)';
+        targetContext.lineWidth = 0.82 + compactBoost + zoomBoost;
+      }
+
+      targetContext.stroke();
       targetContext.restore();
     }
 
@@ -392,6 +416,15 @@
       drawOcean(context);
       drawGraticule(context);
       drawOrder.forEach(country => drawCountry(context, country, false));
+      drawOrder
+        .filter(country => country.i !== hoveredCountryId && country.i !== selectedCountryId)
+        .forEach(country => drawCountryOutline(context, country));
+      const hoveredCountry = geometryById.get(hoveredCountryId);
+      const selectedCountry = geometryById.get(selectedCountryId);
+      if (hoveredCountry && hoveredCountry !== selectedCountry) {
+        drawCountryOutline(context, hoveredCountry);
+      }
+      if (selectedCountry) drawCountryOutline(context, selectedCountry);
       drawSmallCountryMarkers(context, false);
       drawAtmosphere(context);
       context.restore();

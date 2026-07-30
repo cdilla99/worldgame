@@ -177,9 +177,11 @@
         }
         targetContext.fillStyle = landGradient;
         targetContext.strokeStyle = isSelected
-          ? 'rgba(225, 255, 235, 0.88)'
-          : 'rgba(194, 255, 224, 0.34)';
-        targetContext.lineWidth = isSelected ? 1.15 : 0.55;
+          ? 'rgba(239, 255, 246, 0.94)'
+          : isHovered
+            ? 'rgba(218, 255, 235, 0.82)'
+            : 'rgba(3, 38, 52, 0.68)';
+        targetContext.lineWidth = isSelected ? 1.4 : isHovered ? 1.1 : 0.78;
         if (isSelected) {
           targetContext.shadowColor = 'rgba(91, 242, 170, 0.52)';
           targetContext.shadowBlur = 9;

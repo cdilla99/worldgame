@@ -88,6 +88,18 @@ test('explorer controller lazy-loads geometry and supports pointer, touch, keybo
   assert.match(script, /startRegionalPractice/);
 });
 
+test('country boundaries remain clear across zoom, mobile, hover, and selection states', () => {
+  const explorer = read('globe-explorer.js');
+  const landingGlobe = read('interactive-globe.js');
+
+  assert.match(explorer, /function drawCountryOutline/);
+  assert.match(explorer, /size <= 430 \? 0\.16 : 0/);
+  assert.match(explorer, /Math\.min\(0\.36, Math\.max\(0, zoom - 1\) \* 0\.085\)/);
+  assert.match(explorer, /rgba\(3, 38, 52, 0\.76\)/);
+  assert.match(explorer, /drawCountryOutline\(context, selectedCountry\)/);
+  assert.match(landingGlobe, /rgba\(3, 38, 52, 0\.68\)/);
+});
+
 test('all four screens participate in navigation and accessibility state', () => {
   const script = read('app.js');
 
