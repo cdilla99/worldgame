@@ -815,6 +815,11 @@
 
     function startHunt() {
       clearHuntTimers();
+      stopAnimation();
+      longitude = -16;
+      latitude = 12;
+      zoom = MIN_ZOOM;
+      centeredCountryId = null;
       huntActive = true;
       huntPausedAt = 0;
       huntTimeLeft = 60;

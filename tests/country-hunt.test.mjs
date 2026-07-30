@@ -33,6 +33,7 @@ test('Country Hunt exposes a complete 60-second game loop', () => {
   assert.match(html, /id="explorer-hunt-score"/);
   assert.match(html, /id="explorer-hunt-summary"/);
   assert.match(script, /function startHunt\(\)/);
+  assert.match(script, /function startHunt\(\) \{[\s\S]*longitude = -16;[\s\S]*latitude = 12;[\s\S]*zoom = MIN_ZOOM;/);
   assert.match(script, /huntDeadline = Date\.now\(\) \+ 60000/);
   assert.match(script, /function handleCountryActivation/);
   assert.match(script, /country\.id === target\.id/);
