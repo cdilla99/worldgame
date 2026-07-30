@@ -58,7 +58,7 @@
     {
       id: 1006, name: 'Bonaire', iso2: 'BQ', countryCode: 'BQ', geometryCode: 'NLY',
       geometryBounds: [-69.0, 11.8, -67.8, 12.6], kind: 'territory', parentName: 'Netherlands',
-      status: 'Caribbean public body of the Netherlands', flagNote: 'Bonaire’s island flag is shown.',
+      status: 'Caribbean public body of the Netherlands', flagNote: 'A shared Caribbean Netherlands flag asset is shown; Bonaire also has a distinct island flag.',
       continent: 'North America', subregion: 'Caribbean', capital: 'Kralendijk',
       population_hint: 'about 25,000 people', area_hint: 'around 288 square kilometers',
       main_languages: ['Dutch', 'Papiamentu'], currency: 'US dollar', neighbors: [],
@@ -67,7 +67,7 @@
     {
       id: 1007, name: 'Sint Eustatius', iso2: 'BQ', countryCode: 'BQ', geometryCode: 'NLY',
       geometryBounds: [-63.1, 17.4, -62.8, 17.7], kind: 'territory', parentName: 'Netherlands',
-      status: 'Caribbean public body of the Netherlands', flagNote: 'Sint Eustatius’s island flag is shown.',
+      status: 'Caribbean public body of the Netherlands', flagNote: 'A shared Caribbean Netherlands flag asset is shown; Sint Eustatius also has a distinct island flag.',
       continent: 'North America', subregion: 'Caribbean', capital: 'Oranjestad',
       population_hint: 'about 3,200 people', area_hint: 'around 21 square kilometers',
       main_languages: ['Dutch', 'English'], currency: 'US dollar', neighbors: [],
@@ -76,7 +76,7 @@
     {
       id: 1008, name: 'Saba', iso2: 'BQ', countryCode: 'BQ', geometryCode: 'NLY',
       geometryBounds: [-63.4, 17.5, -63.1, 17.8], kind: 'territory', parentName: 'Netherlands',
-      status: 'Caribbean public body of the Netherlands', flagNote: 'Saba’s island flag is shown.',
+      status: 'Caribbean public body of the Netherlands', flagNote: 'A shared Caribbean Netherlands flag asset is shown; Saba also has a distinct island flag.',
       continent: 'North America', subregion: 'Caribbean', capital: 'The Bottom',
       population_hint: 'about 2,000 people', area_hint: 'around 13 square kilometers',
       main_languages: ['Dutch', 'English'], currency: 'US dollar', neighbors: [],
