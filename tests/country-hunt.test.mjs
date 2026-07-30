@@ -88,9 +88,10 @@ test('Country Hunt uses game audio, celebration, and a paused success beat', () 
 test('Explorer supports deep globe zoom for small countries', () => {
   const script = read('globe-explorer.js');
 
-  assert.match(script, /clamp\(nextZoom, 1, 5\.2\)/);
-  assert.match(script, /zoom >= 5\.2/);
-  assert.match(script, /geometry\.s \? Math\.max\(zoom, 3\.6\)/);
+  assert.match(script, /const MAX_ZOOM = 9/);
+  assert.match(script, /clamp\(nextZoom, MIN_ZOOM, MAX_ZOOM\)/);
+  assert.match(script, /zoom >= MAX_ZOOM/);
+  assert.match(script, /geometry\.s \? Math\.max\(zoom, 5\.4\)/);
 });
 test('Explorer music is preloaded and its label follows actual playback', () => {
   const music = read('background-music.js');

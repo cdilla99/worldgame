@@ -7,7 +7,7 @@
   <title>GeoWars</title>
   <link rel="stylesheet" href="styles.css?v=20260729-world-stage" />
   <link rel="stylesheet" href="ux-polish.css?v=20260729-editorial-layout3" />
-  <link rel="stylesheet" href="globe-explorer.css?v=20260730-territories3" />
+  <link rel="stylesheet" href="globe-explorer.css?v=20260730-guidance1" />
 </head>
 <body>
   <div class="app">
@@ -312,6 +312,14 @@
                   <h2 id="explorer-hunt-selected-country">Tap a country</h2>
                 </div>
               </div>
+              <div id="explorer-hunt-guidance" class="explorer-hunt-guidance hidden" aria-live="polite">
+                <span id="explorer-hunt-direction-arrow" class="explorer-hunt-direction-arrow" aria-hidden="true">↗</span>
+                <span class="explorer-hunt-guidance-copy">
+                  <strong id="explorer-hunt-distance">—</strong>
+                  <span id="explorer-hunt-direction">Direction to the target</span>
+                  <small>Approximate center-to-center distance</small>
+                </span>
+              </div>
               <p id="explorer-hunt-selection-feedback" class="explorer-hunt-selection-feedback">Your selection will appear here.</p>
             </article>
           </section>
@@ -592,6 +600,7 @@
   <script src="app.js?v=20260730-explorer2"></script>
   <script src="assets/globe-data.js?v=20260729-natural-earth"></script>
   <script src="interactive-globe.js?v=20260729-editorial-layout3"></script>
-  <script src="globe-explorer.js?v=20260730-territories3"></script>
+  <script src="geography.js?v=20260730-guidance1"></script>
+  <script src="globe-explorer.js?v=20260730-guidance1"></script>
 </body>
 </html>

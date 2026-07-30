@@ -9,7 +9,9 @@
  */
 (function installGlobeExplorer(root) {
   const geometryUrl = 'assets/globe-countries.js?v=20260730-territories3';
-  const territoryGeometryUrl = 'assets/globe-territories.js?v=20260730-territories3';
+  const territoryGeometryUrl = 'assets/globe-territories.js?v=20260730-guidance1';
+  const MIN_ZOOM = 1;
+  const MAX_ZOOM = 9;
   const clamp = (value, minimum, maximum) =>
     Math.min(maximum, Math.max(minimum, value));
   const toRadians = degrees => degrees * Math.PI / 180;
@@ -72,6 +74,10 @@
     const huntSelectionLabel = document.getElementById('explorer-hunt-selection-label');
     const huntSelectedCountry = document.getElementById('explorer-hunt-selected-country');
     const huntSelectionFeedback = document.getElementById('explorer-hunt-selection-feedback');
+    const huntGuidance = document.getElementById('explorer-hunt-guidance');
+    const huntDirectionArrow = document.getElementById('explorer-hunt-direction-arrow');
+    const huntDistance = document.getElementById('explorer-hunt-distance');
+    const huntDirection = document.getElementById('explorer-hunt-direction');
     const huntCelebration = document.getElementById('explorer-hunt-celebration');
     const huntCelebrationCountry = document.getElementById('explorer-hunt-celebration-country');
     const huntSummary = document.getElementById('explorer-hunt-summary');
@@ -83,6 +89,7 @@
     const emptyCardTitle = emptyCard?.querySelector('h2');
     const emptyCardCopy = emptyCard?.querySelector('p');
     const navigation = root.GeoWars?.navigate;
+    const geography = root.GeoWarsGeography;
     const cards = typeof countryCards !== 'undefined' && Array.isArray(countryCards)
       ? countryCards
       : [];
@@ -445,8 +452,8 @@
       hitContext.restore();
 
       updateCenteredCountry();
-      zoomInButton.disabled = zoom >= 5.2;
-      zoomOutButton.disabled = zoom <= 1;
+      zoomInButton.disabled = zoom >= MAX_ZOOM;
+      zoomOutButton.disabled = zoom <= MIN_ZOOM;
     }
 
     function resize() {
@@ -535,7 +542,7 @@
     }
 
     function setZoom(nextZoom) {
-      zoom = clamp(nextZoom, 1, 5.2);
+      zoom = clamp(nextZoom, MIN_ZOOM, MAX_ZOOM);
       draw();
     }
 
@@ -549,7 +556,7 @@
       if (!geometry) return;
       stopAnimation();
       const targetLatitude = clamp(geometry.y, -62, 66);
-      const targetZoom = geometry.s ? Math.max(zoom, 3.6) : Math.max(zoom, 1.12);
+      const targetZoom = geometry.s ? Math.max(zoom, 5.4) : Math.max(zoom, 1.12);
       if (prefersReducedMotion.matches) {
         longitude = geometry.x;
         latitude = targetLatitude;
@@ -607,6 +614,35 @@
       }
     }
 
+    function hideHuntGuidance() {
+      huntGuidance?.classList.add('hidden');
+      huntGuidance?.removeAttribute('aria-label');
+      if (huntDirectionArrow) huntDirectionArrow.textContent = '↗';
+      if (huntDistance) huntDistance.textContent = '—';
+      if (huntDirection) huntDirection.textContent = 'Direction to the target';
+    }
+
+    function renderHuntGuidance(country, target) {
+      const selectedGeometry = geometryById.get(country?.id);
+      const targetGeometry = geometryById.get(target?.id);
+      const hint = geography?.hintBetween?.(selectedGeometry, targetGeometry);
+      if (!hint) {
+        hideHuntGuidance();
+        return null;
+      }
+      if (huntDirectionArrow) huntDirectionArrow.textContent = hint.arrow;
+      if (huntDistance) huntDistance.textContent = hint.displayDistance;
+      if (huntDirection) huntDirection.textContent = `${hint.directionLabel} · ${hint.proximity}`;
+      if (huntGuidance) {
+        huntGuidance.setAttribute(
+          'aria-label',
+          `${target.name} is approximately ${hint.displayDistance} ${hint.directionLabel} of ${country.name}. ${hint.proximity}.`
+        );
+        huntGuidance.classList.remove('hidden');
+      }
+      return hint;
+    }
+
     function resetHuntSelection() {
       huntSelectionCard?.classList.remove('is-correct', 'is-wrong');
       huntSelectionCard?.classList.add('is-empty');
@@ -614,6 +650,7 @@
       if (huntSelectionLabel) huntSelectionLabel.textContent = 'Waiting for your choice';
       if (huntSelectedCountry) huntSelectedCountry.textContent = 'Tap a country';
       if (huntSelectionFeedback) huntSelectionFeedback.textContent = 'Your selection will appear here.';
+      hideHuntGuidance();
     }
 
     function renderHuntTarget(country) {
@@ -632,10 +669,14 @@
       renderFlagInto(huntSelectedFlag, country);
       if (huntSelectionLabel) huntSelectionLabel.textContent = correct ? 'Correct country' : 'Not the target';
       if (huntSelectedCountry) huntSelectedCountry.textContent = country.name;
+      const hint = correct ? null : renderHuntGuidance(country, target);
+      if (correct) hideHuntGuidance();
       if (huntSelectionFeedback) {
         huntSelectionFeedback.textContent = correct
           ? `You found ${target.name}. Next country coming up.`
-          : `${country.name} is not ${target.name}. Keep looking.`;
+          : hint
+            ? `${target.name} is about ${hint.displayDistance} ${hint.directionLabel}. Keep looking.`
+            : `${country.name} is not ${target.name}. Keep looking.`;
       }
     }
 
@@ -872,8 +913,10 @@
       } else {
         renderHuntSelection(country, false, target);
         playExplorerSound('playWrong');
-        setStatus(`You selected ${country.name}. Keep looking for ${target.name}.`);
-        live.textContent = `${country.name} is not the target. Keep looking for ${target.name}.`;
+        const hint = geography?.hintBetween?.(geometryById.get(country.id), geometryById.get(target.id));
+        const guidanceCopy = hint ? ` ${hint.displayDistance} ${hint.directionLabel}.` : '';
+        setStatus(`You selected ${country.name}.${guidanceCopy} Keep looking for ${target.name}.`);
+        live.textContent = `${country.name} is not the target.${guidanceCopy} Keep looking for ${target.name}.`;
         draw();
       }
     }    function dismissSearch() {
@@ -1067,8 +1110,8 @@
     homeButtons.forEach(button => button.addEventListener('click', returnHome));
     practiceButton.addEventListener('click', startRegionalPractice);
     musicButton?.addEventListener('click', toggleExplorerMusic);
-    zoomInButton.addEventListener('click', () => setZoom(zoom + 0.4));
-    zoomOutButton.addEventListener('click', () => setZoom(zoom - 0.25));
+    zoomInButton.addEventListener('click', () => setZoom(zoom + (zoom >= 4 ? 0.9 : 0.6)));
+    zoomOutButton.addEventListener('click', () => setZoom(zoom - (zoom > 4 ? 0.75 : 0.4)));
     resetButton.addEventListener('click', () => {
       stopAnimation();
       longitude = -16;
@@ -1146,9 +1189,10 @@
           dragDistance,
           Math.hypot(event.clientX - startX, event.clientY - startY)
         );
+        const dragScale = Math.sqrt(zoom);
         setRotation(
-          longitude - deltaX * 0.38 / zoom,
-          latitude + deltaY * 0.28 / zoom
+          longitude - deltaX * 0.38 / dragScale,
+          latitude + deltaY * 0.28 / dragScale
         );
         lastX = event.clientX;
         lastY = event.clientY;
@@ -1224,7 +1268,7 @@
     canvas.addEventListener('wheel', event => {
       if (!countries.length) return;
       event.preventDefault();
-      setZoom(zoom + (event.deltaY < 0 ? 0.28 : -0.28));
+      setZoom(zoom * (event.deltaY < 0 ? 1.14 : 1 / 1.14));
     }, { passive: false });
     canvas.addEventListener('keydown', event => {
       const rotation = {
@@ -1247,10 +1291,10 @@
             : 'Use arrow keys to explore.');
       } else if (event.key === '+' || event.key === '=') {
         event.preventDefault();
-        setZoom(zoom + 0.4);
+        setZoom(zoom + (zoom >= 4 ? 0.9 : 0.6));
       } else if (event.key === '-' || event.key === '_') {
         event.preventDefault();
-        setZoom(zoom - 0.25);
+        setZoom(zoom - (zoom > 4 ? 0.75 : 0.4));
       } else if (event.key === 'Home') {
         event.preventDefault();
         resetButton.click();
