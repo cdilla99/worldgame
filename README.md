@@ -1,6 +1,6 @@
-# GeoWars
+# EARTHLING
 
-GeoWars is a browser-based world geography game with two connected experiences:
+EARTHLING is a browser-based world geography game with two connected experiences:
 
 - Shape Challenge: identify countries from silhouette outlines.
 - World Explorer: rotate an interactive globe, browse country facts, and play Country Hunt.

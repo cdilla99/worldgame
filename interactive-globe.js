@@ -79,6 +79,9 @@
     let animationFrame = 0;
     let resizeFrame = 0;
 
+    let idleRotationFrame = 0;
+    let idleRotationActive = !prefersReducedMotion.matches;
+    let idleRotationLastTime = 0;
     function project(longitudeValue, latitudeValue) {
       const lambda = toRadians(normalizeLongitude(longitudeValue - longitude));
       const phi = toRadians(latitudeValue);
@@ -95,6 +98,30 @@
         visible: visibility >= -0.012,
         visibility
       };
+    }
+
+    function stopIdleRotation() {
+      idleRotationActive = false;
+      if (idleRotationFrame) root.cancelAnimationFrame(idleRotationFrame);
+      idleRotationFrame = 0;
+    }
+
+    function startIdleRotation() {
+      if (!idleRotationActive || idleRotationFrame || prefersReducedMotion.matches) return;
+      const step = now => {
+        if (!idleRotationActive || prefersReducedMotion.matches) {
+          idleRotationFrame = 0;
+          return;
+        }
+        if (idleRotationLastTime) {
+          const elapsed = Math.min(now - idleRotationLastTime, 34);
+          longitude = normalizeLongitude(longitude + elapsed * 0.0022);
+          draw();
+        }
+        idleRotationLastTime = now;
+        idleRotationFrame = root.requestAnimationFrame(step);
+      };
+      idleRotationFrame = root.requestAnimationFrame(step);
     }
 
     function appendProjectedLine(targetContext, points) {
@@ -321,6 +348,7 @@
 
     function selectRegion(region) {
       const buttonValue = region === 'South America' ? 'North America' : region;
+      stopIdleRotation();
       const button = regionButtons.find(candidate => candidate.dataset.continent === buttonValue);
       if (!button) return;
       button.click();
@@ -406,6 +434,7 @@
 
     canvas.addEventListener('pointerdown', event => {
       stopAnimation();
+      stopIdleRotation();
       dragging = true;
       pointerId = event.pointerId;
       startX = lastX = event.clientX;
@@ -476,6 +505,7 @@
       };
       if (keySteps[event.key]) {
         event.preventDefault();
+        stopIdleRotation();
         stopAnimation();
         setRotation(longitude + keySteps[event.key][0], latitude + keySteps[event.key][1]);
         updateStatus(`${selectedLabel(keyboardRegion)} centered. Press Enter to select.`);
@@ -483,11 +513,13 @@
       }
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
+        stopIdleRotation();
         selectRegion(keyboardRegion);
       }
     });
 
     regionModeButton.addEventListener('click', () => {
+      stopIdleRotation();
       canvas.focus({ preventScroll: true });
       if (selectedRegion === 'all') {
         updateStatus('Select a continent on the globe.');
@@ -499,6 +531,7 @@
       confirmSelection();
     });
     resetButton.addEventListener('click', () => {
+      stopIdleRotation();
       const worldwide = regionButtons.find(button => button.dataset.continent === 'all');
       if (worldwide) worldwide.click();
       syncSelectedRegion({ animate: false });
@@ -551,6 +584,7 @@
     globe.classList.add('is-enhanced');
     syncSelectedRegion({ animate: false });
     resize();
+    startIdleRotation();
   }
 
   if (document.readyState === 'loading') {

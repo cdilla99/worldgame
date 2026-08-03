@@ -88,6 +88,39 @@ test('explorer controller lazy-loads geometry and supports pointer, touch, keybo
   assert.match(script, /startRegionalPractice/);
 });
 
+test('free exploration opens selected-country details by default', () => {
+  const script = read('globe-explorer.js');
+
+  assert.match(script, /details\.open = !huntActive;/);
+  assert.match(script, /function showFreeExplorer\(\)[\s\S]*renderCountryCard\(cardsById\.get\(selectedCountryId\)\)/);
+});
+
+test('Explorer loads an optional expandable landmark image with information and source links', () => {
+  const html = read('index.html');
+  const script = read('globe-explorer.js');
+  const styles = read('globe-explorer.css');
+
+  assert.match(html, /id="explorer-landmark-media" class="explorer-landmark-media hidden"/);
+  assert.match(html, /id="explorer-landmark-media-toggle" class="explorer-landmark-media-toggle" type="button" aria-expanded="false"/);
+  assert.match(html, /id="explorer-landmark-learn-more"[\s\S]*Learn about this landmark/);
+  assert.match(html, /id="explorer-landmark-media-source"[\s\S]*Wikipedia/);
+  assert.match(script, /https:\/\/en\.wikipedia\.org\/w\/api\.php/);
+  assert.match(script, /'Chichen Itza pyramid': 'Chichen Itza'/);
+  assert.match(script, /LANDMARK_WIKIPEDIA_TITLES\[landmarkName\] \|\| landmarkName/);
+  assert.match(script, /'&titles=' \+ title \+ '&redirects=1/);
+  assert.match(script, /prop=pageimages\|info/);
+  assert.match(script, /piprop=thumbnail/);
+  assert.match(script, /const imageUrl = page\?\.thumbnail\?\.source;/);
+  assert.match(script, /landmarkMediaImage\.alt = `\$\{wikipediaTitle\} in \$\{country\.name\}`/);
+  assert.match(script, /function getLandmarkWikipediaUrl\(landmarkName\)/);
+  assert.match(script, /landmarkLearnMore\.href = sourceUrl;/);
+  assert.match(script, /landmarkMediaSource\.href = sourceUrl;/);
+  assert.match(script, /landmarkMediaToggle\?\.addEventListener\('click'/);
+  assert.match(styles, /\.explorer-landmark-media-toggle\s*\{[\s\S]*width: min\(100%, 180px\);/);
+  assert.match(styles, /\.explorer-landmark-media\.is-expanded \.explorer-landmark-media-toggle\s*\{[\s\S]*width: 100%;/);
+  assert.match(styles, /\.explorer-landmark-media img\s*\{[\s\S]*height: auto;[\s\S]*object-fit: contain;/);
+});
+
 test('geometry loading is timeout-bounded and retryable after a terminal failure', () => {
   const script = read('globe-explorer.js');
 

@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#07111f" />
-  <title>GeoWars</title>
+  <title>EARTHLING | World Shape Game</title>
   <link rel="stylesheet" href="styles.css?v=20260802-game-choice2" />
-  <link rel="stylesheet" href="ux-polish.css?v=20260802-premium-flow1" />
-  <link rel="stylesheet" href="globe-explorer.css?v=20260802-premium-flow1" />
+  <link rel="stylesheet" href="ux-polish.css?v=20260802-stats-disclosure1" />
+  <link rel="stylesheet" href="globe-explorer.css?v=20260802-landmark-media3" />
 </head>
 <body>
   <div class="app">
@@ -22,10 +22,10 @@
       data-explorer-objective="Discover 195 countries. Then race to find them."
     >
       <header class="landing-utility-header landing-top">
-        <div class="brand-lockup">
-          <img class="brand-logo" src="assets/geowars-logo.svg" alt="GeoWars">
+        <button id="btn-landing-home" class="brand-lockup" type="button" aria-label="Return to the EARTHLING home page">
+          <img class="brand-logo" src="assets/geowars-logo.svg" alt="EARTHLING">
           <p class="landing-utility-copy">Country shape game</p>
-        </div>
+        </button>
         <section id="player-context" class="player-context landing-player-context" aria-labelledby="player-context-title">
           <div class="player-context-copy">
             <p id="player-context-title" class="player-context-eyebrow">Playing as</p>
@@ -39,7 +39,7 @@
       <section class="landing-proposition" aria-labelledby="landing-title">
         <div class="landing-copy">
           <p id="landing-eyebrow" class="landing-eyebrow">Country shape challenge</p>
-          <h1 id="landing-title" class="landing-tagline">See the shape. Name the country.</h1>
+          <h1 id="landing-title" class="landing-tagline">See the <span class="landing-title-accent">shape</span>. Name the country.</h1>
           <p id="landing-objective" class="landing-objective">Race through country outlines in a 60-second sprint, or learn at your own pace.</p>
           <ul class="landing-proof" aria-label="Game highlights">
             <li><strong id="landing-proof-one-value">195</strong><span id="landing-proof-one-label">countries</span></li>
@@ -47,22 +47,25 @@
             <li><strong id="landing-proof-three-value">Free</strong><span id="landing-proof-three-label">practice</span></li>
           </ul>
         </div>
-        <div id="landing-shape-preview" class="landing-shape-preview" aria-label="Shape Challenge preview. Identify a country from its outline.">
+        <details id="landing-shape-preview" class="landing-shape-preview" aria-label="Shape Challenge preview. Identify a country from its outline.">
+          <summary class="landing-shape-preview-toggle">Demo</summary>
           <div class="landing-shape-preview-stage">
-            <span class="landing-shape-preview-kicker">Sample round</span>
-            <div class="landing-shape-preview-art" aria-hidden="true">
+            <span class="landing-shape-preview-kicker landing-shape-preview-kicker-desktop">Sample round</span>
+            <span class="landing-shape-preview-kicker landing-shape-preview-kicker-mobile">How it works</span>
+            <div id="landing-shape-preview-art" class="landing-shape-preview-art" aria-hidden="true">
               <svg viewBox="0 0 320 220" focusable="false">
                 <path d="M39 89 48 49 77 42 72 58 81 78 107 81 118 68 131 83 158 89 178 85 190 97 221 94 233 109 257 117 278 111 296 121 278 133 252 131 232 145 210 137 198 156 173 149 153 164 128 151 106 137 87 130 69 116 39 114 47 99Z"></path>
               </svg>
-              <span class="landing-shape-preview-marker">?</span>
             </div>
-            <div class="landing-shape-preview-copy">
-              <span>Shape only</span>
-              <strong>A new outline every round</strong>
-              <small>Hints stay optional.</small>
+            <div class="landing-shape-preview-answer">
+              <span class="landing-shape-preview-marker"><img id="landing-shape-preview-flag" src="https://flagcdn.com/w80/us.png" alt="United States flag"></span>
+              <div class="landing-shape-preview-copy">
+                <span>Answer</span>
+                <strong id="landing-shape-preview-country">United States</strong>
+              </div>
             </div>
           </div>
-        </div>
+        </details>
         <div id="landing-globe-shell" class="landing-globe-shell hidden" aria-hidden="true">
           <div id="landing-globe" class="landing-globe">
             <canvas
@@ -172,20 +175,19 @@
           <details id="challenge-settings" class="game-setup">
             <summary class="game-setup-summary">
               <span class="game-setup-copy">
-                <span class="game-setup-title">Customize challenge</span>
-                <span id="filter-summary" class="filter-summary">Any difficulty · Worldwide</span>
+                <span class="game-setup-title">Choose a ladder</span>
+                <span id="filter-summary" class="filter-summary">Earthling · Worldwide</span>
               </span>
               <span class="game-setup-chevron" aria-hidden="true"></span>
             </summary>
             <div class="game-setup-content">
               <fieldset class="setup-group">
-                <legend>Difficulty</legend>
+                <legend>Difficulty ladder</legend>
                 <div class="option-grid difficulty-grid">
-                  <button type="button" class="diff-btn active" data-diff="all" aria-pressed="true">Any difficulty</button>
-                  <button type="button" class="diff-btn" data-diff="easy" aria-pressed="false">Easy</button>
-                  <button type="button" class="diff-btn" data-diff="medium" aria-pressed="false">Medium</button>
-                  <button type="button" class="diff-btn" data-diff="hard" aria-pressed="false">Hard</button>
-                  <button type="button" class="diff-btn" data-diff="expert" aria-pressed="false">Expert</button>
+                  <button type="button" class="diff-btn" data-level="cadet" aria-pressed="false">Cadet</button>
+                  <button type="button" class="diff-btn" data-level="explorer" aria-pressed="false">Explorer</button>
+                  <button type="button" class="diff-btn active" data-level="earthling" aria-pressed="true">Earthling</button>
+                  <button type="button" class="diff-btn" data-level="expert" aria-pressed="false">Expert Verification</button>
                 </div>
               </fieldset>
               <fieldset class="setup-group">
@@ -209,7 +211,7 @@
           </span>
           <span class="landing-selection-copy">
             <span>Ready</span>
-            <p id="mode-summary">Sprint · 60 seconds · Any difficulty · Worldwide</p>
+            <p id="mode-summary">Sprint · 60 seconds · Earthling · Worldwide</p>
           </span>
         </div>
         <button id="btn-start-game" class="cta landing-start-action" type="button">
@@ -241,20 +243,24 @@
       </section>
 
       <aside class="landing-statistics" aria-labelledby="statistics-title">
-        <div class="landing-statistics-heading">
-          <h2 id="statistics-title" class="statistics-heading" tabindex="-1">Your best</h2>
-          <button id="btn-reset-stats" class="statistics-reset hidden" type="button" aria-haspopup="dialog">
-            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 8a8 8 0 1 1-1 6M5 8V3m0 5h5"></path></svg>
-            <span>Reset stats</span>
-          </button>
-        </div>
-        <p id="records-empty" class="records-empty">Your first game sets the score to beat.</p>
-        <dl id="stats-bar" class="stats-bar hidden" aria-label="Player statistics">
-          <div class="stat"><dt>Games</dt><dd id="stat-played">0</dd></div>
-          <div class="stat"><dt>Best streak</dt><dd id="stat-best">0</dd></div>
-          <div class="stat"><dt>Correct</dt><dd id="stat-total">0</dd></div>
-        </dl>
-        <div id="player-badge" class="player-badge hidden" aria-hidden="true"></div>
+        <details class="landing-statistics-disclosure">
+          <summary class="landing-statistics-toggle"><span id="statistics-title" class="statistics-heading">Your best</span></summary>
+          <div class="landing-statistics-content">
+            <div class="landing-statistics-heading">
+              <button id="btn-reset-stats" class="statistics-reset hidden" type="button" aria-haspopup="dialog">
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 8a8 8 0 1 1-1 6M5 8V3m0 5h5"></path></svg>
+                <span>Reset stats</span>
+              </button>
+            </div>
+            <p id="records-empty" class="records-empty">Your first game sets the score to beat.</p>
+            <dl id="stats-bar" class="stats-bar hidden" aria-label="Player statistics">
+              <div class="stat"><dt>Games</dt><dd id="stat-played">0</dd></div>
+              <div class="stat"><dt>Best streak</dt><dd id="stat-best">0</dd></div>
+              <div class="stat"><dt>Correct</dt><dd id="stat-total">0</dd></div>
+            </dl>
+            <div id="player-badge" class="player-badge hidden" aria-hidden="true"></div>
+          </div>
+        </details>
       </aside>
       <dialog id="stats-reset-dialog" class="stats-reset-dialog" aria-labelledby="stats-reset-title" aria-describedby="stats-reset-description">
         <div class="stats-reset-dialog-card">
@@ -274,7 +280,7 @@
     <section id="explorer" class="screen hidden explorer-screen" aria-labelledby="explorer-title">
       <header class="explorer-utility">
         <div class="explorer-brand">
-          <button class="explorer-home-logo" type="button" data-explorer-home aria-label="Return to the GeoWars home page">
+          <button class="explorer-home-logo" type="button" data-explorer-home aria-label="Return to the EARTHLING home page">
             <img src="assets/geowars-logo.svg" alt="" aria-hidden="true">
           </button>
           <div class="explorer-heading-copy">
@@ -456,6 +462,12 @@
                 <div><dt>Neighbors</dt><dd id="explorer-country-neighbors"></dd></div>
                 <div><dt>Landmark</dt><dd id="explorer-country-landmark"></dd></div>
               </dl>
+              <figure id="explorer-landmark-media" class="explorer-landmark-media hidden">
+                <button id="explorer-landmark-media-toggle" class="explorer-landmark-media-toggle" type="button" aria-expanded="false">
+                  <img id="explorer-landmark-media-image" alt="">
+                </button>
+                <figcaption><a id="explorer-landmark-learn-more" target="_blank" rel="noopener noreferrer">Learn about this landmark</a> · Image from <a id="explorer-landmark-media-source" target="_blank" rel="noopener noreferrer">Wikipedia</a></figcaption>
+              </figure>
             </details>
             <button id="btn-explorer-practice" class="explorer-practice-action" type="button">Practice this region</button>
           </article>
@@ -467,14 +479,14 @@
     <section id="game" class="screen hidden game-layout-region" aria-labelledby="game-title" aria-describedby="game-stage-title" data-layout="desktop-mobile">
       <header id="game-utility-region" class="game-utility" aria-label="Game utility and HUD region">
         <div class="game-brand-nav">
-          <button id="btn-game-home" class="game-home-logo" type="button" aria-label="Return to the GeoWars home page">
+          <button id="btn-game-home" class="game-home-logo" type="button" aria-label="Return to the EARTHLING home page">
             <img src="assets/geowars-logo.svg" alt="" aria-hidden="true">
           </button>
           <div class="game-run-context" aria-hidden="true">
             <span id="game-mode-label">Sprint run</span>
             <span>Country shape game</span>
           </div>
-          <h1 id="game-title" class="game-screen-title sr-only" tabindex="-1">GeoWars game</h1>
+          <h1 id="game-title" class="game-screen-title sr-only" tabindex="-1">EARTHLING game</h1>
         </div>
         <div class="game-hud">
           <div class="game-hud-status" aria-label="Round status">
@@ -651,6 +663,7 @@
         <section class="results-summary" aria-labelledby="results-summary-title">
           <h3 id="results-summary-title">Run results</h3>
           <div class="results-stats">
+            <div class="result-stat"><strong id="res-level">Earthling</strong><span>Level</span></div>
             <div class="result-stat"><strong id="res-score">0</strong><span>Score</span></div>
             <div class="result-stat"><strong id="res-streak">0</strong><span>Best streak</span></div>
             <div class="result-stat"><strong id="res-correct">0/0</strong><span>Correct</span></div>
@@ -700,8 +713,10 @@
     </div>
   </div>
 
-  <script src="data/countries.js?v=20260730-encoding1"></script>
+  <script src="data/countries.js?v=20260802-moldova-encoding1"></script>
   <script src="data/territories.js?v=20260730-territories3"></script>
+  <script src="difficulty-ladder.js?v=20260803-ladder1"></script>
+  <script src="ladder-progress.js?v=20260803-ladder1"></script>
   <script src="anthems.js"></script>
   <script src="supabase-client.js?v=20260802-device-stats1"></script>
   <script src="audio-engine.js"></script>
@@ -714,6 +729,6 @@
   <script src="assets/globe-data.js?v=20260729-natural-earth"></script>
   <script src="interactive-globe.js?v=20260729-editorial-layout3"></script>
   <script src="geography.js?v=20260730-guidance1"></script>
-  <script src="globe-explorer.js?v=20260730-guidance2"></script>
+  <script src="globe-explorer.js?v=20260802-landmark-media6"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 276 64" role="img" aria-labelledby="title desc">
-  <title id="title">GeoWars</title>
-  <desc id="desc">A globe in a targeting orbit beside the GeoWars wordmark.</desc>
+  <title id="title">EARTHLING</title>
+  <desc id="desc">A globe in an orbit beside the EARTHLING wordmark.</desc>
   <defs>
     <linearGradient id="ocean" x1="8" y1="5" x2="50" y2="55" gradientUnits="userSpaceOnUse">
       <stop stop-color="#78B8FF"/>
@@ -37,7 +37,7 @@
     <circle cx="54.2" cy="16.8" r="2.6" fill="#FF6458"/>
   </g>
 
-  <text x="72" y="40" fill="url(#word)" font-family="Arial Black, Arial, sans-serif" font-size="34" font-weight="900" letter-spacing="-1.8">GEOWARS</text>
+  <text x="72" y="40" fill="url(#word)" font-family="Arial Black, Arial, sans-serif" font-size="29" font-weight="900" letter-spacing="0">EARTHLING</text>
   <path d="M73 48h176" stroke="#48617E" stroke-width="1"/>
-  <text x="73" y="58" fill="#8FA4BF" font-family="Arial, sans-serif" font-size="7.5" font-weight="700" letter-spacing="2.25">WORLD SHAPE ARENA</text>
+  <text x="73" y="58" fill="#8FA4BF" font-family="Arial, sans-serif" font-size="7.5" font-weight="700" letter-spacing="2.25">WORLD SHAPE GAME</text>
 </svg>

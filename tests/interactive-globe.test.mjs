@@ -47,13 +47,18 @@ test('landing markup exposes an accessible interactive globe with local fallback
   assert.ok(appScript > -1 && appScript < dataScript && dataScript < globeScript);
 });
 
-test('globe motion is input-driven and supports reduced motion', () => {
+test('globe has restrained idle motion that stops on interaction and supports reduced motion', () => {
   const script = fs.readFileSync(path.join(root, 'interactive-globe.js'), 'utf8');
   const styles = fs.readFileSync(path.join(root, 'styles.css'), 'utf8');
 
   assert.doesNotMatch(script, /setInterval\s*\(/);
   assert.doesNotMatch(styles, /landing-globe-spin/);
   assert.match(script, /prefers-reduced-motion: reduce/);
+  assert.match(script, /function startIdleRotation\(\)/);
+  assert.match(script, /function stopIdleRotation\(\)/);
+  assert.match(script, /idleRotationActive = false/);
+  assert.match(script, /canvas\.addEventListener\('pointerdown'[\s\S]*stopIdleRotation\(\)/);
+  assert.doesNotMatch(script, /function project[\s\S]*function startIdleRotation[\s\S]*const visibility/);
   assert.match(script, /addEventListener\('pointermove'/);
   assert.match(script, /addEventListener\('keydown'/);
   assert.match(script, /root\.GeoWars\.globe/);

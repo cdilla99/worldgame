@@ -1,5 +1,5 @@
 /**
- * GeoWars — Country silhouette guessing game
+ * EARTHLING — Country silhouette guessing game
  *
  * Flow: Silhouette shows → Player says answer out loud → Taps to validate
  * Flag is a secondary hint (unlockable). Outline is the game.
@@ -11,7 +11,8 @@
 
 const state = {
   mode: 'sprint', // 'sprint' or 'showoff'
-  difficulty: 'all',
+  level: 'earthling',
+  difficulty: 'earthling',
   continent: 'all',
   deck: [],
   currentCard: null,
@@ -33,6 +34,9 @@ const state = {
   roundCounted: false,
   assetFailure: null,
 };
+
+const difficultyLadder = window.GeoWarsDifficulty || null;
+const ladderProgress = window.GeoWarsLadderProgress || null;
 
 // ============================================================
 // HELPERS
@@ -57,9 +61,31 @@ function shuffle(arr) {
   return arr;
 }
 
-function filterDeck(difficulty) {
+function getLevelConfig(levelId) {
+  if (difficultyLadder && typeof difficultyLadder.getLevel === 'function') {
+    return difficultyLadder.getLevel(levelId);
+  }
+  return {
+    id: levelId || 'earthling',
+    name: 'Earthling',
+    recommendation: 'Name the country from the shape.',
+    defaultMode: 'sprint',
+    allowedModes: ['showoff', 'sprint'],
+    choiceCount: 6,
+    showTypedAnswer: true,
+    showSprintTimer: true,
+    showFlagHint: true,
+    showRegionHint: true,
+    showAnswerMap: false,
+    endRunOnWrongSprint: false
+  };
+}
+
+function filterDeck(levelId) {
+  if (difficultyLadder && typeof difficultyLadder.buildLevelDeck === 'function') {
+    return difficultyLadder.buildLevelDeck(levelId, countryCards, state.continent);
+  }
   let cards = [...countryCards];
-  if (difficulty !== 'all') cards = cards.filter(c => c.difficulty === difficulty);
   if (state.continent && state.continent !== 'all') {
     if (state.continent === 'North America') {
       cards = cards.filter(c => c.continent === 'North America' || c.continent === 'South America');
@@ -74,16 +100,19 @@ function filterDeck(difficulty) {
  * Pick 3 wrong answers from the same continent (similar countries = harder).
  * Falls back to random if not enough from same continent.
  */
-function pickDistractors(correctCard, pool) {
-  // Prefer same continent
+function buildChoices(correctCard, pool) {
+  const level = getLevelConfig(state.level);
+  if (difficultyLadder && typeof difficultyLadder.createChoices === 'function') {
+    return difficultyLadder.createChoices(correctCard, pool, level.choiceCount);
+  }
+
   let candidates = pool.filter(c => c.continent === correctCard.continent && c.id !== correctCard.id);
-  if (candidates.length < 5) {
-    // Not enough from same continent, pull from everywhere
+  if (candidates.length < Math.max(0, level.choiceCount - 1)) {
     const extras = pool.filter(c => c.id !== correctCard.id && c.continent !== correctCard.continent);
     candidates = candidates.concat(shuffle(extras));
   }
   shuffle(candidates);
-  return candidates.slice(0, 5);
+  return shuffle([correctCard, ...candidates.slice(0, Math.max(0, level.choiceCount - 1))]).slice(0, level.choiceCount);
 }
 
 // ============================================================
@@ -123,6 +152,7 @@ const $streakDisplay = document.getElementById('streak-display');
 const $scoreDisplay = document.getElementById('score-display');
 const $roundDisplay = document.getElementById('round-display');
 const $gameModeLabel = document.getElementById('game-mode-label');
+const $landingHomeLogo = document.getElementById('btn-landing-home');
 const $gameHomeLogo = document.getElementById('btn-game-home');
 const $feedbackContinueHint = document.getElementById('feedback-continue-hint');
 const $globeSelectionLabel = document.getElementById('globe-selection-label');
@@ -142,6 +172,88 @@ const $btnRecoverNext = document.getElementById('btn-recover-next');
 const $btnRecoverHome = document.getElementById('btn-recover-home');
 const $answerInteractionPanel = document.getElementById('answer-interaction-panel');
 const assetFallbacks = window.AssetFallbacks;
+let localSilhouetteGeometryPromise = null;
+
+function loadLocalSilhouetteGeometry() {
+  if (Array.isArray(window.GeoWarsGlobeCountries)) return Promise.resolve(window.GeoWarsGlobeCountries);
+  if (localSilhouetteGeometryPromise) return localSilhouetteGeometryPromise;
+
+  localSilhouetteGeometryPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'assets/globe-countries.js?v=20260730-territories3';
+    script.async = true;
+    script.onload = () => Array.isArray(window.GeoWarsGlobeCountries)
+      ? resolve(window.GeoWarsGlobeCountries)
+      : reject(new Error('Country geometry was incomplete.'));
+    script.onerror = () => reject(new Error('Country geometry failed to load.'));
+    document.head.appendChild(script);
+  });
+
+  return localSilhouetteGeometryPromise.catch(error => {
+    localSilhouetteGeometryPromise = null;
+    throw error;
+  });
+}
+
+function polygonArea(polygon) {
+  const ring = polygon?.[0] || [];
+  return Math.abs(ring.reduce((area, point, index) => {
+    const next = ring[(index + 1) % ring.length] || point;
+    return area + point[0] * next[1] - next[0] * point[1];
+  }, 0));
+}
+
+function createLocalSilhouette(card, geometry, elementId = 'silhouette-img', options = {}) {
+  const country = geometry.find(entry => entry.i === card.id);
+  if (!country?.p?.length) return null;
+
+  const polygons = options.largestLandmass
+    ? [country.p.reduce((largest, polygon) => polygonArea(polygon) > polygonArea(largest) ? polygon : largest)]
+    : country.p;
+  const points = polygons.flat(2);
+  const longitudes = points.map(point => point[0]);
+  const latitudes = points.map(point => point[1]);
+  const minLongitude = Math.min(...longitudes);
+  const maxLongitude = Math.max(...longitudes);
+  const minLatitude = Math.min(...latitudes);
+  const maxLatitude = Math.max(...latitudes);
+  const width = Math.max(1, maxLongitude - minLongitude);
+  const height = Math.max(1, maxLatitude - minLatitude);
+  const padding = Math.max(width, height) * 0.08;
+  const viewBoxWidth = width + padding * 2;
+  const viewBoxHeight = height + padding * 2;
+  const pathData = polygons.flatMap(polygon => polygon.map(ring => ring.map((point, index) => {
+    const x = point[0] - minLongitude + padding;
+    const y = maxLatitude - point[1] + padding;
+    return (index === 0 ? 'M' : 'L') + x.toFixed(3) + ' ' + y.toFixed(3);
+  }).join(' ') + ' Z')).join(' ');
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  if (elementId) svg.id = elementId;
+  svg.setAttribute('viewBox', `0 0 ${viewBoxWidth} ${viewBoxHeight}`);
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', 'Guess this country');
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', pathData);
+  path.setAttribute('fill', 'currentColor');
+  path.setAttribute('fill-rule', 'evenodd');
+  svg.appendChild(path);
+  return svg;
+}
+
+function renderLocalSilhouette(card) {
+  return loadLocalSilhouetteGeometry().then(geometry => {
+    if (state.currentCard !== card || state.gameOver || state.answered || !$silhouetteBox) return false;
+    const fallback = createLocalSilhouette(card, geometry);
+    if (!fallback) throw new Error('Country shape was unavailable locally.');
+    const previousAsset = $silhouetteBox.querySelector('#silhouette-img, [data-asset-fallback="silhouette"]');
+    if (previousAsset) previousAsset.replaceWith(fallback);
+    else $silhouetteBox.insertBefore(fallback, $flagHint);
+    restoreRecoveredRound(card);
+    return true;
+  });
+}
 
 function setAssetRecoveryVisible(visible) {
   if (!$assetRecovery) return;
@@ -205,11 +317,14 @@ function renderSilhouetteAsset(card) {
   const image = document.createElement('img');
   image.id = 'silhouette-img';
   image.alt = 'Guess this country';
-  image.addEventListener('error', () => handleSilhouetteAssetFailure(card), { once: true });
+  image.addEventListener('error', () => {
+    renderLocalSilhouette(card).catch(() => handleSilhouetteAssetFailure(card));
+  }, { once: true });
   image.addEventListener('load', () => restoreRecoveredRound(card), { once: true });
   $silhouetteBox.insertBefore(image, $flagHint);
 
-  const source = assetFallbacks.prepareImage(image, 'silhouette', card, { alt: image.alt });
+  const source = assetFallbacks.getSilhouetteSource(card);
+  if (source?.url) image.src = source.url;
   if (!source || !source.url) handleSilhouetteAssetFailure(card);
 }
 
@@ -337,6 +452,7 @@ if ($btnMute) {
 // Results
 const $resultsTitle = document.getElementById('results-title');
 const $resultsStatus = document.getElementById('results-status');
+const $resLevel = document.getElementById('res-level');
 const $resScore = document.getElementById('res-score');
 const $resStreak = document.getElementById('res-streak');
 const $resCorrect = document.getElementById('res-correct');
@@ -378,6 +494,13 @@ const $landingProofTwoValue = document.getElementById('landing-proof-two-value')
 const $landingProofTwoLabel = document.getElementById('landing-proof-two-label');
 const $landingProofThreeValue = document.getElementById('landing-proof-three-value');
 const $landingProofThreeLabel = document.getElementById('landing-proof-three-label');
+const $landingShapePreviewArt = document.getElementById('landing-shape-preview-art');
+const $landingShapePreviewFlag = document.getElementById('landing-shape-preview-flag');
+const $landingShapePreviewCountry = document.getElementById('landing-shape-preview-country');
+const $levelButtons = Array.from(document.querySelectorAll('.diff-btn[data-level]'));
+const $btnIKnow = document.getElementById('btn-i-know');
+const $btnShowOptions = document.getElementById('btn-show-options');
+const $btnBail = document.getElementById('btn-bail');
 
 // ============================================================
 // SCREENS
@@ -415,6 +538,54 @@ const LANDING_GAME_PRESENTATION = Object.freeze({
   })
 });
 
+const LANDING_PREVIEW_COUNTRY_IDS = Object.freeze([1, 4, 7, 12, 14, 16, 18, 23]);
+let landingShapePreviewIndex = 0;
+let landingShapePreviewTimer = null;
+const landingShapePreviewDesktopQuery = window.matchMedia?.('(min-width: 768px)');
+
+function syncLandingShapePreviewDisclosure() {
+  if (!$landingShapePreview || !landingShapePreviewDesktopQuery) return;
+  $landingShapePreview.open = landingShapePreviewDesktopQuery.matches;
+}
+
+function renderLandingShapePreview(cards, geometry) {
+  const card = cards[landingShapePreviewIndex];
+  if (!card || !$landingShapePreviewArt) return;
+  const silhouette = createLocalSilhouette(card, geometry, '', { largestLandmass: card.id === 1 });
+  if (!silhouette) return;
+
+  $landingShapePreviewArt.classList.remove('is-changing');
+  $landingShapePreviewArt.replaceChildren(silhouette);
+  const flagCode = assetFallbacks?.getCountryCode?.(card);
+  if ($landingShapePreviewFlag && flagCode) {
+    $landingShapePreviewFlag.src = 'https://flagcdn.com/w80/' + flagCode.toLowerCase() + '.png';
+    $landingShapePreviewFlag.alt = card.name + ' flag';
+  }
+  if ($landingShapePreviewCountry) $landingShapePreviewCountry.textContent = card.name;
+  if ($landingShapePreview) {
+    $landingShapePreview.setAttribute('aria-label', 'Shape Challenge preview. ' + card.flag + ' ' + card.name + ' revealed.');
+  }
+  void $landingShapePreviewArt.offsetWidth;
+  $landingShapePreviewArt.classList.add('is-changing');
+}
+
+function initializeLandingShapePreview() {
+  if (!$landingShapePreviewArt || !$landingShapePreviewFlag || !$landingShapePreviewCountry) return;
+  const cards = shuffle(LANDING_PREVIEW_COUNTRY_IDS
+    .map(id => countryCards.find(card => card.id === id))
+    .filter(Boolean));
+  if (cards.length < 2) return;
+
+  loadLocalSilhouetteGeometry().then(geometry => {
+    renderLandingShapePreview(cards, geometry);
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    landingShapePreviewTimer = window.setInterval(() => {
+      landingShapePreviewIndex = (landingShapePreviewIndex + 1) % cards.length;
+      renderLandingShapePreview(cards, geometry);
+    }, 3600);
+  }).catch(() => {});
+}
+
 function setLandingPreviewVisibility(preview, visible) {
   if (!preview) return;
   preview.hidden = !visible;
@@ -425,7 +596,16 @@ function setLandingPreviewVisibility(preview, visible) {
 function updateLandingPresentation(game) {
   const presentation = LANDING_GAME_PRESENTATION[game] || LANDING_GAME_PRESENTATION.shape;
   if ($landingEyebrow) $landingEyebrow.textContent = presentation.eyebrow;
-  if ($landingHeroTitle) $landingHeroTitle.textContent = presentation.title;
+  if ($landingHeroTitle) {
+    if (game === 'shape') {
+      const accent = document.createElement('span');
+      accent.className = 'landing-title-accent';
+      accent.textContent = 'shape';
+      $landingHeroTitle.replaceChildren('See the ', accent, '. Name the country.');
+    } else {
+      $landingHeroTitle.textContent = presentation.title;
+    }
+  }
   if ($landingObjective) $landingObjective.textContent = presentation.objective;
 
   const proofNodes = [
@@ -473,14 +653,15 @@ if ($landingShapeGameButton) {
 if ($landingExplorerGameButton) {
   $landingExplorerGameButton.addEventListener('click', () => selectLandingGame('explorer'));
 }
+syncLandingShapePreviewDisclosure();
+landingShapePreviewDesktopQuery?.addEventListener?.('change', syncLandingShapePreviewDisclosure);
 selectLandingGame('shape');
+initializeLandingShapePreview();
 
 // Keep internal filter state synchronized with the visibly active controls.
 // This also protects against stale state when switching between game modes.
 function syncFiltersFromUI() {
-  const activeDifficulty = document.querySelector('.diff-btn[data-diff].active');
   const activeContinent = document.querySelector('#continent-row .diff-btn.active');
-  state.difficulty = activeDifficulty ? activeDifficulty.dataset.diff : 'all';
   state.continent = activeContinent ? activeContinent.dataset.continent : 'all';
   updateFilterSummary();
 }
@@ -489,15 +670,48 @@ function syncFiltersFromUI() {
 function updateFilterSummary() {
   const $summary = document.getElementById('filter-summary');
   if (!$summary) return;
-  const diffLabel = state.difficulty === 'all'
-    ? 'Any difficulty'
-    : state.difficulty.charAt(0).toUpperCase() + state.difficulty.slice(1);
+  const level = getLevelConfig(state.level);
+  const diffLabel = level.name || 'Earthling';
   const continentLabel = state.continent === 'all'
     ? 'Worldwide'
     : (state.continent === 'North America' ? 'Americas' : state.continent);
   $summary.textContent = diffLabel + ' · ' + continentLabel;
   if ($globeSelectionLabel) $globeSelectionLabel.textContent = continentLabel;
   updateModeSummary();
+}
+
+function updateLevelAvailability() {
+  const level = getLevelConfig(state.level);
+  const allowedModes = new Set(level.allowedModes || ['showoff', 'sprint']);
+  $modeButtons.forEach(button => {
+    const modeId = button === $btnSprint ? 'sprint' : 'showoff';
+    const allowed = allowedModes.has(modeId);
+    button.disabled = !allowed;
+    button.classList.toggle('is-disabled', !allowed);
+    if (!allowed && button.classList.contains('active')) {
+      button.classList.remove('active');
+      button.setAttribute('aria-pressed', 'false');
+    }
+  });
+  if (!allowedModes.has(state.mode)) {
+    selectModeOption(level.defaultMode === 'sprint' ? $btnSprint : $btnShowoff);
+  }
+}
+
+function selectLevelOption(selectedButton) {
+  const selectedLevel = selectedButton?.dataset?.level || 'earthling';
+  state.level = selectedLevel;
+  state.difficulty = selectedLevel;
+  $levelButtons.forEach(button => {
+    const isSelected = button === selectedButton;
+    button.classList.toggle('active', isSelected);
+    button.setAttribute('aria-pressed', String(isSelected));
+  });
+  if (ladderProgress && typeof ladderProgress.setLastLevel === 'function') {
+    ladderProgress.setLastLevel(selectedLevel);
+  }
+  updateLevelAvailability();
+  updateFilterSummary();
 }
 
 function selectFilterOption(buttons, selectedButton) {
@@ -509,10 +723,9 @@ function selectFilterOption(buttons, selectedButton) {
   syncFiltersFromUI();
 }
 
-// Difficulty buttons
-const $difficultyButtons = document.querySelectorAll('.diff-btn[data-diff]');
-$difficultyButtons.forEach(button => {
-  button.addEventListener('click', () => selectFilterOption($difficultyButtons, button));
+// Difficulty ladder buttons
+$levelButtons.forEach(button => {
+  button.addEventListener('click', () => selectLevelOption(button));
 });
 
 // Region filter buttons
@@ -529,10 +742,9 @@ const $startGameButton = document.getElementById('btn-start-game');
 const $startGameLabel = document.getElementById('start-game-label');
 
 function updateModeSummary() {
+  const level = getLevelConfig(state.level);
   const isSprint = state.mode === 'sprint';
-  const diffLabel = state.difficulty === 'all'
-    ? 'Any difficulty'
-    : state.difficulty.charAt(0).toUpperCase() + state.difficulty.slice(1);
+  const diffLabel = level.name || 'Earthling';
   const continentLabel = state.continent === 'all'
     ? 'Worldwide'
     : (state.continent === 'North America' ? 'Americas' : state.continent);
@@ -546,7 +758,15 @@ function updateModeSummary() {
 
 function selectModeOption(selectedButton) {
   const isSprint = selectedButton === $btnSprint;
-  state.mode = isSprint ? 'sprint' : 'showoff';
+  const level = getLevelConfig(state.level);
+  if (isSprint && !(level.allowedModes || []).includes('sprint')) {
+    selectedButton = $btnShowoff;
+  }
+  if (!isSprint && !(level.allowedModes || []).includes('showoff')) {
+    selectedButton = $btnSprint;
+  }
+  const nextIsSprint = selectedButton === $btnSprint;
+  state.mode = nextIsSprint ? 'sprint' : 'showoff';
   $modeButtons.forEach(button => {
     const isSelected = button === selectedButton;
     button.classList.toggle('active', isSelected);
@@ -564,6 +784,12 @@ function syncModeFromUI() {
 }
 
 function syncLandingStateFromUI() {
+  const activeLevel = $levelButtons.find(button => button.classList.contains('active'))
+    || $levelButtons.find(button => button.getAttribute('aria-pressed') === 'true')
+    || $levelButtons.find(button => button.dataset.level === (ladderProgress && ladderProgress.getLastLevel && ladderProgress.getLastLevel()))
+    || $levelButtons.find(button => button.dataset.level === 'earthling')
+    || $levelButtons[0];
+  selectLevelOption(activeLevel);
   syncModeFromUI();
   syncFiltersFromUI();
 }
@@ -687,7 +913,7 @@ function saveStats() {
       correct: state.correct,
       total: state.total,
       bestStreak: state.bestStreak,
-      difficulty: state.difficulty,
+      difficulty: state.level,
       duration: state.mode === 'sprint' ? (60 - state.timeLeft) : null
     });
   }
@@ -716,7 +942,7 @@ function startGame() {
   // Re-read the visible controls at the final start boundary so mode changes
   // can never carry a stale difficulty or continent into the deck.
   syncFiltersFromUI();
-  state.deck = shuffle(filterDeck(state.difficulty));
+  state.deck = shuffle(filterDeck(state.level));
   state.score = 0;
   state.streak = 0;
   state.bestStreak = 0;
@@ -729,19 +955,28 @@ function startGame() {
   clearAssetRecovery();
 
   showScreen($game);
-  if ($gameModeLabel) $gameModeLabel.textContent = state.mode === 'sprint' ? 'Sprint run' : 'Practice session';
+  if ($gameModeLabel) $gameModeLabel.textContent = getLevelConfig(state.level).name + ' · ' + (state.mode === 'sprint' ? 'Sprint run' : 'Practice session');
   updateHUD();
 
-  if (state.mode === 'sprint') {
+  const level = getLevelConfig(state.level);
+  $btnShowFlag.classList.toggle('hidden', !level.showFlagHint);
+  $btnShowRegion.classList.toggle('hidden', !level.showRegionHint);
+  setControlDisabled($btnShowFlag, !level.showFlagHint);
+  setControlDisabled($btnShowRegion, !level.showRegionHint);
+  if ($btnIKnow) $btnIKnow.classList.toggle('hidden', !level.showTypedAnswer);
+  if ($btnShowOptions) $btnShowOptions.classList.toggle('hidden', !level.choiceCount);
+  if ($btnBail) $btnBail.classList.toggle('hidden', !level.showTypedAnswer);
+
+  if (state.mode === 'sprint' && level.showSprintTimer) {
     $timerContainer.classList.remove('hidden');
     $btnReveal.classList.add('hidden');
     startTimer();
   } else {
     $timerContainer.classList.add('hidden');
-    $btnReveal.classList.remove('hidden');
+    $btnReveal.classList.toggle('hidden', !level.showAnswerMap);
     setControlIcon($btnReveal, 'icon-flag');
     setControlLabel($btnReveal, 'Reveal answer');
-    setControlDisabled($btnReveal, false);
+    setControlDisabled($btnReveal, !level.showAnswerMap);
   }
 
   nextRound();
@@ -856,7 +1091,7 @@ function renderRegionReveal(card) {
 
 function nextRound() {
   if (state.deck.length === 0) {
-    state.deck = shuffle(filterDeck(state.difficulty));
+    state.deck = shuffle(filterDeck(state.level));
   }
 
   // Resume timer in Sprint mode (was paused during feedback)
@@ -874,6 +1109,7 @@ function nextRound() {
   clearAssetRecovery();
 
   const card = state.currentCard;
+  const level = getLevelConfig(state.level);
 
   // Silhouette is the main clue. The fallback module reserves its layout and
   // replaces a failed remote image with a local, readable recovery state.
@@ -892,10 +1128,12 @@ function nextRound() {
   $difficultyHint.textContent = card.stars + '★';
 
   // Reset hint controls for the new stage and keep their disabled state exposed to assistive technology.
-  setControlDisabled($btnShowFlag, false);
+  $btnShowFlag.classList.toggle('hidden', !level.showFlagHint);
+  $btnShowRegion.classList.toggle('hidden', !level.showRegionHint);
+  setControlDisabled($btnShowFlag, !level.showFlagHint);
   setControlLabel($btnShowFlag, 'Show flag');
   $btnShowFlag.removeAttribute('aria-pressed');
-  setControlDisabled($btnShowRegion, false);
+  setControlDisabled($btnShowRegion, !level.showRegionHint);
   setControlLabel($btnShowRegion, 'Show region');
   $btnShowRegion.removeAttribute('aria-pressed');
 
@@ -910,17 +1148,15 @@ function nextRound() {
   if (state.mode === 'sprint') {
     $btnReveal.classList.add('hidden');
   } else {
-    $btnReveal.classList.remove('hidden');
+    $btnReveal.classList.toggle('hidden', !level.showAnswerMap);
     setControlIcon($btnReveal, 'icon-flag');
     setControlLabel($btnReveal, 'Reveal answer');
-    setControlDisabled($btnReveal, false);
+    setControlDisabled($btnReveal, !level.showAnswerMap);
   }
   if ($answerInput) $answerInput.value = '';
 
   // Prepare choices data (but don't show yet)
-  const distractors = pickDistractors(card, countryCards);
-  const options = shuffle([card, ...distractors]);
-  state.choices = options;
+  state.choices = level.choiceCount ? buildChoices(card, countryCards) : [];
 
   // Hide feedback until an answer or reveal has been evaluated.
   $answerInteractionPanel.classList.remove('has-feedback');
@@ -939,6 +1175,8 @@ function nextRound() {
 // "I KNOW IT" — show text input
 function showTypedAnswer() {
   if (state.answered || state.gameOver) return;
+  const level = getLevelConfig(state.level);
+  if (!level.showTypedAnswer) return;
   document.getElementById('answer-section').classList.add('hidden');
   $typeAnswer.classList.remove('hidden');
   syncFeedbackAccessibility(false);
@@ -975,6 +1213,10 @@ function showChoiceButtons(multiplier, moveFocus) {
       btn.textContent = state.choices[i].name;
       btn.className = 'choice-btn';
       setControlDisabled(btn, false);
+    } else {
+      btn.textContent = '';
+      btn.className = 'choice-btn hidden';
+      setControlDisabled(btn, true);
     }
   });
 
@@ -1145,6 +1387,8 @@ function submitTypedAnswer() {
 // "Show Options" — reveal choice buttons at 1x multiplier
 document.getElementById('btn-show-options').addEventListener('click', () => {
   if (state.answered || state.gameOver) return;
+  const level = getLevelConfig(state.level);
+  if (!level.choiceCount) return;
   document.getElementById('answer-section').classList.add('hidden');
   showChoiceButtons(1, true);
 });
@@ -1155,12 +1399,13 @@ $choiceBtns.forEach(btn => {
     if (state.answered || state.gameOver) return;
     const idx = parseInt(btn.dataset.idx);
     const chosen = state.choices[idx];
+    if (!chosen) return;
     const correct = chosen.id === state.currentCard.id;
 
     // Highlight buttons
     $choiceBtns.forEach((b, i) => {
       b.disabled = true;
-      if (state.choices[i].id === state.currentCard.id) b.classList.add('choice-correct');
+      if (state.choices[i]?.id === state.currentCard.id) b.classList.add('choice-correct');
     });
     if (!correct) btn.classList.add('choice-wrong');
 
@@ -1373,9 +1618,20 @@ function endGame() {
   invokeBackgroundMusic('stop');
   AudioEngine.playGameEnd();
 
+  if (ladderProgress && typeof ladderProgress.recordRun === 'function') {
+    ladderProgress.recordRun(state.level, {
+      score: state.score,
+      bestStreak: state.bestStreak,
+      correct: state.correct,
+      total: state.total,
+      mode: state.mode
+    });
+  }
+
   // Show results
-  $resultsTitle.textContent = 'Run complete.';
+  $resultsTitle.textContent = getLevelConfig(state.level).name + ' run complete.';
   if ($resultsStatus) $resultsStatus.textContent = 'Sprint complete. Review your results or replay.';
+  if ($resLevel) $resLevel.textContent = getLevelConfig(state.level).name;
   $resScore.textContent = state.score;
   $resStreak.textContent = state.bestStreak;
   $resCorrect.textContent = state.correct + '/' + state.total;
@@ -1396,6 +1652,10 @@ if ($gameHomeLogo) {
     if (state.total > 0) Promise.resolve(saveStats()).then(() => loadStats());
     showScreen($landing);
   });
+}
+
+if ($landingHomeLogo) {
+  $landingHomeLogo.addEventListener('click', () => showScreen($landing));
 }
 
 $btnQuit.addEventListener('click', () => {
@@ -1422,9 +1682,19 @@ function quitGame() {
   state.gameOver = true;
   invokeBackgroundMusic('stop');
   if (state.total > 0) {
+    if (ladderProgress && typeof ladderProgress.recordRun === 'function') {
+      ladderProgress.recordRun(state.level, {
+        score: state.score,
+        bestStreak: state.bestStreak,
+        correct: state.correct,
+        total: state.total,
+        mode: state.mode
+      });
+    }
     const savePromise = saveStats();
-    $resultsTitle.textContent = 'Run complete.';
+    $resultsTitle.textContent = getLevelConfig(state.level).name + ' run complete.';
     if ($resultsStatus) $resultsStatus.textContent = 'Run ended. Review your results or replay.';
+    if ($resLevel) $resLevel.textContent = getLevelConfig(state.level).name;
     $resScore.textContent = state.score;
     $resStreak.textContent = state.bestStreak;
     $resCorrect.textContent = state.correct + '/' + state.total;
@@ -1768,7 +2038,6 @@ const $typeAnswer = document.getElementById('type-answer');
 const $answerSection = document.getElementById('answer-section');
 const $hintRow = document.querySelector('.hint-row');
 const $btnSkip = document.getElementById('btn-skip');
-const $btnIKnow = document.getElementById('btn-i-know');
 const $gameUtility = document.querySelector('.game-utility');
 const $gameStage = document.querySelector('.game-stage');
 let currentScreen = $landing;

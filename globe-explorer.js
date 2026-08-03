@@ -13,6 +13,9 @@
   const MIN_ZOOM = 1;
   const MAX_ZOOM = 9;
   const GEOMETRY_TIMEOUT_MS = 10000;
+  const LANDMARK_WIKIPEDIA_TITLES = Object.freeze({
+    'Chichen Itza pyramid': 'Chichen Itza'
+  });
   const clamp = (value, minimum, maximum) =>
     Math.min(maximum, Math.max(minimum, value));
   const toRadians = degrees => degrees * Math.PI / 180;
@@ -57,6 +60,11 @@
     const fact = document.getElementById('explorer-country-fact');
     const practiceButton = document.getElementById('btn-explorer-practice');
     const details = document.getElementById('explorer-more-details');
+    const landmarkMedia = document.getElementById('explorer-landmark-media');
+    const landmarkMediaImage = document.getElementById('explorer-landmark-media-image');
+    const landmarkMediaToggle = document.getElementById('explorer-landmark-media-toggle');
+    const landmarkLearnMore = document.getElementById('explorer-landmark-learn-more');
+    const landmarkMediaSource = document.getElementById('explorer-landmark-media-source');
     const zoomInButton = document.getElementById('btn-explorer-zoom-in');
     const zoomOutButton = document.getElementById('btn-explorer-zoom-out');
     const resetButton = document.getElementById('btn-explorer-reset');
@@ -165,6 +173,7 @@
     let huntInterval = 0;
     let huntAdvanceTimeout = 0;
     let huntSessionId = 0;
+    let landmarkMediaRequestId = 0;
     const huntPauseReasons = new Set();
 
     function getRadius() {
@@ -690,6 +699,69 @@
       if (element) element.textContent = value || '—';
     }
 
+    function hideLandmarkMedia() {
+      landmarkMediaRequestId += 1;
+      landmarkMedia?.classList.add('hidden');
+      landmarkMedia?.classList.remove('is-expanded');
+      landmarkMediaImage?.removeAttribute('src');
+      landmarkMediaImage?.removeAttribute('alt');
+      landmarkMediaToggle?.setAttribute('aria-expanded', 'false');
+      landmarkMediaToggle?.removeAttribute('aria-label');
+      landmarkLearnMore?.removeAttribute('href');
+      landmarkLearnMore && (landmarkLearnMore.textContent = 'Learn about this landmark');
+      landmarkMediaSource?.removeAttribute('href');
+    }
+
+    function getLandmarkWikipediaUrl(landmarkName) {
+      const title = LANDMARK_WIKIPEDIA_TITLES[landmarkName] || landmarkName;
+      return 'https://en.wikipedia.org/wiki/' + encodeURIComponent(title.replace(/\s+/g, '_'));
+    }
+
+    function loadLandmarkMedia(country) {
+      const landmarkName = country?.landmarks?.[0];
+      hideLandmarkMedia();
+      if (!landmarkName || !root.fetch || !landmarkMedia || !landmarkMediaImage) return;
+
+      const requestId = landmarkMediaRequestId;
+      const wikipediaTitle = LANDMARK_WIKIPEDIA_TITLES[landmarkName] || landmarkName;
+      const title = encodeURIComponent(wikipediaTitle);
+      const endpoint = 'https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*'
+        + '&titles=' + title + '&redirects=1&prop=pageimages|info&piprop=thumbnail&inprop=url&pithumbsize=640';
+
+      root.fetch(endpoint)
+        .then(response => response.ok ? response.json() : null)
+        .then(data => {
+          if (requestId !== landmarkMediaRequestId) return;
+          const page = Object.values(data?.query?.pages || {})[0];
+          const imageUrl = page?.thumbnail?.source;
+          const sourceUrl = page?.fullurl || getLandmarkWikipediaUrl(landmarkName);
+          if (!imageUrl || !sourceUrl) return;
+
+          landmarkMediaImage.onload = () => {
+            if (requestId === landmarkMediaRequestId) landmarkMedia.classList.remove('hidden');
+          };
+          landmarkMediaImage.onerror = () => {
+            if (requestId === landmarkMediaRequestId) landmarkMedia.classList.add('hidden');
+          };
+          landmarkMediaImage.alt = `${wikipediaTitle} in ${country.name}`;
+          landmarkMediaToggle?.setAttribute('aria-label', `Expand image of ${wikipediaTitle}`);
+          if (landmarkLearnMore) {
+            landmarkLearnMore.href = sourceUrl;
+            landmarkLearnMore.textContent = `Learn about ${page?.title || landmarkName}`;
+          }
+          landmarkMediaSource.href = sourceUrl;
+          landmarkMediaImage.src = imageUrl;
+        })
+        .catch(() => {});
+    }
+
+    landmarkMediaToggle?.addEventListener('click', () => {
+      const expanded = landmarkMedia?.classList.toggle('is-expanded');
+      landmarkMediaToggle.setAttribute('aria-expanded', String(expanded));
+      const landmarkName = landmarkMediaImage?.alt?.replace(/ in .*$/, '') || 'landmark';
+      landmarkMediaToggle.setAttribute('aria-label', `${expanded ? 'Collapse' : 'Expand'} image of ${landmarkName}`);
+    });
+
     function playExplorerSound(method, ...args) {
       if (document.hidden) return;
       const audio = root.AudioEngine;
@@ -877,7 +949,8 @@
       );
       setDetailValue(landmark, country.landmarks?.[0]);
       setDetailValue(fact, country.fun_facts?.[0] || country.built_in_clue);
-      details.open = false;
+      loadLandmarkMedia(country);
+      details.open = !huntActive;
       const practiceRegion = country.continent === 'South America'
         ? 'Americas'
         : country.continent;

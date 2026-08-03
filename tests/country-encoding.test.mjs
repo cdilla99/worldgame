@@ -47,10 +47,13 @@ this.__cards = countryCards;`;
   const samoa = context.__cards.find(card => card.name === 'Samoa');
   const brazil = context.__cards.find(card => card.name === 'Brazil');
   const colombia = context.__cards.find(card => card.name === 'Colombia');
+  const moldova = context.__cards.find(card => card.name === 'Moldova');
 
   assert.equal(samoa.fun_facts[0], "Fa'a Samoa — the Samoan way — governs village life");
   assert.equal(brazil.capital, 'Brasília');
   assert.equal(colombia.capital, 'Bogotá');
+  assert.equal(moldova.capital, 'Chișinău');
+  assert.equal(moldova.landmarks[0], 'Mileștii Mici wine cellars');
 });
 
 test('World Explorer is a prominent landing feature with independent music controls', () => {

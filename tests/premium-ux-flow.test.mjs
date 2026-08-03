@@ -14,6 +14,10 @@ test('selected landing game drives the hero copy and visual preview', () => {
   const styles = read('ux-polish.css');
 
   assert.ok(html.includes('id="landing-shape-preview"'));
+  assert.ok(html.includes('id="landing-shape-preview-flag"'));
+  assert.ok(html.includes('id="landing-shape-preview-country"'));
+  assert.ok(html.includes('class="landing-shape-preview-answer"'));
+  assert.ok(html.includes('<span class="landing-title-accent">shape</span>'));
   assert.ok(html.includes('id="landing-globe-shell" class="landing-globe-shell hidden"'));
   assert.ok(html.includes('id="setup-title">Choose a mode'));
   assert.equal(html.includes('Test your country knowledge'), false);
@@ -27,6 +31,13 @@ test('selected landing game drives the hero copy and visual preview', () => {
   assert.ok(selectionFlow.includes('$landing.dataset.selectedGame = selectedGame'));
 
   assert.ok(styles.includes('.landing-shape-preview-stage'));
+  assert.ok(styles.includes('.landing-shape-preview-answer'));
+  assert.ok(styles.includes('.landing-shape-preview-marker img'));
+  assert.ok(styles.includes('@keyframes landing-shape-swap'));
+  assert.ok(styles.includes('@keyframes landing-shape-title'));
+  assert.ok(app.includes('const LANDING_PREVIEW_COUNTRY_IDS'));
+  assert.ok(app.includes('const cards = shuffle(LANDING_PREVIEW_COUNTRY_IDS'));
+  assert.ok(app.includes("accent.className = 'landing-title-accent'"));
   assert.ok(styles.includes(".landing[data-selected-game='shape'] .landing-tagline"));
   assert.ok(styles.includes('.landing-game-option[aria-pressed='));
 });

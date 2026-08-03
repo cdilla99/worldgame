@@ -1,7 +1,7 @@
-# GeoWars visual assets
+# EARTHLING visual assets
 
-- `geowars-icons.svg` is the local GeoWars interface icon sprite.
-- `geowars-logo.svg` is the responsive GeoWars globe-orbit lockup used on the
+- `geowars-icons.svg` is the local EARTHLING interface icon sprite.
+- `geowars-logo.svg` is the responsive EARTHLING globe-orbit lockup used on the
   landing page and as the in-game home control.
 - `landing-globe.svg` is the static fallback shown when the interactive canvas
   cannot initialize.
@@ -10,7 +10,7 @@
   https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_110m_admin_0_countries.geojson
 
 Natural Earth data is public domain. The geometry is rounded and simplified for
-the landing-page globe, grouped into the six regions supported by GeoWars, and
+the landing-page globe, grouped into the six regions supported by EARTHLING, and
 bundled locally so the page makes no runtime map-data request.
 ## World Explorer geometry
 
@@ -19,6 +19,6 @@ bundled locally so the page makes no runtime map-data request.
   World Explorer opens.
 - Rebuild it with
   `node scripts/build-globe-country-data.mjs <path-to-ne_50m_admin_0_countries.geojson>`.
-- The generator joins geometry to the canonical GeoWars records through the
+- The generator joins geometry to the canonical EARTHLING records through the
   ISO alpha-2 code encoded in each flag. All 195 game countries are covered,
   including visible markers and larger hit targets for small countries.

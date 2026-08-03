@@ -8,18 +8,23 @@ const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(testDirectory, '..');
 const read = (...parts) => fs.readFileSync(path.join(root, ...parts), 'utf8');
 
-test('GeoWars uses the dedicated SVG lockup on landing and as an in-game home control', () => {
+test('EARTHLING uses the dedicated SVG lockup on landing and as an in-game home control', () => {
   const html = read('index.html');
   const logo = read('assets', 'geowars-logo.svg');
   const app = read('app.js');
+  const explorer = read('globe-explorer.js');
 
   assert.match(logo, /<svg[\s\S]*viewBox="0 0 276 64"/);
-  assert.match(logo, /<title id="title">GeoWars<\/title>/);
-  assert.match(logo, /WORLD SHAPE ARENA/);
-  assert.match(html, /class="brand-logo" src="assets\/geowars-logo\.svg" alt="GeoWars"/);
-  assert.match(html, /id="btn-game-home"[\s\S]*aria-label="Return to the GeoWars home page"/);
+  assert.match(logo, /<title id="title">EARTHLING<\/title>/);
+  assert.match(logo, /WORLD SHAPE GAME/);
+  assert.match(html, /id="btn-landing-home" class="brand-lockup" type="button" aria-label="Return to the EARTHLING home page"/);
+  assert.match(html, /class="brand-logo" src="assets\/geowars-logo\.svg" alt="EARTHLING"/);
+  assert.match(html, /class="explorer-home-logo" type="button" data-explorer-home aria-label="Return to the EARTHLING home page"/);
+  assert.match(html, /id="btn-game-home"[\s\S]*aria-label="Return to the EARTHLING home page"/);
+  assert.match(app, /\$landingHomeLogo\.addEventListener\('click', \(\) => showScreen\(\$landing\)\)/);
   assert.match(app, /\$gameHomeLogo\.addEventListener\('click'/);
   assert.match(app, /showScreen\(\$landing\)/);
+  assert.match(explorer, /homeButtons\.forEach\(button => button\.addEventListener\('click', returnHome\)\)/);
 });
 
 test('globe selection is repeated in persistent, live, and ready-to-play surfaces', () => {
@@ -62,6 +67,49 @@ test('landing copy leads with Explorer and keeps the shape game concise', () => 
   assert.match(app, /Sprint · 60 seconds · \$\{diffLabel\} · \$\{continentLabel\}/);
   assert.match(fallbacks, /title: 'Shape unavailable'/);
 });
+
+test('the mobile shape preview is a Demo disclosure with a dedicated explanation label', () => {
+  const html = read('index.html');
+  const styles = read('ux-polish.css');
+  const app = read('app.js');
+
+  assert.match(html, /<details id="landing-shape-preview" class="landing-shape-preview"/);
+  assert.match(html, /<summary class="landing-shape-preview-toggle">Demo<\/summary>/);
+  assert.match(html, /landing-shape-preview-kicker-desktop">Sample round</);
+  assert.match(html, /landing-shape-preview-kicker-mobile">How it works</);
+  assert.match(app, /function syncLandingShapePreviewDisclosure\(\)[\s\S]*\$landingShapePreview\.open = landingShapePreviewDesktopQuery\.matches;/);
+  assert.match(app, /landingShapePreviewDesktopQuery\?\.addEventListener\?\.\('change', syncLandingShapePreviewDisclosure\)/);
+  assert.match(styles, /@media \(min-width: 1024px\)[\s\S]*\.landing-shape-preview-stage\s*\{[\s\S]*minmax\(350px, 1fr\)[\s\S]*min-height: 470px;/);
+  assert.match(styles, /@media \(min-width: 1024px\)[\s\S]*\.landing-shape-preview-art svg\s*\{[\s\S]*width: 300px;[\s\S]*max-height: none;/);
+  assert.match(styles, /@media \(max-width: 767px\)[\s\S]*\.landing-shape-preview-toggle\s*\{[\s\S]*display: flex;/);
+  assert.match(styles, /@media \(max-width: 767px\)[\s\S]*\.landing-shape-preview-kicker-mobile\s*\{[\s\S]*display: block;/);
+});
+
+test('desktop landing has a dedicated Explorer launch composition without changing mobile rules', () => {
+  const styles = read('ux-polish.css');
+  const explorerStyles = read('globe-explorer.css');
+
+  assert.match(styles, /@media \(min-width: 1024px\)[\s\S]*\.landing-proposition\s*\{[\s\S]*min-height: 600px;/);
+  assert.match(styles, /@media \(min-width: 1024px\)[\s\S]*\.landing-explore-feature\s*\{[\s\S]*min-height: 214px;/);
+  assert.match(styles, /@media \(min-width: 1024px\)[\s\S]*\.landing-explore-actions\s*\{[\s\S]*grid-template-columns: minmax\(0, 1\.15fr\) minmax\(0, 0\.85fr\);/);
+  assert.match(explorerStyles, /@media \(min-width: 1024px\)[\s\S]*\.landing-explore-feature\s*\{[\s\S]*min-height: 214px;/);
+  assert.match(explorerStyles, /@media \(min-width: 1024px\)[\s\S]*\.landing-explore-actions[^}]*grid-template-columns: minmax\(0, 1\.15fr\) minmax\(0, 0\.85fr\);/);
+  assert.match(styles, /@media \(min-width: 1024px\)[\s\S]*\.landing-statistics\s*\{[\s\S]*min-height: 0;/);
+  assert.match(styles, /@media \(min-width: 1024px\)[\s\S]*\.landing\[data-selected-game='explorer'\] \.landing-setup-panel\s*\{[\s\S]*min-height: clamp\(600px, 70vh, 640px\);/);
+  assert.match(styles, /@media \(min-width: 1024px\)[\s\S]*\.landing\[data-selected-game='explorer'\] \.landing-explore-actions\s*\{[\s\S]*align-self: end;/);
+});
+
+test('landing statistics are available through a subtle collapsed disclosure', () => {
+  const html = read('index.html');
+  const styles = read('ux-polish.css');
+
+  assert.match(html, /<details class="landing-statistics-disclosure">/);
+  assert.match(html, /<summary class="landing-statistics-toggle"><span id="statistics-title" class="statistics-heading">Your best<\/span><\/summary>/);
+  assert.match(html, /id="btn-reset-stats"[\s\S]*aria-haspopup="dialog"/);
+  assert.match(styles, /\.landing-statistics-toggle::after\s*\{[\s\S]*content: '\+';/);
+  assert.match(styles, /\.landing-statistics-disclosure\[open\] \.landing-statistics-toggle::after\s*\{[\s\S]*content: '-';/);
+});
+
 test('gameplay polish preserves responsive and focused-task contracts', () => {
   const html = read('index.html');
   const app = read('app.js');
