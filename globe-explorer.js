@@ -12,6 +12,7 @@
   const territoryGeometryUrl = 'assets/globe-territories.js?v=20260730-guidance1';
   const MIN_ZOOM = 1;
   const MAX_ZOOM = 9;
+  const GEOMETRY_TIMEOUT_MS = 10000;
   const clamp = (value, minimum, maximum) =>
     Math.min(maximum, Math.max(minimum, value));
   const toRadians = degrees => degrees * Math.PI / 180;
@@ -32,6 +33,10 @@
     const status = document.getElementById('explorer-globe-status');
     const loading = document.getElementById('explorer-globe-loading');
     const error = document.getElementById('explorer-globe-error');
+    const errorTitle = document.getElementById('explorer-globe-error-title');
+    const errorCopy = document.getElementById('explorer-globe-error-copy');
+    const geometryRetryButton = document.getElementById('btn-explorer-globe-retry');
+    const searchFallbackButton = document.getElementById('btn-explorer-search-fallback');
     const live = document.getElementById('explorer-live');
     const searchInput = document.getElementById('explorer-country-search');
     const searchList = document.getElementById('explorer-search-results');
@@ -58,6 +63,8 @@
     const musicButton = document.getElementById('btn-explorer-music');
     const musicButtonLabel = musicButton?.querySelector('span');
     const musicButtonUse = musicButton?.querySelector('use');
+    const hapticsButton = document.getElementById('btn-explorer-haptics');
+    const hapticsButtonLabel = hapticsButton?.querySelector('span');
     const freeModeButton = document.getElementById('btn-explorer-free');
     const huntModeButton = document.getElementById('btn-explorer-hunt');
     const huntHud = document.getElementById('explorer-hunt-hud');
@@ -74,6 +81,13 @@
     const huntSelectionLabel = document.getElementById('explorer-hunt-selection-label');
     const huntSelectedCountry = document.getElementById('explorer-hunt-selected-country');
     const huntSelectionFeedback = document.getElementById('explorer-hunt-selection-feedback');
+    const huntFeedback = document.getElementById('explorer-hunt-feedback');
+    const huntFeedbackFlag = document.getElementById('explorer-hunt-feedback-flag');
+    const huntFeedbackOutcome = document.getElementById('explorer-hunt-feedback-outcome');
+    const huntFeedbackSelected = document.getElementById('explorer-hunt-feedback-selected');
+    const huntFeedbackArrow = document.getElementById('explorer-hunt-feedback-arrow');
+    const huntFeedbackDistance = document.getElementById('explorer-hunt-feedback-distance');
+    const huntFeedbackDirection = document.getElementById('explorer-hunt-feedback-direction');
     const huntGuidance = document.getElementById('explorer-hunt-guidance');
     const huntDirectionArrow = document.getElementById('explorer-hunt-direction-arrow');
     const huntDistance = document.getElementById('explorer-hunt-distance');
@@ -113,6 +127,9 @@
     const pointers = new Map();
     const prefersReducedMotion = root.matchMedia('(prefers-reduced-motion: reduce)');
     let geometryPromise = null;
+    let geometryState = 'idle';
+    let geometryLoadAttempt = 0;
+    let territoryGeometryReady = false;
     let countries = [];
     let drawOrder = [];
     let size = 560;
@@ -147,6 +164,8 @@
     let huntPausedAt = 0;
     let huntInterval = 0;
     let huntAdvanceTimeout = 0;
+    let huntSessionId = 0;
+    const huntPauseReasons = new Set();
 
     function getRadius() {
       return baseRadius * zoom;
@@ -452,14 +471,13 @@
       hitContext.restore();
 
       updateCenteredCountry();
-      zoomInButton.disabled = zoom >= MAX_ZOOM;
-      zoomOutButton.disabled = zoom <= MIN_ZOOM;
+      syncGlobeControls();
     }
 
     function resize() {
       const rect = globeFrame.getBoundingClientRect();
       if (!rect.width) return;
-      size = Math.max(280, Math.round(Math.min(rect.width, rect.height || rect.width)));
+      size = Math.max(220, Math.round(Math.min(rect.width, rect.height || rect.width)));
       center = size / 2;
       baseRadius = size * 0.45;
       const devicePixelRatio = Math.min(root.devicePixelRatio || 1, 2);
@@ -476,52 +494,136 @@
       status.textContent = message;
     }
 
+    function syncGlobeControls() {
+      const ready = countries.length >= cards.length && geometryState !== 'loading';
+      zoomInButton.disabled = !ready || zoom >= MAX_ZOOM;
+      zoomOutButton.disabled = !ready || zoom <= MIN_ZOOM;
+      resetButton.disabled = !ready;
+    }
+
     function setLoading(active) {
       loading.classList.toggle('hidden', !active);
       canvas.classList.toggle('is-loading', active);
+      globeFrame.setAttribute('aria-busy', String(active));
+      if (geometryRetryButton) {
+        geometryRetryButton.disabled = active;
+        if (active) geometryRetryButton.textContent = 'Loading…';
+      }
+      syncGlobeControls();
+    }
+
+    function showGeometryError(loadError) {
+      console.warn('[GeoWars Explorer]', loadError);
+      geometryState = 'error';
+      setLoading(false);
+      canvas.classList.add('hidden');
+      error.classList.remove('hidden');
+      if (errorTitle) errorTitle.textContent = 'The map could not load';
+      if (errorCopy) {
+        errorCopy.textContent = root.navigator?.onLine === false
+          ? 'You appear to be offline. Reconnect, then try again.'
+          : 'Check your connection, then try again.';
+      }
+      if (geometryRetryButton) {
+        geometryRetryButton.disabled = false;
+        geometryRetryButton.textContent = huntActive ? 'Retry Country Hunt' : 'Try again';
+      }
+      if (huntActive && huntTarget) huntTarget.textContent = 'Map unavailable';
+      const recoveryMessage = huntActive
+        ? 'Country Hunt is waiting for the map. Retry when you are ready.'
+        : 'The interactive globe is unavailable. You can retry or use country search.';
+      setStatus(recoveryMessage);
+      live.textContent = recoveryMessage;
+      if (opened && !document.hidden) {
+        root.requestAnimationFrame(() => geometryRetryButton?.focus({ preventScroll: true }));
+      }
+    }
+
+    function loadGeometryAsset(globalName, url, errorMessage, expectedCount, attempt) {
+      const cachedData = root[globalName];
+      if (Array.isArray(cachedData) && cachedData.length === expectedCount) {
+        return Promise.resolve(cachedData);
+      }
+      if (cachedData != null) {
+        try { root[globalName] = undefined; } catch (assignmentError) {}
+      }
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        let settled = false;
+        const finish = (callback, value) => {
+          if (settled) return;
+          settled = true;
+          root.clearTimeout(timeoutId);
+          script.remove();
+          callback(value);
+        };
+        const timeoutId = root.setTimeout(
+          () => finish(reject, new Error(errorMessage + ' (timed out)')),
+          GEOMETRY_TIMEOUT_MS
+        );
+        script.src = attempt > 1 ? url + '&retry=' + attempt : url;
+        script.async = true;
+        script.onload = () => {
+          const loadedData = root[globalName];
+          if (!Array.isArray(loadedData) || loadedData.length !== expectedCount) {
+            finish(reject, new Error(errorMessage + ' (incomplete data)'));
+            return;
+          }
+          finish(resolve, loadedData);
+        };
+        script.onerror = () => finish(reject, new Error(errorMessage));
+        document.head.appendChild(script);
+      });
     }
 
     function loadGeometry() {
-      if (countries.length) return Promise.resolve(countries);
+      if (countries.length >= cards.length) return Promise.resolve(countries);
       if (geometryPromise) return geometryPromise;
+      geometryLoadAttempt += 1;
+      geometryState = 'loading';
       setLoading(true);
       error.classList.add('hidden');
 
-      function loadGeometryAsset(globalName, url, errorMessage) {
-        if (Array.isArray(root[globalName])) return Promise.resolve(root[globalName]);
-        return new Promise((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = url;
-          script.async = true;
-          script.onload = () => resolve(root[globalName]);
-          script.onerror = () => reject(new Error(errorMessage));
-          document.head.appendChild(script);
-        });
-      }
-
-      geometryPromise = Promise.all([
-        loadGeometryAsset('GeoWarsGlobeCountries', geometryUrl, 'Country geometry failed to load'),
-        loadGeometryAsset('GeoWarsGlobeTerritories', territoryGeometryUrl, 'Territory geometry failed to load')
-      ]).then(([countryData, territoryData]) => {
-        if (!Array.isArray(countryData) || countryData.length !== cards.length) {
-          throw new Error('Country geometry is incomplete');
-        }
-        if (!Array.isArray(territoryData) || territoryData.length !== territoryCards.length) {
-          throw new Error('Territory geometry is incomplete');
-        }
+      geometryPromise = Promise.allSettled([
+        loadGeometryAsset(
+          'GeoWarsGlobeCountries',
+          geometryUrl,
+          'Country geometry failed to load',
+          cards.length,
+          geometryLoadAttempt
+        ),
+        loadGeometryAsset(
+          'GeoWarsGlobeTerritories',
+          territoryGeometryUrl,
+          'Territory geometry failed to load',
+          territoryCards.length,
+          geometryLoadAttempt
+        )
+      ]).then(results => {
+        const countryResult = results[0];
+        const territoryResult = results[1];
+        if (countryResult.status !== 'fulfilled') throw countryResult.reason;
+        const countryData = countryResult.value;
+        const territoryData = territoryResult.status === 'fulfilled' ? territoryResult.value : [];
+        territoryGeometryReady = territoryData.length === territoryCards.length;
         countries = [...countryData, ...territoryData];
+        geometryById.clear();
         countries.forEach(country => geometryById.set(country.i, country));
         drawOrder = [...countries].sort((first, second) => first.s - second.s);
+        geometryState = territoryGeometryReady ? 'ready' : 'partial';
+        canvas.classList.remove('hidden');
+        error.classList.add('hidden');
         setLoading(false);
-        requestAnimationFrame(resize);
+        root.requestAnimationFrame(resize);
+        if (!territoryGeometryReady && !huntActive) {
+          setStatus('Country globe ready. Territory outlines are temporarily unavailable.');
+        }
         return countries;
       }).catch(loadError => {
-        console.warn('[GeoWars Explorer]', loadError);
-        setLoading(false);
-        canvas.classList.add('hidden');
-        error.classList.remove('hidden');
-        setStatus('The interactive globe is unavailable. Search for a country or territory instead.');
+        showGeometryError(loadError);
         return [];
+      }).finally(() => {
+        if (geometryState === 'error') geometryPromise = null;
       });
 
       return geometryPromise;
@@ -589,6 +691,7 @@
     }
 
     function playExplorerSound(method, ...args) {
+      if (document.hidden) return;
       const audio = root.AudioEngine;
       if (!audio || typeof audio[method] !== 'function') return;
       try {
@@ -611,6 +714,42 @@
       } else {
         flagImage.remove();
         element.textContent = country.flag;
+      }
+    }
+
+    function resetHuntFeedback() {
+      if (!huntFeedback) return;
+      huntFeedback.classList.remove('is-correct', 'is-wrong');
+      huntFeedback.classList.add('is-waiting');
+      huntFeedbackFlag?.replaceChildren();
+      if (huntFeedbackOutcome) huntFeedbackOutcome.textContent = 'Ready for your guess';
+      if (huntFeedbackSelected) huntFeedbackSelected.textContent = 'Tap a country';
+      if (huntFeedbackArrow) huntFeedbackArrow.textContent = '\u25CE';
+      if (huntFeedbackDistance) huntFeedbackDistance.textContent = 'Ready';
+      if (huntFeedbackDirection) huntFeedbackDirection.textContent = 'Choose on the globe';
+    }
+
+    function renderHuntFeedback(country, correct, hint) {
+      if (!huntFeedback || !country) return;
+      huntFeedback.classList.remove('is-waiting', 'is-correct', 'is-wrong');
+      huntFeedback.classList.add(correct ? 'is-correct' : 'is-wrong');
+      renderFlagInto(huntFeedbackFlag, country);
+      if (huntFeedbackOutcome) {
+        huntFeedbackOutcome.textContent = correct ? 'Correct country' : 'Not the target';
+      }
+      if (huntFeedbackSelected) huntFeedbackSelected.textContent = country.name;
+      if (correct) {
+        if (huntFeedbackArrow) huntFeedbackArrow.textContent = '\u2713';
+        if (huntFeedbackDistance) huntFeedbackDistance.textContent = '+1 found';
+        if (huntFeedbackDirection) huntFeedbackDirection.textContent = 'Next target loading';
+        return;
+      }
+      if (huntFeedbackArrow) huntFeedbackArrow.textContent = hint?.arrow || '\u2192';
+      if (huntFeedbackDistance) huntFeedbackDistance.textContent = hint?.displayDistance || 'Keep looking';
+      if (huntFeedbackDirection) {
+        huntFeedbackDirection.textContent = hint
+          ? hint.directionLabel + ' \u00B7 ' + hint.proximity
+          : 'Try another country';
       }
     }
 
@@ -651,6 +790,7 @@
       if (huntSelectedCountry) huntSelectedCountry.textContent = 'Tap a country';
       if (huntSelectionFeedback) huntSelectionFeedback.textContent = 'Your selection will appear here.';
       hideHuntGuidance();
+      resetHuntFeedback();
     }
 
     function renderHuntTarget(country) {
@@ -662,7 +802,7 @@
     }
 
     function renderHuntSelection(country, correct, target) {
-      if (!country || !target) return;
+      if (!country || !target) return null;
       huntSelectionCard?.classList.remove('is-empty', 'is-correct', 'is-wrong');
       if (huntSelectionCard) void huntSelectionCard.offsetWidth;
       huntSelectionCard?.classList.add(correct ? 'is-correct' : 'is-wrong');
@@ -671,6 +811,7 @@
       if (huntSelectedCountry) huntSelectedCountry.textContent = country.name;
       const hint = correct ? null : renderHuntGuidance(country, target);
       if (correct) hideHuntGuidance();
+      renderHuntFeedback(country, correct, hint);
       if (huntSelectionFeedback) {
         huntSelectionFeedback.textContent = correct
           ? `You found ${target.name}. Next country coming up.`
@@ -678,6 +819,7 @@
             ? `${target.name} is about ${hint.displayDistance} ${hint.directionLabel}. Keep looking.`
             : `${country.name} is not ${target.name}. Keep looking.`;
       }
+      return hint;
     }
 
     function showHuntCelebration(country) {
@@ -783,6 +925,41 @@
       huntAdvanceTimeout = 0;
     }
 
+    function resetHuntPauseState() {
+      huntPauseReasons.clear();
+      huntPausedAt = 0;
+      screen.classList.remove('is-hunt-paused');
+    }
+
+    function pauseHuntClock(reason) {
+      if (!huntActive || huntPauseReasons.has(reason)) return;
+      if (huntPauseReasons.size === 0 && huntDeadline) huntPausedAt = Date.now();
+      huntPauseReasons.add(reason);
+      screen.classList.add('is-hunt-paused');
+    }
+
+    function resumeHuntClock(reason) {
+      if (!huntPauseReasons.delete(reason)) return;
+      if (huntPauseReasons.size > 0) return;
+      if (huntPausedAt && huntDeadline) huntDeadline += Date.now() - huntPausedAt;
+      huntPausedAt = 0;
+      screen.classList.remove('is-hunt-paused');
+      updateHuntClock();
+    }
+
+    function handleHuntVisibility() {
+      if (!huntActive) return;
+      if (document.hidden) {
+        pauseHuntClock('document-hidden');
+        return;
+      }
+      const wasVisibilityPaused = huntPauseReasons.has('document-hidden');
+      resumeHuntClock('document-hidden');
+      if (wasVisibilityPaused && huntActive && huntDeadline && !huntPauseReasons.size) {
+        live.textContent = 'Country Hunt resumed. ' + huntTimeLeft + ' seconds remain.';
+      }
+    }
+
     function chooseNextHuntTarget() {
       if (!huntActive || !cards.length) return;
       const candidates = cards.filter(country => country.id !== lastHuntTargetId);
@@ -804,7 +981,7 @@
     }
 
     function updateHuntClock() {
-      if (!huntActive || huntPausedAt) return;
+      if (!huntActive || !huntDeadline || huntPauseReasons.size) return;
       const nextTime = Math.max(0, Math.ceil((huntDeadline - Date.now()) / 1000));
       if (nextTime !== huntTimeLeft) {
         huntTimeLeft = nextTime;
@@ -815,13 +992,15 @@
 
     function startHunt() {
       clearHuntTimers();
+      const sessionId = ++huntSessionId;
       stopAnimation();
       longitude = -16;
       latitude = 12;
       zoom = MIN_ZOOM;
       centeredCountryId = null;
       huntActive = true;
-      huntPausedAt = 0;
+      huntDeadline = 0;
+      resetHuntPauseState();
       huntTimeLeft = 60;
       huntScore = 0;
       huntTargetId = null;
@@ -833,14 +1012,17 @@
       huntSummary?.classList.add('hidden');
       huntCompare?.classList.add('hidden');
       hideHuntCelebration();
+      resetHuntSelection();
       if (huntTime) huntTime.textContent = '60';
       if (huntScoreElement) huntScoreElement.textContent = '0';
       if (huntTarget) huntTarget.textContent = 'Get ready…';
       setExplorerMode('hunt');
+      if (document.hidden) pauseHuntClock('document-hidden');
       setStatus('Loading your first country…');
       loadGeometry().then(loadedCountries => {
-        if (!huntActive || !loadedCountries.length) return;
+        if (!huntActive || sessionId !== huntSessionId || loadedCountries.length < cards.length) return;
         huntDeadline = Date.now() + 60000;
+        if (huntPauseReasons.size) huntPausedAt = Date.now();
         chooseNextHuntTarget();
         huntInterval = root.setInterval(updateHuntClock, 250);
         canvas.focus({ preventScroll: true });
@@ -849,9 +1031,11 @@
 
     function endHunt(showSummary = true) {
       const completedScore = huntScore;
+      huntSessionId += 1;
       clearHuntTimers();
       huntActive = false;
-      huntPausedAt = 0;
+      huntDeadline = 0;
+      resetHuntPauseState();
       huntTargetId = null;
       hideHuntCelebration();
       huntCompare?.classList.add('hidden');
@@ -880,7 +1064,9 @@
         if (emptyCardTitle) emptyCardTitle.textContent = 'Select a country or territory';
         if (emptyCardCopy) emptyCardCopy.textContent = 'Its flag, capital, status, and essential facts will appear here.';
       }
-      setStatus('Drag to explore. Select a country or territory to learn more.');
+      setStatus(geometryState === 'partial'
+        ? 'Country globe ready. Territory outlines are temporarily unavailable.'
+        : 'Drag to explore. Select a country or territory to learn more.');
       canvas.focus({ preventScroll: true });
     }
 
@@ -891,8 +1077,8 @@
       }
       const country = cardsById.get(Number(countryId));
       const target = cardsById.get(huntTargetId);
-      if (!country || !target || huntAdvanceTimeout) return;
-      if (!huntPausedAt && Date.now() >= huntDeadline) {
+      if (!country || !target || huntAdvanceTimeout || huntPauseReasons.size) return;
+      if (Date.now() >= huntDeadline) {
         endHunt(true);
         return;
       }
@@ -900,25 +1086,25 @@
       hoveredCountryId = country.id;
       if (country.id === target.id) {
         huntScore += 1;
-        huntPausedAt = Date.now();
+        pauseHuntClock('answer-feedback');
         if (huntScoreElement) huntScoreElement.textContent = String(huntScore);
         renderHuntSelection(country, true, target);
         showHuntCelebration(country);
         playExplorerSound('playCorrect', 3, huntScore);
+        root.GeoWarsHaptics?.play?.('correct');
         setStatus(`Correct — ${country.name}.`);
         live.textContent = `Correct. You found ${country.name}. ${huntScore} ${huntScore === 1 ? 'country' : 'countries'} found.`;
         draw();
         huntAdvanceTimeout = root.setTimeout(() => {
-          const pausedDuration = huntPausedAt ? Date.now() - huntPausedAt : 0;
-          huntDeadline += pausedDuration;
-          huntPausedAt = 0;
           huntAdvanceTimeout = 0;
+          resumeHuntClock('answer-feedback');
           chooseNextHuntTarget();
         }, 1600);
       } else {
-        renderHuntSelection(country, false, target);
-        playExplorerSound('playWrong');
-        const hint = geography?.hintBetween?.(geometryById.get(country.id), geometryById.get(target.id));
+        const hint = renderHuntSelection(country, false, target);
+        if (hint?.proximity === 'Nearby') playExplorerSound('playNearMiss');
+        else playExplorerSound('playWrong');
+        root.GeoWarsHaptics?.play?.(hint?.proximity === 'Nearby' ? 'near' : 'wrong');
         const guidanceCopy = hint ? ` ${hint.displayDistance} ${hint.directionLabel}.` : '';
         setStatus(`You selected ${country.name}.${guidanceCopy} Keep looking for ${target.name}.`);
         live.textContent = `${country.name} is not the target.${guidanceCopy} Keep looking for ${target.name}.`;
@@ -1062,6 +1248,53 @@
         renderMusicControl(false);
       }
     }
+
+    function renderHapticsControl() {
+      if (!hapticsButton) return;
+      const haptics = root.GeoWarsHaptics;
+      const supported = !!haptics?.isSupported?.();
+      screen.classList.toggle('has-haptics', supported);
+      hapticsButton.classList.toggle('hidden', !supported);
+      if (!supported) return;
+      const enabled = !!haptics.isEnabled?.();
+      hapticsButton.setAttribute('aria-pressed', String(enabled));
+      hapticsButton.setAttribute('aria-label', enabled ? 'Turn haptics off' : 'Turn haptics on');
+      if (hapticsButtonLabel) hapticsButtonLabel.textContent = enabled ? 'Haptics on' : 'Haptics off';
+    }
+
+    function toggleExplorerHaptics() {
+      root.GeoWarsHaptics?.toggle?.();
+      renderHapticsControl();
+    }
+
+    function retryGeometry() {
+      if (geometryState === 'loading') return;
+      if (huntActive) {
+        startHunt();
+        return;
+      }
+      loadGeometry().then(loadedCountries => {
+        if (loadedCountries.length < cards.length) return;
+        root.requestAnimationFrame(() => {
+          resize();
+          canvas.focus({ preventScroll: true });
+        });
+      });
+    }
+
+    function useSearchFallback() {
+      showFreeExplorer();
+      setStatus('The map is unavailable. Search for any country or territory to view its facts.');
+      searchInput.focus({ preventScroll: true });
+    }
+
+    function refreshGeometryErrorCopy() {
+      if (error.classList.contains('hidden') || !errorCopy) return;
+      errorCopy.textContent = root.navigator?.onLine === false
+        ? 'You appear to be offline. Reconnect, then try again.'
+        : 'Connection restored. Try loading the map again.';
+    }
+
     function openExplorer() {
       opened = true;
       try { root.AudioEngine?.init?.(); } catch (audioError) {}
@@ -1103,6 +1336,8 @@
       openExplorer();
       showFreeExplorer();
     });
+    renderHapticsControl();
+    syncGlobeControls();
     openHuntButton?.addEventListener('click', () => {
       openExplorer();
       startHunt();
@@ -1115,6 +1350,16 @@
     homeButtons.forEach(button => button.addEventListener('click', returnHome));
     practiceButton.addEventListener('click', startRegionalPractice);
     musicButton?.addEventListener('click', toggleExplorerMusic);
+    hapticsButton?.addEventListener('click', toggleExplorerHaptics);
+    geometryRetryButton?.addEventListener('click', retryGeometry);
+    searchFallbackButton?.addEventListener('click', useSearchFallback);
+    document.addEventListener('visibilitychange', handleHuntVisibility);
+    root.addEventListener('pagehide', () => pauseHuntClock('document-hidden'));
+    root.addEventListener('pageshow', () => {
+      if (!document.hidden) handleHuntVisibility();
+    });
+    root.addEventListener('online', refreshGeometryErrorCopy);
+    root.addEventListener('offline', refreshGeometryErrorCopy);
     zoomInButton.addEventListener('click', () => setZoom(zoom + (zoom >= 4 ? 0.9 : 0.6)));
     zoomOutButton.addEventListener('click', () => setZoom(zoom - (zoom > 4 ? 0.75 : 0.4)));
     resetButton.addEventListener('click', () => {
@@ -1336,7 +1581,10 @@
         huntTimeLeft,
         huntScore,
         huntTargetId,
-        geometryReady: countries.length === explorerCards.length
+        huntPaused: huntPauseReasons.size > 0,
+        geometryState,
+        geometryReady: countries.length === explorerCards.length,
+        territoryGeometryReady
       })
     };
   }

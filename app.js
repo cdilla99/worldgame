@@ -100,6 +100,9 @@ const $flagHint = document.getElementById('flag-hint');
 const $flagImg = document.getElementById('flag-img');
 const $continentHint = document.getElementById('continent-hint');
 const $difficultyHint = document.getElementById('difficulty-hint');
+const $regionRevealCard = document.getElementById('region-reveal-card');
+const $regionRevealTitle = document.getElementById('region-reveal-title');
+const $regionRevealContext = document.getElementById('region-reveal-context');
 const $choices = document.getElementById('choices');
 const $choiceBtns = Array.from(document.querySelectorAll('.choice-btn'));
 const $feedback = document.getElementById('feedback');
@@ -344,6 +347,12 @@ const $statBest = document.getElementById('stat-best');
 const $statTotal = document.getElementById('stat-total');
 const $statsBar = document.getElementById('stats-bar');
 const $recordsEmpty = document.getElementById('records-empty');
+const $resetStatsButton = document.getElementById('btn-reset-stats');
+const $statsResetDialog = document.getElementById('stats-reset-dialog');
+const $cancelStatsResetButton = document.getElementById('btn-cancel-stats-reset');
+const $confirmStatsResetButton = document.getElementById('btn-confirm-stats-reset');
+const $statsResetStatus = document.getElementById('stats-reset-status');
+const $statisticsTitle = document.getElementById('statistics-title');
 const $playerContextName = document.getElementById('player-context-name');
 const $playerContextDetail = document.getElementById('player-context-detail');
 const $choosePlayerButton = document.getElementById('btn-choose-player');
@@ -354,6 +363,21 @@ const $playerProfileEmail = document.getElementById('player-profile-email');
 const $playerProfileStatus = document.getElementById('player-profile-status');
 const $playerProfileDescription = document.getElementById('player-profile-description');
 const $sendPlayerLinkButton = document.getElementById('btn-send-player-link');
+const $landingShapeGameButton = document.getElementById('btn-landing-shape-game');
+const $landingExplorerGameButton = document.getElementById('btn-landing-explorer-game');
+const $shapeChallengePanel = document.getElementById('shape-challenge-panel');
+const $worldExplorerPanel = document.getElementById('world-explorer-panel');
+const $landingShapePreview = document.getElementById('landing-shape-preview');
+const $landingGlobeShell = document.getElementById('landing-globe-shell');
+const $landingEyebrow = document.getElementById('landing-eyebrow');
+const $landingHeroTitle = document.getElementById('landing-title');
+const $landingObjective = document.getElementById('landing-objective');
+const $landingProofOneValue = document.getElementById('landing-proof-one-value');
+const $landingProofOneLabel = document.getElementById('landing-proof-one-label');
+const $landingProofTwoValue = document.getElementById('landing-proof-two-value');
+const $landingProofTwoLabel = document.getElementById('landing-proof-two-label');
+const $landingProofThreeValue = document.getElementById('landing-proof-three-value');
+const $landingProofThreeLabel = document.getElementById('landing-proof-three-label');
 
 // ============================================================
 // SCREENS
@@ -367,6 +391,89 @@ function showScreen(screen) {
 // ============================================================
 // LANDING
 // ============================================================
+
+const LANDING_GAME_PRESENTATION = Object.freeze({
+  shape: Object.freeze({
+    eyebrow: 'Country shape challenge',
+    title: 'See the shape. Name the country.',
+    objective: 'Race through country outlines in a 60-second sprint, or learn at your own pace.',
+    proof: Object.freeze([
+      Object.freeze(['195', 'countries']),
+      Object.freeze(['60s', 'sprint']),
+      Object.freeze(['Free', 'practice'])
+    ])
+  }),
+  explorer: Object.freeze({
+    eyebrow: 'Interactive world atlas',
+    title: 'Explore the world.',
+    objective: 'Discover 195 countries at your pace, then race to find them in Country Hunt.',
+    proof: Object.freeze([
+      Object.freeze(['195', 'countries']),
+      Object.freeze(['Free', 'explore']),
+      Object.freeze(['60s', 'country hunt'])
+    ])
+  })
+});
+
+function setLandingPreviewVisibility(preview, visible) {
+  if (!preview) return;
+  preview.hidden = !visible;
+  preview.classList.toggle('hidden', !visible);
+  preview.setAttribute('aria-hidden', String(!visible));
+}
+
+function updateLandingPresentation(game) {
+  const presentation = LANDING_GAME_PRESENTATION[game] || LANDING_GAME_PRESENTATION.shape;
+  if ($landingEyebrow) $landingEyebrow.textContent = presentation.eyebrow;
+  if ($landingHeroTitle) $landingHeroTitle.textContent = presentation.title;
+  if ($landingObjective) $landingObjective.textContent = presentation.objective;
+
+  const proofNodes = [
+    [$landingProofOneValue, $landingProofOneLabel],
+    [$landingProofTwoValue, $landingProofTwoLabel],
+    [$landingProofThreeValue, $landingProofThreeLabel]
+  ];
+  proofNodes.forEach((nodes, index) => {
+    if (nodes[0]) nodes[0].textContent = presentation.proof[index][0];
+    if (nodes[1]) nodes[1].textContent = presentation.proof[index][1];
+  });
+}
+
+function selectLandingGame(game) {
+  const shapeSelected = game !== 'explorer';
+  const selectedGame = shapeSelected ? 'shape' : 'explorer';
+  if ($landingShapeGameButton) {
+    $landingShapeGameButton.classList.toggle('is-active', shapeSelected);
+    $landingShapeGameButton.setAttribute('aria-pressed', String(shapeSelected));
+  }
+  if ($landingExplorerGameButton) {
+    $landingExplorerGameButton.classList.toggle('is-active', !shapeSelected);
+    $landingExplorerGameButton.setAttribute('aria-pressed', String(!shapeSelected));
+  }
+  if ($shapeChallengePanel) {
+    $shapeChallengePanel.hidden = !shapeSelected;
+    $shapeChallengePanel.classList.toggle('hidden', !shapeSelected);
+  }
+  if ($worldExplorerPanel) {
+    $worldExplorerPanel.hidden = shapeSelected;
+    $worldExplorerPanel.classList.toggle('hidden', shapeSelected);
+  }
+  setLandingPreviewVisibility($landingShapePreview, shapeSelected);
+  setLandingPreviewVisibility($landingGlobeShell, !shapeSelected);
+  updateLandingPresentation(selectedGame);
+  if ($landing) {
+    $landing.dataset.selectedGame = selectedGame;
+    $landing.classList.toggle('is-world-explorer-selected', !shapeSelected);
+  }
+}
+
+if ($landingShapeGameButton) {
+  $landingShapeGameButton.addEventListener('click', () => selectLandingGame('shape'));
+}
+if ($landingExplorerGameButton) {
+  $landingExplorerGameButton.addEventListener('click', () => selectLandingGame('explorer'));
+}
+selectLandingGame('shape');
 
 // Keep internal filter state synchronized with the visibly active controls.
 // This also protects against stale state when switching between game modes.
@@ -472,11 +579,19 @@ $startGameButton.addEventListener('click', () => {
 
 syncLandingStateFromUI();
 
-// Load stats on page load (from Supabase if online, localStorage fallback)
+// Load player statistics. Guest records remain device-owned; claimed profiles
+// keep using their synced Supabase totals and intentionally cannot be reset here.
 async function loadStats() {
   let stats;
+  let identity = { online: false, claimed: false, displayName: 'Guest', email: null };
   if (window.GeoWarsDB) {
     await GeoWarsDB.init();
+    if (GeoWarsDB.getIdentity) {
+      try {
+        const resolvedIdentity = await GeoWarsDB.getIdentity();
+        if (resolvedIdentity) identity = resolvedIdentity;
+      } catch (error) {}
+    }
     stats = await GeoWarsDB.getStats();
   } else {
     try {
@@ -497,7 +612,71 @@ async function loadStats() {
   const hasRecords = (stats.played || 0) > 0 || (stats.bestStreak || 0) > 0 || (stats.totalCorrect || 0) > 0;
   if ($statsBar) $statsBar.classList.toggle('hidden', !hasRecords);
   if ($recordsEmpty) $recordsEmpty.classList.toggle('hidden', hasRecords);
-  await renderPlayerContext();
+  if ($resetStatsButton) {
+    const canResetDeviceStats = hasRecords && !identity.claimed;
+    $resetStatsButton.classList.toggle('hidden', !canResetDeviceStats);
+    $resetStatsButton.disabled = !canResetDeviceStats;
+  }
+  await renderPlayerContext(identity);
+}
+
+function openStatsResetDialog() {
+  if (!$statsResetDialog || !$resetStatsButton || $resetStatsButton.disabled) return;
+  if (typeof $statsResetDialog.showModal === 'function') {
+    if (!$statsResetDialog.open) $statsResetDialog.showModal();
+  } else {
+    $statsResetDialog.setAttribute('open', '');
+  }
+  $cancelStatsResetButton?.focus();
+}
+
+function closeStatsResetDialog(restoreFocus) {
+  if (!$statsResetDialog) return;
+  if (typeof $statsResetDialog.close === 'function' && $statsResetDialog.open) {
+    $statsResetDialog.close();
+  } else {
+    $statsResetDialog.removeAttribute('open');
+  }
+  if (restoreFocus) $resetStatsButton?.focus();
+}
+
+async function resetDeviceStats() {
+  let resetSucceeded = false;
+  try {
+    if (window.GeoWarsDB && typeof GeoWarsDB.resetLocalStats === 'function') {
+      resetSucceeded = GeoWarsDB.resetLocalStats();
+    } else {
+      localStorage.removeItem('geowars-stats');
+      resetSucceeded = true;
+    }
+  } catch (error) {
+    resetSucceeded = false;
+  }
+
+  if (!resetSucceeded) {
+    if ($statsResetStatus) $statsResetStatus.textContent = 'Your device stats could not be reset. Try again.';
+    return;
+  }
+
+  closeStatsResetDialog(false);
+  await loadStats();
+  if ($statsResetStatus) $statsResetStatus.textContent = 'Your device stats have been reset.';
+  $statisticsTitle?.focus();
+}
+
+if ($resetStatsButton) $resetStatsButton.addEventListener('click', openStatsResetDialog);
+if ($cancelStatsResetButton) {
+  $cancelStatsResetButton.addEventListener('click', () => closeStatsResetDialog(true));
+}
+if ($confirmStatsResetButton) $confirmStatsResetButton.addEventListener('click', resetDeviceStats);
+if ($statsResetDialog) {
+  $statsResetDialog.addEventListener('cancel', event => {
+    event.preventDefault();
+    closeStatsResetDialog(true);
+  });
+  $statsResetDialog.addEventListener('click', event => {
+    if (event.target === $statsResetDialog) closeStatsResetDialog(true);
+  });
 }
 
 function saveStats() {
@@ -654,6 +833,27 @@ function updateHUD() {
   }
 }
 
+function resetRegionReveal() {
+  if ($regionRevealCard) {
+    $regionRevealCard.hidden = true;
+    $regionRevealCard.classList.add('hidden');
+    $regionRevealCard.setAttribute('aria-hidden', 'true');
+  }
+  if ($regionRevealTitle) $regionRevealTitle.textContent = '';
+  if ($regionRevealContext) $regionRevealContext.textContent = '';
+}
+
+function renderRegionReveal(card) {
+  if (!card || !$regionRevealCard || !$regionRevealTitle || !$regionRevealContext) return;
+  const continent = card.continent || 'Worldwide';
+  const subregion = card.subregion && card.subregion !== continent ? card.subregion : '';
+  $regionRevealTitle.textContent = subregion || continent;
+  $regionRevealContext.textContent = subregion ? 'Part of ' + continent : 'Continent';
+  $regionRevealCard.hidden = false;
+  $regionRevealCard.classList.remove('hidden');
+  $regionRevealCard.setAttribute('aria-hidden', 'false');
+}
+
 function nextRound() {
   if (state.deck.length === 0) {
     state.deck = shuffle(filterDeck(state.difficulty));
@@ -688,6 +888,7 @@ function nextRound() {
   // Hints
   $continentHint.textContent = '';
   $continentHint.classList.add('hidden');
+  resetRegionReveal();
   $difficultyHint.textContent = card.stars + '★';
 
   // Reset hint controls for the new stage and keep their disabled state exposed to assistive technology.
@@ -1140,6 +1341,7 @@ $btnShowFlag.addEventListener('click', () => {
 $btnShowRegion.addEventListener('click', () => {
   if (state.regionRevealed) return;
   state.regionRevealed = true;
+  renderRegionReveal(state.currentCard);
   $continentHint.textContent = state.currentCard.continent + ' · ' + state.currentCard.subregion;
   $continentHint.classList.remove('hidden');
   setControlDisabled($btnShowRegion, true);
@@ -1273,16 +1475,18 @@ function updateSaveProgressUI() {
   }
 }
 
-async function renderPlayerContext() {
+async function renderPlayerContext(identityOverride) {
   if (!$playerContextName || !$playerContextDetail || !$choosePlayerButton) return;
 
-  let identity = { online: false, claimed: false, displayName: 'Guest', email: null };
-  try {
-    if (window.GeoWarsDB && GeoWarsDB.getIdentity) {
-      const resolvedIdentity = await GeoWarsDB.getIdentity();
-      if (resolvedIdentity) identity = resolvedIdentity;
-    }
-  } catch (error) {}
+  let identity = identityOverride || { online: false, claimed: false, displayName: 'Guest', email: null };
+  if (!identityOverride) {
+    try {
+      if (window.GeoWarsDB && GeoWarsDB.getIdentity) {
+        const resolvedIdentity = await GeoWarsDB.getIdentity();
+        if (resolvedIdentity) identity = resolvedIdentity;
+      }
+    } catch (error) {}
+  }
 
   $playerContextName.textContent = identity.displayName || 'Guest';
   if (!identity.online) {

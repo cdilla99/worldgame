@@ -59,7 +59,7 @@ test('World Explorer is a prominent landing feature with independent music contr
   const explorer = fs.readFileSync(path.join(root, 'globe-explorer.js'), 'utf8');
   const music = fs.readFileSync(path.join(root, 'background-music.js'), 'utf8');
 
-  assert.match(html, /class="landing-explore-feature"[\s\S]*id="btn-open-explorer"/);
+  assert.match(html, /class="[^"]*landing-explore-feature[^"]*"[\s\S]*id="btn-open-explorer"/);
   assert.match(html, /World Explorer[\s\S]*Country Hunt/);
   assert.match(html, /id="btn-explorer-music"[\s\S]*Start music/);
   assert.match(styles, /\.landing-explore-feature[\s\S]*grid-template-columns/);

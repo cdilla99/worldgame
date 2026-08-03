@@ -5,15 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#07111f" />
   <title>GeoWars</title>
-  <link rel="stylesheet" href="styles.css?v=20260729-world-stage" />
-  <link rel="stylesheet" href="ux-polish.css?v=20260729-editorial-layout3" />
-  <link rel="stylesheet" href="globe-explorer.css?v=20260730-guidance1" />
+  <link rel="stylesheet" href="styles.css?v=20260802-game-choice2" />
+  <link rel="stylesheet" href="ux-polish.css?v=20260802-premium-flow1" />
+  <link rel="stylesheet" href="globe-explorer.css?v=20260802-premium-flow1" />
 </head>
 <body>
   <div class="app">
 
-    <!-- Landing / Mode Select -->
-    <section id="landing" class="screen landing" aria-labelledby="landing-title">
+    <!-- Landing / Game Select -->
+    <section
+      id="landing"
+      class="screen landing"
+      aria-labelledby="landing-title"
+      data-explorer-eyebrow="Interactive world atlas"
+      data-explorer-title="Explore the world."
+      data-explorer-objective="Discover 195 countries. Then race to find them."
+    >
       <header class="landing-utility-header landing-top">
         <div class="brand-lockup">
           <img class="brand-logo" src="assets/geowars-logo.svg" alt="GeoWars">
@@ -31,16 +38,32 @@
 
       <section class="landing-proposition" aria-labelledby="landing-title">
         <div class="landing-copy">
-          <p class="landing-eyebrow">Interactive world atlas</p>
-          <h1 id="landing-title" class="landing-tagline">Explore the world.</h1>
-          <p class="landing-objective">Discover 195 countries. Then race to find them.</p>
+          <p id="landing-eyebrow" class="landing-eyebrow">Country shape challenge</p>
+          <h1 id="landing-title" class="landing-tagline">See the shape. Name the country.</h1>
+          <p id="landing-objective" class="landing-objective">Race through country outlines in a 60-second sprint, or learn at your own pace.</p>
           <ul class="landing-proof" aria-label="Game highlights">
-            <li><strong>195</strong><span>countries</span></li>
-            <li><strong>Free</strong><span>explore</span></li>
-            <li><strong>60s</strong><span>country hunt</span></li>
+            <li><strong id="landing-proof-one-value">195</strong><span id="landing-proof-one-label">countries</span></li>
+            <li><strong id="landing-proof-two-value">60s</strong><span id="landing-proof-two-label">sprint</span></li>
+            <li><strong id="landing-proof-three-value">Free</strong><span id="landing-proof-three-label">practice</span></li>
           </ul>
         </div>
-        <div class="landing-globe-shell">
+        <div id="landing-shape-preview" class="landing-shape-preview" aria-label="Shape Challenge preview. Identify a country from its outline.">
+          <div class="landing-shape-preview-stage">
+            <span class="landing-shape-preview-kicker">Sample round</span>
+            <div class="landing-shape-preview-art" aria-hidden="true">
+              <svg viewBox="0 0 320 220" focusable="false">
+                <path d="M39 89 48 49 77 42 72 58 81 78 107 81 118 68 131 83 158 89 178 85 190 97 221 94 233 109 257 117 278 111 296 121 278 133 252 131 232 145 210 137 198 156 173 149 153 164 128 151 106 137 87 130 69 116 39 114 47 99Z"></path>
+              </svg>
+              <span class="landing-shape-preview-marker">?</span>
+            </div>
+            <div class="landing-shape-preview-copy">
+              <span>Shape only</span>
+              <strong>A new outline every round</strong>
+              <small>Hints stay optional.</small>
+            </div>
+          </div>
+        </div>
+        <div id="landing-globe-shell" class="landing-globe-shell hidden" aria-hidden="true">
           <div id="landing-globe" class="landing-globe">
             <canvas
               id="landing-globe-canvas"
@@ -90,31 +113,42 @@
           <p id="landing-globe-status" class="landing-globe-status" role="status" aria-live="polite">Drag to rotate. Select a continent.</p>
 
         </div>
-        <section class="landing-explore-feature" aria-labelledby="landing-explorer-title">
-          <span class="landing-explore-visual" aria-hidden="true">
-            <svg viewBox="0 0 24 24" focusable="false">
+      </section>
+
+      <section class="landing-setup-panel landing-games-panel" aria-labelledby="landing-games-title">
+        <div class="landing-games-heading">
+          <p class="landing-setup-kicker">Games</p>
+          <h2 id="landing-games-title">Choose a game</h2>
+          <p>Two ways to learn the world.</p>
+        </div>
+
+        <div class="landing-game-switch" role="group" aria-labelledby="landing-games-title">
+          <button id="btn-landing-shape-game" class="landing-game-option is-active" type="button" aria-pressed="true" aria-controls="shape-challenge-panel">
+            <svg class="landing-game-option-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <use href="assets/geowars-icons.svg#icon-mode-practice"></use>
+            </svg>
+            <span>
+              <strong>Shape Challenge</strong>
+              <small>Name countries from their shapes.</small>
+            </span>
+          </button>
+          <button id="btn-landing-explorer-game" class="landing-game-option" type="button" aria-pressed="false" aria-controls="world-explorer-panel">
+            <svg class="landing-game-option-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <circle cx="12" cy="12" r="8.5"></circle>
               <path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.3 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.8 8.6 12s1.2 6.1 3.4 8.5"></path>
             </svg>
-          </span>
-          <span class="landing-explore-copy">
-            <span>Featured</span>
-            <strong id="landing-explorer-title">World Explorer</strong>
-            <small>Explore every country—or race the clock in Country Hunt.</small>
-          </span>
-          <span class="landing-explore-actions">
-            <button id="btn-open-explorer" class="landing-explore-action landing-explore-primary" type="button">Explore freely <span aria-hidden="true">→</span></button>
-            <button id="btn-open-explorer-hunt" class="landing-explore-action landing-explore-hunt-action" type="button"><span>Country Hunt</span><small>60-second challenge</small></button>
-          </span>
-        </section>
-      </section>
-
-      <section class="landing-setup-panel" aria-labelledby="setup-title">
-        <div class="landing-setup-heading">
-          <p class="landing-setup-kicker">Shape challenge</p>
-          <h2 id="setup-title">Test your country knowledge</h2>
-          <p>Name countries from their shapes.</p>
+            <span>
+              <strong>World Explorer</strong>
+              <small>Explore freely or race in Country Hunt.</small>
+            </span>
+          </button>
         </div>
+
+        <section id="shape-challenge-panel" class="landing-game-panel" aria-labelledby="btn-landing-shape-game">
+          <div class="landing-mode-heading">
+            <h3 id="setup-title">Choose a mode</h3>
+            <p>Race the clock or learn without a timer.</p>
+          </div>
 
         <div class="mode-select" role="group" aria-labelledby="mode-title">
           <h3 id="mode-title" class="setup-subheading sr-only">Game modes</h3>
@@ -185,10 +219,35 @@
           <span id="start-game-label">Start sprint</span>
         </button>
         <p class="landing-start-note">No account required. Your best scores stay on this device.</p>
+        </section>
+
+        <section id="world-explorer-panel" class="landing-game-panel landing-explore-feature hidden" aria-labelledby="landing-explorer-title">
+          <span class="landing-explore-visual" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <circle cx="12" cy="12" r="8.5"></circle>
+              <path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.3 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.8 8.6 12s1.2 6.1 3.4 8.5"></path>
+            </svg>
+          </span>
+          <span class="landing-explore-copy">
+            <span>World Explorer</span>
+            <strong id="landing-explorer-title">Explore or race</strong>
+            <small>Discover every country at your pace, or find as many as you can in 60 seconds.</small>
+          </span>
+          <span class="landing-explore-actions">
+            <button id="btn-open-explorer" class="landing-explore-action landing-explore-primary" type="button">Explore freely <span aria-hidden="true">→</span></button>
+            <button id="btn-open-explorer-hunt" class="landing-explore-action landing-explore-hunt-action" type="button"><span>Country Hunt</span><small>60-second challenge</small></button>
+          </span>
+        </section>
       </section>
 
       <aside class="landing-statistics" aria-labelledby="statistics-title">
-        <h2 id="statistics-title" class="statistics-heading">Your best</h2>
+        <div class="landing-statistics-heading">
+          <h2 id="statistics-title" class="statistics-heading" tabindex="-1">Your best</h2>
+          <button id="btn-reset-stats" class="statistics-reset hidden" type="button" aria-haspopup="dialog">
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 8a8 8 0 1 1-1 6M5 8V3m0 5h5"></path></svg>
+            <span>Reset stats</span>
+          </button>
+        </div>
         <p id="records-empty" class="records-empty">Your first game sets the score to beat.</p>
         <dl id="stats-bar" class="stats-bar hidden" aria-label="Player statistics">
           <div class="stat"><dt>Games</dt><dd id="stat-played">0</dd></div>
@@ -197,6 +256,18 @@
         </dl>
         <div id="player-badge" class="player-badge hidden" aria-hidden="true"></div>
       </aside>
+      <dialog id="stats-reset-dialog" class="stats-reset-dialog" aria-labelledby="stats-reset-title" aria-describedby="stats-reset-description">
+        <div class="stats-reset-dialog-card">
+          <p class="landing-setup-kicker">Device stats</p>
+          <h2 id="stats-reset-title">Reset Your Best?</h2>
+          <p id="stats-reset-description">This clears the guest statistics stored on this device. Supabase and signed-in profile records will not change.</p>
+          <div class="stats-reset-actions">
+            <button id="btn-cancel-stats-reset" class="statistics-reset-cancel" type="button">Keep stats</button>
+            <button id="btn-confirm-stats-reset" class="statistics-reset-confirm" type="button">Reset this device</button>
+          </div>
+        </div>
+      </dialog>
+      <p id="stats-reset-status" class="sr-only" role="status" aria-live="polite"></p>
     </section>
 
     <!-- Globe Explorer -->
@@ -216,7 +287,14 @@
             <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-sound"></use></svg>
             <span>Start music</span>
           </button>
-          <button class="explorer-home-action" type="button" data-explorer-home>Back to home</button>
+          <button id="btn-explorer-haptics" class="explorer-haptics-toggle hidden" type="button" aria-label="Turn haptics on" aria-pressed="false">
+            <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="8" y="4" width="8" height="16" rx="2"></rect><path d="M5.5 8.5a5 5 0 0 0 0 7M18.5 8.5a5 5 0 0 1 0 7M11 17h2"></path></svg>
+            <span>Haptics off</span>
+          </button>
+          <button class="explorer-home-action" type="button" data-explorer-home aria-label="Back to home">
+            <svg class="icon explorer-home-action-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-geowars-mark"></use></svg>
+            <span>Back to home</span>
+          </button>
         </div>
       </header>
 
@@ -267,7 +345,14 @@
             <div id="explorer-globe-frame" class="explorer-globe-frame">
               <canvas id="explorer-globe-canvas" class="explorer-globe-canvas" width="720" height="720" tabindex="0" aria-describedby="explorer-globe-status" aria-label="Interactive world globe. Use arrow keys to rotate, plus or minus to zoom, and Enter to select."></canvas>
               <div id="explorer-globe-loading" class="explorer-globe-loading hidden" role="status">Loading the world…</div>
-              <div id="explorer-globe-error" class="explorer-globe-error hidden" role="status">The interactive globe is unavailable. Search for a country or territory instead.</div>
+              <div id="explorer-globe-error" class="explorer-globe-error hidden" role="alert" aria-labelledby="explorer-globe-error-title" aria-describedby="explorer-globe-error-copy">
+                <strong id="explorer-globe-error-title">The map couldn’t load</strong>
+                <span id="explorer-globe-error-copy">Check your connection, then try again.</span>
+                <div class="explorer-globe-error-actions">
+                  <button id="btn-explorer-globe-retry" type="button">Try again</button>
+                  <button id="btn-explorer-search-fallback" type="button">Use country search</button>
+                </div>
+              </div>
               <div id="explorer-hunt-celebration" class="explorer-hunt-celebration hidden" aria-hidden="true">
                 <span class="explorer-hunt-celebration-check">✓</span>
                 <strong>Correct!</strong>
@@ -279,6 +364,21 @@
                 <button id="btn-explorer-zoom-in" type="button" aria-label="Zoom in">+</button>
               </div>
             </div>
+          </div>
+
+          <div id="explorer-hunt-feedback" class="explorer-hunt-feedback is-waiting" aria-hidden="true">
+            <span id="explorer-hunt-feedback-flag" class="explorer-hunt-feedback-flag"></span>
+            <span class="explorer-hunt-feedback-selection">
+              <span id="explorer-hunt-feedback-outcome">Ready for your guess</span>
+              <strong id="explorer-hunt-feedback-selected">Tap a country</strong>
+            </span>
+            <span class="explorer-hunt-feedback-guidance">
+              <span id="explorer-hunt-feedback-arrow" class="explorer-hunt-feedback-arrow">&#9678;</span>
+              <span>
+                <strong id="explorer-hunt-feedback-distance">Ready</strong>
+                <small id="explorer-hunt-feedback-direction">Choose on the globe</small>
+              </span>
+            </span>
           </div>
 
           <footer class="explorer-stage-footer">
@@ -418,7 +518,7 @@
         </div>
         <div class="game-prompt-context">
           <div class="round-info" aria-label="Round information">
-            <span id="continent-hint" class="pill-sm"></span>
+            <span id="continent-hint" class="pill-sm region-hint-status sr-only hidden"></span>
             <span id="difficulty-hint" class="pill-sm"></span>
           </div>
           <div id="clue-area" class="clue-area hidden" aria-live="polite"><p id="clue-text" class="clue-text"></p></div>
@@ -472,6 +572,18 @@
           <button class="choice-btn" type="button" data-idx="4" data-shortcut="5"></button>
           <button class="choice-btn" type="button" data-idx="5" data-shortcut="6"></button>
         </div>
+
+        <section id="region-reveal-card" class="region-reveal-card hidden" role="status" aria-live="polite" aria-atomic="true" aria-labelledby="region-reveal-title">
+          <span class="region-reveal-icon" aria-hidden="true">
+            <svg class="icon" width="28" height="28" viewBox="0 0 24 24" focusable="false"><use href="assets/geowars-icons.svg#icon-region"></use></svg>
+          </span>
+          <span class="region-reveal-copy">
+            <span class="region-reveal-eyebrow">Region clue</span>
+            <strong id="region-reveal-title" class="region-reveal-title"></strong>
+            <span id="region-reveal-context" class="region-reveal-context"></span>
+          </span>
+          <span class="region-reveal-support">Use the region to narrow your answer.</span>
+        </section>
 
         <div class="hint-tools">
           <p class="hint-tools-label"><strong>Hints</strong><span>Optional</span></p>
@@ -591,13 +703,14 @@
   <script src="data/countries.js?v=20260730-encoding1"></script>
   <script src="data/territories.js?v=20260730-territories3"></script>
   <script src="anthems.js"></script>
-  <script src="supabase-client.js?v=20260722-magic-link"></script>
+  <script src="supabase-client.js?v=20260802-device-stats1"></script>
   <script src="audio-engine.js"></script>
+  <script src="haptics.js?v=20260802-hunt-resilience1"></script>
   <script src="particles.js"></script>
   <script src="celebration-text.js"></script>
   <script src="background-music.js?v=20260730-explorer2"></script>
   <script src="asset-fallbacks.js"></script>
-  <script src="app.js?v=20260730-explorer2"></script>
+  <script src="app.js?v=20260802-premium-flow1"></script>
   <script src="assets/globe-data.js?v=20260729-natural-earth"></script>
   <script src="interactive-globe.js?v=20260729-editorial-layout3"></script>
   <script src="geography.js?v=20260730-guidance1"></script>

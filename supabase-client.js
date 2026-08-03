@@ -78,11 +78,11 @@
   }
 
   /**
-   * Get the current player's aggregate stats from Supabase.
-   * Falls back to localStorage if offline.
+   * Get the current player's aggregate stats. Guest records remain local to
+   * this browser/device; claimed profiles use their synced Supabase totals.
    */
   async function getStats() {
-    if (!online || !supabase || !currentUser) return getLocalStats();
+    if (!online || !supabase || !currentUser || !isClaimed()) return getLocalStats();
 
     try {
       var result = await supabase
@@ -327,12 +327,22 @@
     } catch (e) {}
   }
 
+  function resetLocalStats() {
+    try {
+      localStorage.removeItem('geowars-stats');
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   window.GeoWarsDB = {
     init: init,
     getPlayer: getPlayer,
     getStats: getStats,
     getIdentity: getIdentity,
     saveGameSession: saveGameSession,
+    resetLocalStats: resetLocalStats,
     isOnline: isOnline,
     isReady: isReady,
     isClaimed: isClaimed,

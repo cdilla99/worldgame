@@ -88,6 +88,40 @@ test('explorer controller lazy-loads geometry and supports pointer, touch, keybo
   assert.match(script, /startRegionalPractice/);
 });
 
+test('geometry loading is timeout-bounded and retryable after a terminal failure', () => {
+  const script = read('globe-explorer.js');
+
+  assert.match(script, /const GEOMETRY_TIMEOUT_MS = 10000/);
+  assert.match(script, /root\.setTimeout\([\s\S]*GEOMETRY_TIMEOUT_MS/);
+  assert.match(script, /function showGeometryError\(loadError\)/);
+  assert.match(script, /geometryState = 'error'/);
+  assert.match(script, /\.finally\(\(\) => \{[\s\S]*if \(geometryState === 'error'\) geometryPromise = null/);
+  assert.match(script, /function retryGeometry\(\)/);
+  assert.match(script, /geometryRetryButton\?\.addEventListener\('click', retryGeometry\)/);
+});
+
+test('country geometry remains required while territory geometry can degrade gracefully', () => {
+  const script = read('globe-explorer.js');
+
+  assert.match(script, /Promise\.allSettled\(/);
+  assert.match(script, /if \(countryResult\.status !== 'fulfilled'\) throw countryResult\.reason/);
+  assert.match(script, /const territoryData = territoryResult\.status === 'fulfilled' \? territoryResult\.value : \[\]/);
+  assert.match(script, /geometryState = territoryGeometryReady \? 'ready' : 'partial'/);
+  assert.match(script, /Country globe ready\. Territory outlines are temporarily unavailable\./);
+});
+
+test('geometry recovery restores the canvas and exposes accessible mobile escape controls', () => {
+  const html = read('index.html');
+  const script = read('globe-explorer.js');
+  const styles = read('globe-explorer.css');
+
+  assert.match(html, /id=\x22explorer-globe-error\x22[^>]*role=\x22alert\x22/);
+  assert.match(html, /id=\x22btn-explorer-globe-retry\x22[\s\S]*id=\x22btn-explorer-search-fallback\x22/);
+  assert.match(script, /canvas\.classList\.add\('hidden'\)[\s\S]*canvas\.classList\.remove\('hidden'\)/);
+  assert.match(script, /searchFallbackButton\?\.addEventListener\('click', useSearchFallback\)/);
+  assert.match(styles, /\.explorer-globe-error-actions button\s*\{[^}]*min-height:\s*44px;/);
+});
+
 test('country boundaries remain clear across zoom, mobile, hover, and selection states', () => {
   const explorer = read('globe-explorer.js');
   const landingGlobe = read('interactive-globe.js');
