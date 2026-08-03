@@ -1,45 +1,79 @@
-# Geo Game Table
+# GeoWars
 
-**Geo Game Table** is a fast, pass-and-play geography battle for teens, friend groups, and classrooms. Players ask smart questions, make bold guesses, and race for the top of the leaderboard.
+GeoWars is a browser-based world geography game with two connected experiences:
 
-## Product highlights
+- Shape Challenge: identify countries from silhouette outlines.
+- World Explorer: rotate an interactive globe, browse country facts, and play Country Hunt.
 
-- **2–8 players** on one shared device
-- **Timer mode** and **race-to-points mode**
-- **125 country cards** across easy, medium, and hard difficulty pools
-- Lightweight missions, clue options, sound effects, score rankings, and a session recap
-- Runs entirely in the browser—no account, install, backend, or build step required
+The app is static-first and runs without a JavaScript build step.
 
-## How to play
+## Current gameplay
 
-1. Open `index.html` in a current desktop or mobile browser.
-2. Choose player count, mode, difficulty pool, and player names.
-3. One player becomes the clue-giver and sees the country card.
-4. Other players ask up to 10 questions or make guesses.
-5. A correct guess earns the card's star value; a guess within five questions earns a +1 speed bonus.
-6. Use the round controls to reveal, pass, or complete the game. Review the session leaderboard and play again.
+### 1) Shape Challenge
 
-## Sound and flags
+- Sprint mode: 60-second timed run.
+- Practice mode: untimed learning loop.
+- Difficulty and region filters.
+- Multiple answer paths (typed answer, options), with hint controls.
+- Session results and local best-stat tracking.
 
-- Sounds are generated locally with the browser's Web Audio API. Use the Sound toggle and volume slider during play.
-- Flags use native emoji, so they render without remote image/CDN dependencies. Appearance can vary slightly by operating system.
+### 2) World Explorer
+
+- Interactive globe with drag, zoom, keyboard support, and search.
+- Country and territory detail panel (flag, capital, population, languages, currency, facts).
+- Country Hunt: 60-second find-the-country challenge on the globe.
+- Distance and direction guidance after misses.
+- Optional haptics on supported mobile devices.
+
+## Data scope
+
+- Canonical dataset: 195 countries.
+- Explorer also includes territory records for map browsing.
+- Globe geometry is bundled locally in the repository and loaded lazily when Explorer opens.
+
+## Identity and stats
+
+- Guest play works offline with device-local stats.
+- Optional Supabase-backed profile flow is available through magic links.
+- Guest device stats can be reset from the landing experience without mutating claimed profile totals.
 
 ## Run locally
 
-Open `index.html` directly in a modern browser. For the best mobile testing experience, use a basic local static server, but it is not required.
+Open index.html directly in a modern browser.
 
-## Deploy to GitHub Pages
+For mobile QA and cleaner asset behavior, run a simple local static server if preferred.
 
-1. Push the repository files, including `data/countries.js`, to GitHub.
-2. In repository settings, enable **GitHub Pages** from the `main` branch and `/ (root)` folder.
-3. Open the published URL when the deployment completes.
+## Tests
 
-## Product readiness notes
+Run the automated Node test suite:
 
-This repository is a polished static MVP. Before commercial distribution, establish brand identity, verify all country facts/content licensing, test supported browsers and devices, and choose a distribution/payment strategy appropriate to the target market.
+node --test tests/*.test.mjs
 
-## Editing
+The suite covers core modules, compatibility facades, gameplay flows, explorer behavior, and property-based checks.
 
-- Country card content lives in `data/countries.js`.
-- Visual styles live in `styles.css`.
-- Game logic, sounds, and scoring live in `app.js`.
+## Deploy
+
+Netlify configuration is in netlify.toml.
+
+- Build command: echo 'Static site - no build needed'
+- Publish directory: .
+
+Because this is a static app, production deploys are branch/push driven.
+
+## Project structure highlights
+
+- index.html: app shell and screen markup.
+- app.js: primary gameplay and screen orchestration.
+- globe-explorer.js: explorer and Country Hunt controller.
+- styles.css, globe-explorer.css, ux-polish.css: visual layers.
+- data/: country and territory records.
+- assets/: bundled globe geometry and SVG assets.
+- src/: modular core and feature units used by compatibility facades.
+- supabase/: local Supabase config and migrations.
+- tests/: Node tests and lightweight HTML/manual QA fixtures.
+
+## Notes for contributors
+
+- Preserve compatibility-facade behavior unless intentionally refactoring both runtime and tests.
+- Keep Explorer and Shape Challenge UX parity across desktop and mobile.
+- Prefer small, validated changes and run the test suite before merging.
