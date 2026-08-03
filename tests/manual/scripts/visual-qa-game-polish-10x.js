@@ -4,7 +4,7 @@
  * Repeatable visual QA for the game-polish-10x acceptance matrix.
  *
  * Requires Playwright to be installed by the caller; this repository remains
- * dependency-free. Run `node tests/visual-qa-game-polish-10x.js --help` for
+ * dependency-free. Run `node tests/manual/scripts/visual-qa-game-polish-10x.js --help` for
  * setup and artifact options.
  *
  * Validates: Requirements 3.1-3.7, 6.8, 7.1-7.8, 8.1-8.10, 9.1-9.5,
@@ -14,9 +14,9 @@ const fs = require('fs');
 const fsp = require('fs/promises');
 const http = require('http');
 const path = require('path');
-const ROOT = path.resolve(__dirname, '..');
-const FIXTURE_PATH = path.join(__dirname, 'fixtures', 'visual-qa-game-polish-10x.json');
-const DEFAULT_OUTPUT = path.join(__dirname, 'visual-qa-artifacts');
+const ROOT = path.resolve(__dirname, '..', '..', '..');
+const FIXTURE_PATH = path.join(__dirname, '..', '..', 'fixtures', 'visual-qa-game-polish-10x.json');
+const DEFAULT_OUTPUT = path.join(__dirname, '..', 'visual-qa-artifacts');
 const MIME_TYPES = {
   '.css': 'text/css; charset=utf-8', '.html': 'text/html; charset=utf-8',
   '.js': 'application/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8',
@@ -24,14 +24,14 @@ const MIME_TYPES = {
 };
 
 function usage() {
-  console.log(`Usage: node tests/visual-qa-game-polish-10x.js [options]
+  console.log(`Usage: node tests/manual/scripts/visual-qa-game-polish-10x.js [options]
 
 Captures the state fixture at five representative viewports, plus 200% page
 scale at 1280px and 390px. Every motion-bearing state is also captured with
 prefers-reduced-motion enabled.
 
 Options:
-  --output <path>     Screenshot directory (default: tests/visual-qa-artifacts)
+  --output <path>     Screenshot directory (default: tests/manual/visual-qa-artifacts)
   --base-url <url>    Use an existing static-server URL instead of starting one
   --headed            Show the browser while running
   --state <id>        Run one fixture state (for focused investigation)

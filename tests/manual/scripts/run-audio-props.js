@@ -158,7 +158,7 @@ FakeAudioContext.prototype.createBuffer = function (channels, length) {
 };
 
 global.window = { AudioContext: FakeAudioContext };
-require('../audio-engine.js');
+require('../../../audio-engine.js');
 window.AudioEngine.init();
 
 // Property 15: Oscillator count cap invariant
