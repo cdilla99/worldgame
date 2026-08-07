@@ -26,7 +26,7 @@ function loadClient({ anonymousFails = true, otpError = null } = {}) {
 
   const window = {
     supabase: { createClient: () => ({ auth, from: () => ({}) }) },
-    location: { protocol: 'https:', href: 'https://worldgame2025.netlify.app/' }
+    location: { protocol: 'https:', href: 'https://earthlinggame.netlify.app/' }
   };
   const context = { window, document: { head: { appendChild() {} }, createElement: () => ({}) }, console };
   vm.runInNewContext(source, context);

@@ -1054,6 +1054,76 @@
   padding: 4px 0 16px;
 }
 
+.explorer-economics-callout {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 12px;
+  border: 1px solid rgba(99, 230, 173, 0.34);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(20, 78, 77, 0.42), rgba(7, 24, 41, 0.72));
+  box-shadow: inset 3px 0 0 rgba(99, 230, 173, 0.72);
+}
+
+.explorer-economics-callout.hidden {
+  display: none;
+}
+
+.explorer-economics-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.explorer-economics-heading p {
+  color: #dffbed;
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.035em;
+}
+
+.explorer-economics-heading small {
+  color: #7fa69b;
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.explorer-economics-values {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+}
+
+.explorer-economics-values > div {
+  min-width: 0;
+  padding: 9px 7px;
+  border-radius: 8px;
+  background: rgba(3, 16, 28, 0.52);
+  text-align: center;
+}
+
+.explorer-economics-values dt {
+  min-height: 2.4em;
+  color: #82a99e;
+  font-size: 0.52rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.explorer-economics-values dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+  color: #f0fff7;
+  font-size: 0.72rem;
+  font-weight: 850;
+  line-height: 1.25;
+}
+
 .explorer-landmark-media {
   display: grid;
   gap: 8px;

@@ -5,7 +5,7 @@ EARTHLING is a browser-based world geography game with two connected experiences
 - Shape Challenge: identify countries from silhouette outlines.
 - World Explorer: rotate an interactive globe, browse country facts, and play Country Hunt.
 
-The app is static-first and runs without a JavaScript build step.
+The app uses Vite with a vanilla JavaScript/TypeScript runtime. Existing gameplay remains in ordered classic scripts while typed data accessors are bundled as modules.
 
 ## Current gameplay
 
@@ -39,26 +39,61 @@ The app is static-first and runs without a JavaScript build step.
 
 ## Run locally
 
-Open index.html directly in a modern browser.
+Install exactly from the lockfile and start Vite:
 
-For mobile QA and cleaner asset behavior, run a simple local static server if preferred.
+```text
+npm ci
+npm run dev
+```
 
-## Tests
+## Validation
 
-Run the automated Node test suite:
+Run the complete source-quality check:
 
-node --test tests/*.test.mjs
+```text
+npm run check
+```
 
-The suite covers core modules, compatibility facades, gameplay flows, explorer behavior, and property-based checks.
+This runs the TypeScript check, Node test suite, and production build. Individual commands are also available:
+
+```text
+npm run typecheck
+npm test
+npm run build
+```
+
+For browser-facing changes, install Chromium once and run the Explorer smoke test:
+
+```text
+npx playwright install chromium
+npm run test:e2e
+```
+
+Run the existing visual acceptance matrix against the production build with:
+
+```text
+npm run test:visual
+```
+
+Browser reports are written to `playwright-report/` and `test-results/`. Visual captures are written to `tests/manual/visual-qa-artifacts/`. Lighthouse reports are written to `.lighthouseci/`; all are generated and Git-ignored.
+
+## GitHub Actions
+
+- **CI** runs type checking, Node tests, and the Vite production build on pushes and pull requests.
+- **Browser smoke** installs pinned Playwright Chromium, tests Explorer economics behavior, and uploads failure reports for 14 days.
+- **Lighthouse** records initially nonblocking performance, accessibility, best-practices, and SEO baselines on pull requests.
+- **Supabase migrations** runs only for Supabase/workflow changes and validates migrations, lint, RLS pgTAP tests, and local reset behavior using Docker-backed Supabase services.
+
+The Node suite covers core modules, compatibility facades, gameplay flows, explorer behavior, and property-based checks.
 
 ## Deploy
 
 Netlify configuration is in netlify.toml.
 
-- Build command: echo 'Static site - no build needed'
-- Publish directory: .
+- Build command: `npm run build`
+- Publish directory: `dist`
 
-Because this is a static app, production deploys are branch/push driven.
+Production deploys remain branch/push driven.
 
 ## Project structure highlights
 

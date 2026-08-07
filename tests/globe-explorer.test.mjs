@@ -72,6 +72,30 @@ test('explorer markup exposes search, globe controls, facts, and home navigation
   assert.ok(gameScript > -1 && explorerScript > gameScript);
 });
 
+test('More country details has unique ordered content sections with economics final', () => {
+  const html = read('index.html');
+  const detailsBody = html.match(/<details\s+id="explorer-more-details"[^>]*>([\s\S]*?)<\/details>/)?.[1];
+  assert.ok(detailsBody, '#explorer-more-details must exist');
+
+  const ids = ['explorer-more-details', 'explorer-landmark-media', 'explorer-economics-callout'];
+  ids.forEach(id => {
+    assert.equal((html.match(new RegExp(`id="${id}"`, 'g')) ?? []).length, 1, `#${id} must be unique`);
+  });
+
+  const directContentOrder = [...detailsBody.matchAll(/^\s{14}<(dl|section|figure)\b([^>]*)>/gm)].map(([, , attributes]) => {
+    const id = attributes.match(/\bid="([^"]+)"/)?.[1];
+    if (id) return `#${id}`;
+    const className = attributes.match(/\bclass="([^"]+)"/)?.[1]?.split(/\s+/)[0];
+    return `.${className}`;
+  });
+  assert.deepEqual(directContentOrder, [
+    '.explorer-more-facts',
+    '#explorer-landmark-media',
+    '#explorer-economics-callout'
+  ]);
+  assert.equal(directContentOrder.at(-1), '#explorer-economics-callout', 'no direct content section may follow economics');
+});
+
 test('explorer controller lazy-loads geometry and supports pointer, touch, keyboard, and search', () => {
   const script = read('globe-explorer.js');
 
@@ -105,16 +129,17 @@ test('Explorer loads an optional expandable landmark image with information and 
   assert.match(html, /id="explorer-landmark-learn-more"[\s\S]*Learn about this landmark/);
   assert.match(html, /id="explorer-landmark-media-source"[\s\S]*Wikipedia/);
   assert.match(script, /https:\/\/en\.wikipedia\.org\/w\/api\.php/);
-  assert.match(script, /'Chichen Itza pyramid': 'Chichen Itza'/);
-  assert.match(script, /LANDMARK_WIKIPEDIA_TITLES\[landmarkName\] \|\| landmarkName/);
-  assert.match(script, /'&titles=' \+ title \+ '&redirects=1/);
+  assert.match(script, /const LANDMARK_WIKIPEDIA_CANDIDATES = Object\.freeze\(/);
+  assert.match(script, /'Chichen Itza pyramid': Object\.freeze\(\['Chichen Itza'\]\)/);
+  assert.match(script, /function getApprovedLandmarkCandidates\(landmarkName\)/);
+  assert.match(script, /function normalizeLandmarkMediaResponse\(data, candidateTitle\)/);
+  assert.match(script, /'&titles='\s*\+\s*encodeURIComponent\(wikipediaTitle\)\s*\+\s*'&redirects=1/);
   assert.match(script, /prop=pageimages\|info/);
   assert.match(script, /piprop=thumbnail/);
   assert.match(script, /const imageUrl = page\?\.thumbnail\?\.source;/);
-  assert.match(script, /landmarkMediaImage\.alt = `\$\{wikipediaTitle\} in \$\{country\.name\}`/);
-  assert.match(script, /function getLandmarkWikipediaUrl\(landmarkName\)/);
-  assert.match(script, /landmarkLearnMore\.href = sourceUrl;/);
-  assert.match(script, /landmarkMediaSource\.href = sourceUrl;/);
+  assert.match(script, /landmarkMediaImage\.alt = `\$\{media\.resolvedTitle\} in \$\{country\.name\}`/);
+  assert.match(script, /landmarkLearnMore\.href = media\.sourceUrl;/);
+  assert.match(script, /landmarkMediaSource\.href = media\.sourceUrl;/);
   assert.match(script, /landmarkMediaToggle\?\.addEventListener\('click'/);
   assert.match(styles, /\.explorer-landmark-media-toggle\s*\{[\s\S]*width: min\(100%, 180px\);/);
   assert.match(styles, /\.explorer-landmark-media\.is-expanded \.explorer-landmark-media-toggle\s*\{[\s\S]*width: 100%;/);

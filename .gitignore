@@ -1,2 +1,15 @@
 # Local Netlify folder
 .netlify
+
+# Editor and IDE state
+.vs/
+
+# Installed dependencies and Vite output
+node_modules/
+dist/
+
+# Browser, performance, and visual test artifacts
+playwright-report/
+test-results/
+.lighthouseci/
+tests/manual/visual-qa-artifacts/

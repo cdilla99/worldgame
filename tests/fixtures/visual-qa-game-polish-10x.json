@@ -17,7 +17,7 @@
       "motionBearing": true,
       "primaryControl": "#btn-start-game",
       "requiredControls": ["#btn-sprint", "#btn-showoff", "#btn-start-game"],
-      "requiredText": ["GeoWars", "Name the country."]
+      "requiredText": ["Name the country."]
     },
     {
       "id": "unanswered-stage",

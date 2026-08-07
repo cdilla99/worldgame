@@ -13,9 +13,18 @@
   const MIN_ZOOM = 1;
   const MAX_ZOOM = 9;
   const GEOMETRY_TIMEOUT_MS = 10000;
-  const LANDMARK_WIKIPEDIA_TITLES = Object.freeze({
-    'Chichen Itza pyramid': 'Chichen Itza'
+  const LANDMARK_WIKIPEDIA_CANDIDATES = Object.freeze({
+    'Chichen Itza pyramid': Object.freeze(['Chichen Itza']),
+    'Christ the Redeemer': Object.freeze(['Christ the Redeemer (statue)']),
+    'Meroe pyramids': Object.freeze(['Pyramids of Meroë']),
+    'Tigris and Euphrates marshes': Object.freeze(['Mesopotamian Marshes']),
+    'Leptis Magna Roman ruins': Object.freeze(['Leptis Magna']),
+    'Sahara oases': Object.freeze(['Sahara']),
+    'Sahara dunes of the Tenere': Object.freeze(['Ténéré']),
+    'Serengeti plains': Object.freeze(['Serengeti']),
+    'Białowieża bison reserve': Object.freeze(['Białowieża Forest'])
   });
+  const EMPTY_LANDMARK_CANDIDATES = Object.freeze([]);
   const clamp = (value, minimum, maximum) =>
     Math.min(maximum, Math.max(minimum, value));
   const toRadians = degrees => degrees * Math.PI / 180;
@@ -699,60 +708,187 @@
       if (element) element.textContent = value || '—';
     }
 
-    function hideLandmarkMedia() {
-      landmarkMediaRequestId += 1;
+    function clearLandmarkMedia() {
       landmarkMedia?.classList.add('hidden');
       landmarkMedia?.classList.remove('is-expanded');
-      landmarkMediaImage?.removeAttribute('src');
-      landmarkMediaImage?.removeAttribute('alt');
+      if (landmarkMediaImage) {
+        landmarkMediaImage.onload = null;
+        landmarkMediaImage.onerror = null;
+        landmarkMediaImage.removeAttribute('src');
+        landmarkMediaImage.removeAttribute('alt');
+      }
       landmarkMediaToggle?.setAttribute('aria-expanded', 'false');
       landmarkMediaToggle?.removeAttribute('aria-label');
       landmarkLearnMore?.removeAttribute('href');
-      landmarkLearnMore && (landmarkLearnMore.textContent = 'Learn about this landmark');
+      if (landmarkLearnMore) landmarkLearnMore.textContent = 'Learn about this landmark';
       landmarkMediaSource?.removeAttribute('href');
     }
 
-    function getLandmarkWikipediaUrl(landmarkName) {
-      const title = LANDMARK_WIKIPEDIA_TITLES[landmarkName] || landmarkName;
-      return 'https://en.wikipedia.org/wiki/' + encodeURIComponent(title.replace(/\s+/g, '_'));
+    function hideLandmarkMedia() {
+      landmarkMediaRequestId += 1;
+      clearLandmarkMedia();
+    }
+
+    function getApprovedLandmarkCandidates(landmarkName) {
+      const candidates = LANDMARK_WIKIPEDIA_CANDIDATES[landmarkName];
+      return candidates || (landmarkName ? Object.freeze([landmarkName]) : EMPTY_LANDMARK_CANDIDATES);
+    }
+
+    function getLandmarkDirectCandidates(country) {
+      const directCandidates = [];
+      const seen = new Set();
+      const addCandidate = candidate => {
+        if (typeof candidate !== 'string') return;
+        const title = candidate.trim();
+        if (!title || seen.has(title)) return;
+        seen.add(title);
+        directCandidates.push(title);
+      };
+
+      (Array.isArray(country?.landmarks) ? country.landmarks : []).forEach(landmarkName => {
+        if (typeof landmarkName !== 'string' || !landmarkName.trim()) return;
+        const label = landmarkName.trim();
+        getApprovedLandmarkCandidates(label).forEach(addCandidate);
+        addCandidate(label);
+      });
+      return directCandidates;
+    }
+
+    function normalizeLandmarkMediaPage(page, candidateTitle, requireResponseTitle = false) {
+      const imageUrl = page?.thumbnail?.source;
+      const sourceUrl = page?.fullurl || page?.canonicalurl;
+      const responseTitle = typeof page?.title === 'string' ? page.title.trim() : '';
+      const resolvedTitle = responseTitle || candidateTitle;
+      if (typeof imageUrl !== 'string' || !imageUrl
+        || typeof sourceUrl !== 'string' || !sourceUrl
+        || (requireResponseTitle && !responseTitle)
+        || typeof resolvedTitle !== 'string' || !resolvedTitle) return null;
+
+      return Object.freeze({ imageUrl, sourceUrl, resolvedTitle });
+    }
+
+    function normalizeLandmarkMediaResponse(data, candidateTitle) {
+      const pages = data?.query?.pages;
+      if (!pages || typeof pages !== 'object') return null;
+
+      const [page] = Object.values(pages);
+      return normalizeLandmarkMediaPage(page, candidateTitle);
+    }
+
+    function normalizeLandmarkSearchResponse(data) {
+      const pages = data?.query?.pages;
+      if (!pages || typeof pages !== 'object') return EMPTY_LANDMARK_CANDIDATES;
+
+      return Object.values(pages)
+        .sort((first, second) => {
+          const firstIndex = Number.isFinite(first?.index) ? first.index : Number.POSITIVE_INFINITY;
+          const secondIndex = Number.isFinite(second?.index) ? second.index : Number.POSITIVE_INFINITY;
+          return firstIndex - secondIndex;
+        })
+        .map(page => normalizeLandmarkMediaPage(page, '', true))
+        .filter(Boolean);
     }
 
     function loadLandmarkMedia(country) {
-      const landmarkName = country?.landmarks?.[0];
+      const landmarkName = (Array.isArray(country?.landmarks) ? country.landmarks : [])
+        .find(candidate => typeof candidate === 'string' && candidate.trim())?.trim();
       hideLandmarkMedia();
       if (!landmarkName || !root.fetch || !landmarkMedia || !landmarkMediaImage) return;
 
       const requestId = landmarkMediaRequestId;
-      const wikipediaTitle = LANDMARK_WIKIPEDIA_TITLES[landmarkName] || landmarkName;
-      const title = encodeURIComponent(wikipediaTitle);
-      const endpoint = 'https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*'
-        + '&titles=' + title + '&redirects=1&prop=pageimages|info&piprop=thumbnail&inprop=url&pithumbsize=640';
+      const candidates = getLandmarkDirectCandidates(country);
+      let candidateIndex = 0;
+      let candidateAttemptId = 0;
+      let fallbackAttempted = false;
 
-      root.fetch(endpoint)
-        .then(response => response.ok ? response.json() : null)
-        .then(data => {
-          if (requestId !== landmarkMediaRequestId) return;
-          const page = Object.values(data?.query?.pages || {})[0];
-          const imageUrl = page?.thumbnail?.source;
-          const sourceUrl = page?.fullurl || getLandmarkWikipediaUrl(landmarkName);
-          if (!imageUrl || !sourceUrl) return;
+      const displayMedia = (media, isCurrentAttempt, onImageError) => {
+        clearLandmarkMedia();
+        landmarkMediaImage.onload = () => {
+          if (isCurrentAttempt()) landmarkMedia.classList.remove('hidden');
+        };
+        landmarkMediaImage.onerror = () => {
+          if (isCurrentAttempt()) onImageError();
+        };
+        landmarkMediaImage.alt = `${media.resolvedTitle} in ${country.name}`;
+        landmarkMediaToggle?.setAttribute('aria-label', `Expand image of ${media.resolvedTitle}`);
+        if (landmarkLearnMore) {
+          landmarkLearnMore.href = media.sourceUrl;
+          landmarkLearnMore.textContent = `Learn about ${media.resolvedTitle}`;
+        }
+        if (landmarkMediaSource) landmarkMediaSource.href = media.sourceUrl;
+        landmarkMediaImage.src = media.imageUrl;
+      };
 
-          landmarkMediaImage.onload = () => {
-            if (requestId === landmarkMediaRequestId) landmarkMedia.classList.remove('hidden');
-          };
-          landmarkMediaImage.onerror = () => {
-            if (requestId === landmarkMediaRequestId) landmarkMedia.classList.add('hidden');
-          };
-          landmarkMediaImage.alt = `${wikipediaTitle} in ${country.name}`;
-          landmarkMediaToggle?.setAttribute('aria-label', `Expand image of ${wikipediaTitle}`);
-          if (landmarkLearnMore) {
-            landmarkLearnMore.href = sourceUrl;
-            landmarkLearnMore.textContent = `Learn about ${page?.title || landmarkName}`;
-          }
-          landmarkMediaSource.href = sourceUrl;
-          landmarkMediaImage.src = imageUrl;
-        })
-        .catch(() => {});
+      const beginFallback = () => {
+        if (requestId !== landmarkMediaRequestId || fallbackAttempted) return;
+        fallbackAttempted = true;
+        const searchAttemptId = ++candidateAttemptId;
+        const isCurrentSearchAttempt = () =>
+          requestId === landmarkMediaRequestId && searchAttemptId === candidateAttemptId;
+
+        const endpoint = 'https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*'
+          + '&generator=search&gsrsearch=' + encodeURIComponent(`${landmarkName} ${country.name}`)
+          + '&gsrnamespace=0&gsrlimit=10&prop=pageimages|info'
+          + '&piprop=thumbnail&inprop=url&pithumbsize=640';
+
+        root.fetch(endpoint)
+          .then(response => isCurrentSearchAttempt() && response.ok ? response.json() : null)
+          .then(data => {
+            if (!isCurrentSearchAttempt()) return;
+            const fallbackCandidates = normalizeLandmarkSearchResponse(data);
+            let fallbackCandidateIndex = 0;
+            const tryNextFallbackCandidate = () => {
+              if (requestId !== landmarkMediaRequestId) return;
+              const media = fallbackCandidates[fallbackCandidateIndex++];
+              if (!media) {
+                clearLandmarkMedia();
+                return;
+              }
+
+              const imageAttemptId = ++candidateAttemptId;
+              const isCurrentImageAttempt = () =>
+                requestId === landmarkMediaRequestId && imageAttemptId === candidateAttemptId;
+              displayMedia(media, isCurrentImageAttempt, tryNextFallbackCandidate);
+            };
+            tryNextFallbackCandidate();
+          })
+          .catch(() => {
+            if (isCurrentSearchAttempt()) clearLandmarkMedia();
+          });
+      };
+
+      const tryNextCandidate = () => {
+        if (requestId !== landmarkMediaRequestId) return;
+        const wikipediaTitle = candidates[candidateIndex++];
+        if (!wikipediaTitle) {
+          beginFallback();
+          return;
+        }
+
+        const attemptId = ++candidateAttemptId;
+        const isCurrentAttempt = () =>
+          requestId === landmarkMediaRequestId && attemptId === candidateAttemptId;
+        const endpoint = 'https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*'
+          + '&titles=' + encodeURIComponent(wikipediaTitle)
+          + '&redirects=1&prop=pageimages|info&piprop=thumbnail&inprop=url&pithumbsize=640';
+
+        root.fetch(endpoint)
+          .then(response => isCurrentAttempt() && response.ok ? response.json() : null)
+          .then(data => {
+            if (!isCurrentAttempt()) return;
+            const media = normalizeLandmarkMediaResponse(data, wikipediaTitle);
+            if (!media) {
+              tryNextCandidate();
+              return;
+            }
+            displayMedia(media, isCurrentAttempt, tryNextCandidate);
+          })
+          .catch(() => {
+            if (isCurrentAttempt()) tryNextCandidate();
+          });
+      };
+
+      tryNextCandidate();
     }
 
     landmarkMediaToggle?.addEventListener('click', () => {

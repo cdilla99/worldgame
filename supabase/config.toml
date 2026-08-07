@@ -7,7 +7,7 @@ project_id = "worldgame"
 [api]
 enabled = true
 # Port to use for the API URL.
-port = 54321
+port = 54021
 # Schemas to expose in your API. Tables, views and stored procedures in this schema will get API
 # endpoints. `public` and `graphql_public` schemas are included by default.
 schemas = ["public", "graphql_public"]
@@ -26,7 +26,7 @@ enabled = false
 
 [db]
 # Port to use for the local database URL.
-port = 54322
+port = 54022
 # Port used by db diff command to initialize the shadow database.
 shadow_port = 54320
 # Maximum amount of time to wait for health check when starting the local database.
@@ -58,11 +58,9 @@ enabled = true
 schema_paths = []
 
 [db.seed]
-# If enabled, seeds the database after migrations during a db reset.
-enabled = true
-# Specifies an ordered list of seed files to load during db reset.
-# Supports glob patterns relative to supabase directory: "./seeds/*.sql"
-sql_paths = ["./seed.sql"]
+# This project has no seed data; migrations are the complete local schema input.
+enabled = false
+sql_paths = []
 
 [db.network_restrictions]
 # Enable management of network restrictions.

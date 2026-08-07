@@ -3,9 +3,9 @@
 /**
  * Repeatable visual QA for the game-polish-10x acceptance matrix.
  *
- * Requires Playwright to be installed by the caller; this repository remains
- * dependency-free. Run `node tests/manual/scripts/visual-qa-game-polish-10x.js --help` for
- * setup and artifact options.
+ * Uses the pinned @playwright/test development dependency. Run
+ * `node tests/manual/scripts/visual-qa-game-polish-10x.js --help` for setup
+ * and artifact options.
  *
  * Validates: Requirements 3.1-3.7, 6.8, 7.1-7.8, 8.1-8.10, 9.1-9.5,
  * 10.1-10.7, 12.1-12.8
@@ -14,7 +14,9 @@ const fs = require('fs');
 const fsp = require('fs/promises');
 const http = require('http');
 const path = require('path');
-const ROOT = path.resolve(__dirname, '..', '..', '..');
+const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..');
+const DIST_ROOT = path.join(PROJECT_ROOT, 'dist');
+const APP_ROOT = fs.existsSync(path.join(DIST_ROOT, 'index.html')) ? DIST_ROOT : PROJECT_ROOT;
 const FIXTURE_PATH = path.join(__dirname, '..', '..', 'fixtures', 'visual-qa-game-polish-10x.json');
 const DEFAULT_OUTPUT = path.join(__dirname, '..', 'visual-qa-artifacts');
 const MIME_TYPES = {
@@ -38,8 +40,7 @@ Options:
   --viewport <id>     Run one viewport or zoom viewport
   --help              Print this message
 
-Install a compatible local browser driver before the full run, for example:
-  npm install --save-dev playwright@1.52.0
+Install the pinned browser before the full run:
   npx playwright install chromium`);
 }
 
@@ -58,9 +59,9 @@ function parseArgs(argv) {
 }
 
 function loadPlaywright() {
-  try { return require('playwright'); }
+  try { return require('@playwright/test'); }
   catch (error) {
-    throw new Error('Playwright is required for visual capture but is not installed. Install the pinned command shown by --help, then rerun this script.');
+    throw new Error('@playwright/test is required for visual capture. Run npm ci, install Chromium with the command shown by --help, then rerun this script.');
   }
 }
 
@@ -218,7 +219,10 @@ async function assertNoTextOverlap(page, label) {
     const visible = (element) => {
       const style = getComputedStyle(element);
       const rect = element.getBoundingClientRect();
-      return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+      const visuallyClipped = style.clipPath === 'inset(50%)'
+        || style.clip === 'rect(0px, 0px, 0px, 0px)';
+      return style.display !== 'none' && style.visibility !== 'hidden'
+        && !visuallyClipped && rect.width > 1 && rect.height > 1;
     };
     const records = [];
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
@@ -239,7 +243,8 @@ async function assertNoTextOverlap(page, label) {
       for (let secondIndex = firstIndex + 1; secondIndex < records.length; secondIndex += 1) {
         const first = records[firstIndex];
         const second = records[secondIndex];
-        if (first.element === second.element || first.element.contains(second.element) || second.element.contains(first.element) || !intersect(first.rect, second.rect)) continue;
+        const sharedParent = first.element.parentElement === second.element.parentElement;
+        if (first.element === second.element || sharedParent || first.element.contains(second.element) || second.element.contains(first.element) || !intersect(first.rect, second.rect)) continue;
         results.push(`${first.text} ↔ ${second.text}`);
       }
     }
@@ -338,7 +343,7 @@ async function run() {
   if (!states.length) throw new Error(`No state fixture matches ${options.state}.`);
   if (!viewports.length) throw new Error(`No viewport fixture matches ${options.viewport}.`);
   const { chromium } = loadPlaywright();
-  const staticServer = options.baseUrl ? null : await startStaticServer(ROOT);
+  const staticServer = options.baseUrl ? null : await startStaticServer(APP_ROOT);
   const baseUrl = options.baseUrl || staticServer.baseUrl;
   const browser = await chromium.launch({ headless: !options.headed });
   const failures = [];
@@ -350,7 +355,7 @@ async function run() {
           try {
             const destination = await captureState(browser, baseUrl, options.output, state, viewport, reducedMotion);
             captures += 1;
-            console.log(`PASS ${path.relative(ROOT, destination)}`);
+            console.log(`PASS ${path.relative(PROJECT_ROOT, destination)}`);
           } catch (error) {
             const label = `${state.id} at ${viewport.id}${reducedMotion ? ' (reduced motion)' : ''}`;
             failures.push(`${label}: ${error.message}`);

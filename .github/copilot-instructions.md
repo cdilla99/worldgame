@@ -1,4 +1,8 @@
 # Copilot Instructions
 
+Follow `AGENTS.md` for architecture, validation, and data constraints.
+
 ## Project Guidelines
-- For this app, prioritize simple teen-friendly gameplay improvements and make it polished enough to be viable as a sellable product; do not focus on security/code injection hardening unless explicitly requested.
+- Prioritize simple, teen-friendly gameplay improvements and polished product quality.
+- Keep responses and changes concise, but never omit validation failures or safety implications.
+- Treat authentication, Supabase migrations, RLS, secrets, and user data as security-sensitive.
