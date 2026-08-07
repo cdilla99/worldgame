@@ -26,21 +26,10 @@ function formatBigMac(value: number | null, quality: BigMacQuality): string {
   return formatUsd(value, 2);
 }
 
-function bigMacTooltip(quality: BigMacQuality): string | null {
-  if (quality === "A") return "delivery benchmark";
-  if (quality === "M") return "Estimated";
-  return null;
-}
-
-function setValue(id: string, value: string, tooltip?: string | null): void {
+function setValue(id: string, value: string): void {
   const element = document.getElementById(id);
   if (element) {
     element.textContent = value;
-    if (tooltip) {
-      element.setAttribute("title", tooltip);
-    } else {
-      element.removeAttribute("title");
-    }
   }
 }
 
@@ -59,11 +48,7 @@ function renderEconomicComparison(event: Event): void {
   const bigMacQuality = economics?.bigMacQuality ?? "N";
 
   setValue("explorer-economics-salary", formatUsd(economics?.annualNetSalaryUsd ?? null, 0));
-  setValue(
-    "explorer-economics-big-mac",
-    formatBigMac(economics?.bigMacUsd ?? null, bigMacQuality),
-    bigMacTooltip(bigMacQuality),
-  );
+  setValue("explorer-economics-big-mac", formatBigMac(economics?.bigMacUsd ?? null, bigMacQuality));
   setValue("explorer-economics-coke", formatUsd(economics?.coke330Usd ?? null, 2));
 }
 

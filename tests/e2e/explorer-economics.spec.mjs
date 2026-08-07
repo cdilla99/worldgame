@@ -101,6 +101,34 @@ test('economics is final after a landmark image failure', async ({ page }) => {
   await expectLandmarkBeforeEconomics(page);
 });
 
+test('Big Mac shows a modeled-estimate prefix and no separate tooltip', async ({ page }) => {
+  await blockExternalRequests(page);
+  await page.goto('/');
+  await page.locator('#btn-landing-explorer-game').click();
+  await page.locator('#btn-open-explorer').click();
+  const search = page.locator('#explorer-country-search');
+  await search.fill('Andorra');
+  await page.getByRole('option', { name: /Andorra/ }).click();
+  await expect(page.locator('#explorer-country-name')).toHaveText('Andorra');
+  const bigMac = page.locator('#explorer-economics-big-mac');
+  await expect(bigMac).toHaveText('~$6.53');
+  await expect(bigMac).not.toHaveAttribute('title');
+});
+
+test('Big Mac shows "No McDonald\'s" for a country with no market', async ({ page }) => {
+  await blockExternalRequests(page);
+  await page.goto('/');
+  await page.locator('#btn-landing-explorer-game').click();
+  await page.locator('#btn-open-explorer').click();
+  const search = page.locator('#explorer-country-search');
+  await search.fill('Afghanistan');
+  await page.getByRole('option', { name: /Afghanistan/ }).click();
+  await expect(page.locator('#explorer-country-name')).toHaveText('Afghanistan');
+  const bigMac = page.locator('#explorer-economics-big-mac');
+  await expect(bigMac).toHaveText("No McDonald's");
+  await expect(bigMac).not.toHaveAttribute('title');
+});
+
 test('Explorer still hides economics for territories', async ({ page }) => {
   await blockExternalRequests(page);
   await page.goto('/');
