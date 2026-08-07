@@ -10,7 +10,7 @@ const economicsApi = Object.freeze({ getCountryEconomics, hasCountryEconomics })
 
 function formatUsd(value: number | null, fractionDigits: number): string {
   if (value === null || !Number.isFinite(value)) return DATA_UNAVAILABLE;
-  return "US" + value.toLocaleString("en-US", {
+  return value.toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
     currencyDisplay: "narrowSymbol",

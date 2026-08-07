@@ -124,9 +124,9 @@ test('preservation: country values and territory exclusion ignore sibling order'
   await expect(economics.locator('dt')).toHaveText([
     'Annual net salary', 'Big Mac', 'Coke · 330 ml'
   ]);
-  await expect(page.locator('#explorer-economics-salary')).toHaveText('US$1,737');
-  await expect(page.locator('#explorer-economics-big-mac')).toHaveText('US$2.65');
-  await expect(page.locator('#explorer-economics-coke')).toHaveText('US$0.34');
+  await expect(page.locator('#explorer-economics-salary')).toHaveText('$1,737');
+  await expect(page.locator('#explorer-economics-big-mac')).toHaveText('$2.65');
+  await expect(page.locator('#explorer-economics-coke')).toHaveText('$0.34');
 
   const contentNodeSet = await page.locator('#explorer-more-details').evaluate(details =>
     Array.from(details.children)

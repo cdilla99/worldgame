@@ -183,7 +183,7 @@ function removeSiblingOrder(snapshot) {
 
 function formatUsd(value, fractionDigits) {
   if (value === null || !Number.isFinite(value)) return 'Data unavailable';
-  return 'US' + value.toLocaleString('en-US', {
+  return value.toLocaleString('en-US', {
     style: 'currency', currency: 'USD', currencyDisplay: 'narrowSymbol',
     minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits
   });
