@@ -171,7 +171,7 @@ function markupSnapshot() {
     calloutCount: (html.match(/id="explorer-economics-callout"/g) ?? []).length,
     heading: html.match(/id="explorer-economics-title">([^<]+)</)?.[1],
     source: html.match(/<small>(2026 · USD)<\/small>/)?.[1],
-    labels: [...html.matchAll(/<dt>(Annual net salary|Big Mac|Coke · 330 ml)<\/dt>/g)].map(match => match[1]),
+    labels: [...html.matchAll(/<dt>(Avg annual gross salary|Big Mac|Coke · 330 ml)<\/dt>/g)].map(match => match[1]),
     siblingOrder: detailsOrderSnapshot()
   };
 }
@@ -191,7 +191,7 @@ function formatUsd(value, fractionDigits) {
 
 function tupleObject(tuple) {
   return {
-    annualNetSalaryUsd: tuple[0],
+    annualGrossSalaryUsd: tuple[0],
     bigMacUsd: tuple[1],
     mcdMealUsd: tuple[2],
     coke330Usd: tuple[3],
@@ -240,7 +240,7 @@ const UNFIXED_MARKUP_BASELINE = {
   calloutCount: 1,
   heading: 'Economic comparison',
   source: '2026 · USD',
-  labels: ['Annual net salary', 'Big Mac', 'Coke · 330 ml'],
+  labels: ['Avg annual gross salary', 'Big Mac', 'Coke · 330 ml'],
   siblingOrder: ['more-facts', 'economics-callout', 'landmark-media']
 };
 assert.deepEqual(
@@ -251,14 +251,14 @@ assert.deepEqual(
 
 const accessorImports = [...accessorSource.matchAll(/from\s+["']([^"']+\.json)["']/g)].map(match => match[1]);
 assert.deepEqual(accessorImports, ['./country-economics-2026.min.json'], 'the accessor has one canonical JSON source');
-assert.deepEqual(dataset.fields, ['annualNetSalary', 'bigMac', 'mcdMeal', 'coke330', 'quality', 'bigMacQuality'], 'the canonical tuple order is stable');
+assert.deepEqual(dataset.fields, ['annualGrossSalary', 'bigMac', 'mcdMeal', 'coke330', 'economicQuality', 'bigMacQuality'], 'the canonical tuple order is stable');
 assert.equal(dataset.year, 2026);
 assert.equal(dataset.currency, 'USD');
 
 const accessor = loadAccessor();
 for (const iso2 of ['eg', 'EG', 'eG']) {
   assert.deepEqual({ ...accessor.getCountryEconomics(iso2) }, {
-    annualNetSalaryUsd: 1737,
+    annualGrossSalaryUsd: 1620,
     bigMacUsd: 2.65,
     mcdMealUsd: 4.97,
     coke330Usd: 0.34,
@@ -272,7 +272,7 @@ for (const iso2 of ['eg', 'EG', 'eG']) {
   assert.equal(accessor.hasCountryEconomics(iso2), true);
 }
 assert.deepEqual({ ...accessor.getCountryEconomics('Gt') }, {
-  annualNetSalaryUsd: 4428,
+  annualGrossSalaryUsd: 9072,
   bigMacUsd: 4.3,
   mcdMealUsd: 7.71,
   coke330Usd: 0.92,
@@ -284,7 +284,7 @@ assert.deepEqual({ ...accessor.getCountryEconomics('Gt') }, {
   bigMacIsEstimate: false
 }, 'Guatemala resolves with O quality Big Mac');
 assert.deepEqual({ ...accessor.getCountryEconomics('ad') }, {
-  annualNetSalaryUsd: 30780,
+  annualGrossSalaryUsd: 32388,
   bigMacUsd: 6.53,
   mcdMealUsd: 12.2,
   coke330Usd: 1.74,

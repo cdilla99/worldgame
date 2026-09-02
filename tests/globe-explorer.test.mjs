@@ -15,7 +15,7 @@ function flagToIso2(flag) {
     .join('');
 }
 
-test('country globe geometry covers the canonical 195-country dataset', () => {
+test('country globe geometry covers the canonical 197-country dataset', () => {
   const geometrySource = read('assets/globe-countries.js');
   const dataSource = `${read('data/countries.js')}\nthis.__cards = countryCards;`;
   const geometryContext = { window: {} };
@@ -28,13 +28,13 @@ test('country globe geometry covers the canonical 195-country dataset', () => {
 
   const geometry = geometryContext.window.GeoWarsGlobeCountries;
   const cards = dataContext.__cards;
-  assert.equal(geometry.length, 195);
-  assert.equal(cards.length, 195);
-  assert.equal(new Set(geometry.map(country => country.i)).size, 195);
-  assert.equal(new Set(geometry.map(country => country.c)).size, 195);
+  assert.equal(geometry.length, 197);
+  assert.equal(cards.length, 197);
+  assert.equal(new Set(geometry.map(country => country.i)).size, 197);
+  assert.equal(new Set(geometry.map(country => country.c)).size, 197);
   assert.deepEqual(
     Array.from(geometry, country => country.i).sort((a, b) => a - b),
-    Array.from({ length: 195 }, (_, index) => index + 1)
+    Array.from({ length: 197 }, (_, index) => index + 1)
   );
   assert.deepEqual(
     Array.from(geometry, country => country.c).sort(),
@@ -56,19 +56,20 @@ test('country globe geometry covers the canonical 195-country dataset', () => {
   assert.ok(geometrySource.length < 450000, 'country geometry should remain a compact lazy-loaded asset');
 });
 
-test('explorer markup exposes search, globe controls, facts, and home navigation', () => {
+test('explorer markup exposes the homepage promise, search, globe controls, and facts', () => {
   const html = read('index.html');
   const explorerScript = html.indexOf('globe-explorer.js?v=');
   const gameScript = html.indexOf('app.js?v=');
 
   assert.match(html, /World Explorer[\s\S]*id="btn-open-explorer"[\s\S]*id="btn-open-explorer-hunt"/);
-  assert.match(html, /id="explorer" class="screen hidden explorer-screen"/);
+  assert.match(html, /id="explorer" class="screen explorer-screen"/);
+  assert.match(html, /id="explorer-stage-title"[\s\S]*Explore the world/);
   assert.match(html, /id="explorer-globe-canvas"[\s\S]*tabindex="0"/);
   assert.match(html, /id="explorer-country-search"[\s\S]*role="combobox"/);
   assert.match(html, /id="explorer-search-results"[\s\S]*role="listbox"/);
   assert.match(html, /id="explorer-country-card"[\s\S]*id="explorer-country-capital"/);
   assert.match(html, /id="btn-explorer-zoom-out"[\s\S]*id="btn-explorer-reset"[\s\S]*id="btn-explorer-zoom-in"/);
-  assert.ok((html.match(/data-explorer-home/g) || []).length >= 2);
+  assert.doesNotMatch(html, /Back to home/);
   assert.ok(gameScript > -1 && explorerScript > gameScript);
 });
 
@@ -109,7 +110,7 @@ test('explorer controller lazy-loads geometry and supports pointer, touch, keybo
   assert.match(script, /option\.addEventListener\('pointerdown'/);
   assert.match(script, /prefers-reduced-motion: reduce/);
   assert.match(script, /root\.GeoWars\.explorer/);
-  assert.match(script, /startRegionalPractice/);
+  assert.match(script, /function showFreeExplorer\(\)/);
 });
 
 test('free exploration opens selected-country details by default', () => {

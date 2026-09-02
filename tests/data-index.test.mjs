@@ -23,11 +23,9 @@ vm.runInContext(`${canonicalSource}; globalThis.cards = countryCards;`, context)
 const canonicalMinimal = JSON.parse(JSON.stringify(
   context.cards.map(({ id, name, continent, difficulty }) => ({ id, name, continent, difficulty }))
 ));
-assert.deepEqual(countries.slice(0, 195), canonicalMinimal, 'the existing 195 country records preserve canonical order and fields');
-assert.deepEqual(countries.slice(195), [
-  { id: 196, name: 'Cyprus', continent: 'Europe', difficulty: 'hard' },
-  { id: 197, name: 'Palestine', continent: 'Asia', difficulty: 'hard' }
-], 'the 197-country index includes Cyprus and Palestine');
+assert.deepEqual(countries, canonicalMinimal, 'the 197 country records preserve canonical order and fields');
+assert.deepEqual(countries.at(-2), { id: 196, name: 'Cyprus', continent: 'Europe', difficulty: 'hard' }, 'the index includes Cyprus');
+assert.deepEqual(countries.at(-1), { id: 197, name: 'Palestine', continent: 'Asia', difficulty: 'hard' }, 'the index includes Palestine');
 
 const asia = filterIndex(country => country.continent === 'Asia');
 assert.ok(asia.length > 0 && asia.every(country => country.continent === 'Asia'), 'callback predicates filter by continent');

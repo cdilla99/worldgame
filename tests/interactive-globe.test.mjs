@@ -32,16 +32,16 @@ test('bundled globe geometry covers every selectable world region', () => {
   });
 });
 
-test('landing markup exposes an accessible interactive globe with local fallback', () => {
+test('landing markup exposes an accessible animated globe preview with local fallback', () => {
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   const appScript = html.indexOf('app.js?v=');
   const dataScript = html.indexOf('assets/globe-data.js?v=');
   const globeScript = html.indexOf('interactive-globe.js?v=');
 
-  assert.match(html, /id="landing-globe-canvas"[\s\S]*tabindex="0"[\s\S]*role="button"/);
+  assert.match(html, /id="landing-globe-canvas"[\s\S]*tabindex="-1"[\s\S]*role="img"/);
   assert.match(html, /class="landing-globe-art" src="assets\/landing-globe\.svg"/);
   assert.match(html, /id="challenge-settings" class="game-setup"/);
-  assert.match(html, /class="globe-scope-switch" role="group" aria-label="Challenge scope"/);
+  assert.match(html, /class="landing-globe-legacy-controls" hidden aria-hidden="true"/);
   assert.match(html, /id="btn-globe-region-mode"[\s\S]*aria-pressed="false"/);
   assert.match(html, /id="btn-globe-worldwide"[\s\S]*aria-pressed="true"/);
   assert.ok(appScript > -1 && appScript < dataScript && dataScript < globeScript);

@@ -8,26 +8,25 @@ const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(testDirectory, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 
-test('landing groups Shape Challenge and World Explorer as peer game choices', () => {
+test('landing presents Explorer first and keeps Country Hunt as a secondary challenge', () => {
   const html = read('index.html');
   const app = read('app.js');
 
   assert.match(html, /Interactive world atlas/);
   assert.match(html, /Explore the world\./);
-  assert.match(html, /class="[^"]*landing-explore-feature[^"]*"/);
-  assert.match(html, /id="landing-games-title">Choose a game/);
-  assert.match(html, /id="btn-landing-shape-game"[\s\S]*Shape Challenge/);
-  assert.match(html, /id="btn-landing-explorer-game"[\s\S]*World Explorer/);
-  assert.match(html, /id="shape-challenge-panel"[\s\S]*id="world-explorer-panel"/);
+  assert.match(html, /class="[^"]*landing-explorer-showcase[^"]*"/);
+  assert.doesNotMatch(html, />Choose a game</);
+  assert.match(html, /id="btn-landing-shape-game"[\s\S]*Border Outline/);
+  assert.match(html, /id="world-explorer-panel"[\s\S]*id="btn-open-explorer"/);
+  assert.match(html, /id="shape-challenge-panel"/);
   assert.match(html, /id="btn-open-explorer"/);
   assert.match(html, /id="btn-open-explorer-hunt"/);
   assert.ok(
-    html.indexOf('landing-setup-panel') < html.indexOf('landing-explore-feature'),
-    'Both game choices should be grouped inside the right-side setup panel'
+    html.indexOf('landing-explorer-showcase') < html.indexOf('id="btn-open-explorer-hunt"'),
+    'World Explorer should appear before the challenge actions'
   );
-  assert.match(app, /function selectLandingGame\(game\)/);
-  assert.match(app, /selectLandingGame\('shape'\)/);
-  assert.match(app, /selectLandingGame\('explorer'\)/);
+  assert.match(app, /function setShapeChallengeExpanded\(expanded\)/);
+  assert.match(app, /setShapeChallengeExpanded\(false\)/);
 });
 
 test('Country Hunt exposes a complete 60-second game loop', () => {
@@ -158,13 +157,17 @@ test('Country Hunt uses game audio, celebration, and a paused success beat', () 
   assert.match(styles, /@keyframes explorer-confetti-burst/);
 });
 
-test('Explorer supports deep globe zoom for small countries', () => {
+test('Explorer supports deep manual zoom while auto-framing preserves geographic context', () => {
   const script = read('globe-explorer.js');
 
-  assert.match(script, /const MAX_ZOOM = 9/);
+  assert.match(script, /const MAX_ZOOM = 60/);
   assert.match(script, /clamp\(nextZoom, MIN_ZOOM, MAX_ZOOM\)/);
   assert.match(script, /zoom >= MAX_ZOOM/);
-  assert.match(script, /geometry\.s \? Math\.max\(zoom, 5\.4\)/);
+  assert.match(script, /const AUTO_FIT_MAX_ZOOM = 8/);
+  assert.match(script, /const targetZoom = fitZoomForCountry\(geometry\)/);
+  // Multiplicative steps keep the whole manual range reachable without dozens of taps.
+  assert.match(script, /setZoom\(zoom \* ZOOM_STEP\)/);
+  assert.match(script, /setZoom\(zoom \/ ZOOM_STEP\)/);
 });
 test('Explorer music is preloaded and its label follows actual playback', () => {
   const music = read('background-music.js');
@@ -176,5 +179,5 @@ test('Explorer music is preloaded and its label follows actual playback', () => 
   assert.match(music, /prepare\(\);\s*\n\}\)\(\);/);
   assert.match(explorer, /music\.isPlaying/);
   assert.match(explorer, /playing \? 'Music on' : 'Start music'/);
-  assert.match(explorer, /startExplorerMusic\(\);\s*\n\s*navigation\?\.showExplorer/);
+  assert.match(explorer, /renderMusicControl\(false\);\s*\n\s*navigation\?\.showExplorer/);
 });

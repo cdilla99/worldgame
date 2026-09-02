@@ -9,19 +9,29 @@ const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(testDirectory, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 
-test('landing exposes two responsive peer game choices with progressive disclosure', () => {
+test('homepage leads with the live Explorer and progressively discloses challenges', () => {
   const html = read('index.html');
-  const styles = read('styles.css');
+  const styles = read('globe-explorer.css');
   const app = read('app.js');
 
-  assert.match(html, /id="landing-games-title">Choose a game/);
-  assert.match(html, /id="btn-landing-shape-game"[\s\S]*aria-controls="shape-challenge-panel"/);
-  assert.match(html, /id="btn-landing-explorer-game"[\s\S]*aria-controls="world-explorer-panel"/);
-  assert.match(html, /id="shape-challenge-panel"[\s\S]*id="world-explorer-panel"[\s\S]*id="btn-open-explorer-hunt"/);
-  assert.match(styles, /\.landing-game-switch\s*\{[\s\S]*grid-template-columns:\s*repeat\(2/);
-  assert.match(styles, /@media \(max-width: 420px\)[\s\S]*\.landing-game-switch\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/);
-  assert.match(app, /\$shapeChallengePanel\.hidden = !shapeSelected/);
-  assert.match(app, /\$worldExplorerPanel\.hidden = shapeSelected/);
+  assert.doesNotMatch(html, /data-selected-game=/);
+  assert.match(html, /id="landing"[\s\S]*class="screen landing hidden"/);
+  assert.match(html, /id="explorer" class="screen explorer-screen"/);
+  assert.match(html, /id="explorer-stage-title"[\s\S]*Explore the world/);
+  assert.match(html, /id="explorer-globe-canvas"[\s\S]*id="explorer-country-card"/);
+  assert.match(html, /id="explorer-secondary-content"/);
+  assert.match(html, /id="landing-challenges-title">Now find them without the labels/);
+  assert.match(html, /id="btn-open-explorer-hunt"[\s\S]*Country Hunt/);
+  assert.match(html, /id="btn-landing-shape-game"[\s\S]*aria-expanded="false"[\s\S]*Border Outline[\s\S]*Advanced/);
+  assert.match(html, /id="shape-challenge-panel"[^>]*hidden/);
+  assert.doesNotMatch(html, />Choose a game</);
+  assert.match(styles, /\.explorer-layout\s*\{[\s\S]*grid-template-columns/);
+  assert.match(styles, /\.explorer-globe-frame\s*\{[\s\S]*width:\s*min\(100%, 540px\)/);
+  assert.match(styles, /\.explorer-secondary-content \.landing-challenges\s*\{/);
+  assert.match(app, /function composeExplorerHomepage\(\)/);
+  assert.match(app, /\$explorerSecondaryContent\.append\(element\)/);
+  assert.match(app, /function setShapeChallengeExpanded\(expanded\)/);
+  assert.match(app, /\$shapeChallengePanel\.hidden = !expanded/);
 });
 
 test('Your Best reset is confirmed, device-only, and never mutates Supabase', () => {

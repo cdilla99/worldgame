@@ -17,7 +17,7 @@ const CHUNK_LOADERS = Object.freeze({
   Oceania: () => import('../src/data/chunks/Oceania.js')
 });
 
-const canonicalIndex = countries.slice(0, 195);
+const canonicalIndex = countries;
 const seed = 0xC017DA7A;
 let randomState = seed;
 
@@ -60,7 +60,7 @@ async function runProperty(name, iterations, generate, verify) {
   console.log(`${name} passed (${iterations} cases, seed=${seed})`);
 }
 
-assert.equal(canonicalIndex.length, 195, 'the chunked dataset covers the 195 canonical country records');
+assert.equal(canonicalIndex.length, 197, 'the chunked dataset covers the 197 canonical country records');
 
 const iterations = 250;
 

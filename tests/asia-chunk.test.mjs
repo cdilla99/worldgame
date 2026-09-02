@@ -11,10 +11,10 @@ const requiredFields = [
 ];
 
 assert.strictEqual(asiaCountries, namedExport, 'default and named exports reference the same chunk');
-assert.equal(asiaCountries.length, 48, 'Asia chunk contains all 48 canonical countries');
+assert.equal(asiaCountries.length, 49, 'Asia chunk contains all 49 canonical countries');
 assert.ok(Object.isFrozen(asiaCountries), 'Asia chunk array is immutable');
-assert.equal(new Set(asiaCountries.map(country => country.id)).size, 48, 'country IDs are unique within the chunk');
-assert.equal(new Set(asiaCountries.map(country => country.name)).size, 48, 'country names are unique within the chunk');
+assert.equal(new Set(asiaCountries.map(country => country.id)).size, 49, 'country IDs are unique within the chunk');
+assert.equal(new Set(asiaCountries.map(country => country.name)).size, 49, 'country names are unique within the chunk');
 
 for (const country of asiaCountries) {
   assert.equal(country.continent, 'Asia', `${country.name} belongs to the Asia chunk`);
@@ -38,11 +38,11 @@ const canonicalAsia = JSON.parse(JSON.stringify(context.cards.filter(country => 
 const extractedCanonicalFields = asiaCountries.map(({ silhouette_url, ...country }) => country);
 assert.deepEqual(extractedCanonicalFields, canonicalAsia, 'chunk preserves canonical order, fields, and values');
 
-const indexedCanonicalAsia = countries.slice(0, 195).filter(country => country.continent === 'Asia');
+const indexedCanonicalAsia = countries.filter(country => country.continent === 'Asia');
 assert.deepEqual(
   asiaCountries.map(({ id, name, continent, difficulty }) => ({ id, name, continent, difficulty })),
   indexedCanonicalAsia,
-  'the chunk and canonical portion of the minimal index use the same 48-country classification'
+  'the chunk and minimal index use the same 49-country Asia classification'
 );
 
 console.log('Asia chunk unit tests passed');

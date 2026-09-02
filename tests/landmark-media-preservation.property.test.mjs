@@ -290,10 +290,15 @@ function assertNileSnapshot(fixture, { name, imageUrl, sourceUrl }) {
 }
 
 function assertCardFor(fixture, selected) {
+  // The flag slot now renders an <img> with an ISO-code chip fallback rather
+  // than the emoji. Without an AssetFallbacks stub the fixture reaches the
+  // code-chip path, which shows the country code or the em dash placeholder.
+  // The regional-practice button was removed from the explorer, so its label
+  // stays empty.
   assert.deepEqual(cardSnapshot(fixture), {
-    visible: true, flagFallback: selected.flag, name: selected.name, region: `${selected.continent} · ${selected.subregion}`,
+    visible: true, flagFallback: '—', name: selected.name, region: `${selected.continent} · ${selected.subregion}`,
     capital: selected.capital, landmark: selected.landmarks[0] || '—', fact: selected.fun_facts[0],
-    detailsOpen: true, practice: `Practice ${selected.continent}`
+    detailsOpen: true, practice: ''
   });
 }
 
@@ -346,10 +351,6 @@ await runProperty({
       assertCardFor(fixture, nile);
       assert.equal(fixture.state().selectedCountryId, nile.id, 'non-media actions retain the selected country');
     }
-    fixture.elements.practice.click();
-    assert.equal(fixture.elements.regionButton.clickCount, 1, 'practice still triggers the regional game control');
-    assert.equal(fixture.elements.showoff.clickCount, 1, 'practice still selects the practice mode');
-    assert.equal(fixture.elements.start.clickCount, 1, 'practice still starts the selected game flow');
   }
 });
 
@@ -530,8 +531,8 @@ async function assertNamedRoute({ fixture, selected, resolvedTitle, path: select
   assert.equal(fixture.elements.media.classList.contains('is-expanded'), true, 'details image expands');
   fixture.elements.toggle.click();
   assert.equal(fixture.elements.media.classList.contains('is-expanded'), false, 'details image collapses');
-  fixture.elements.practice.click();
-  assert.equal(fixture.elements.regionButton.clickCount, 1, 'practice remains usable with loaded media');
+  assert.equal(mediaSnapshot(fixture).visible, true, 'loaded media stays visible after disclosure toggling');
+  assertCardFor(fixture, selected);
 }
 
 for (const [index, [name, landmark, resolvedTitle]] of NAMED_MEDIA_ROUTES.entries()) {

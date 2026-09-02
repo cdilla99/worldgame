@@ -11,8 +11,6 @@ async function blockExternalRequests(page) {
 
 async function openEgypt(page) {
   await page.goto('/');
-  await page.locator('#btn-landing-explorer-game').click();
-  await page.locator('#btn-open-explorer').click();
   const search = page.locator('#explorer-country-search');
   await search.fill('Egypt');
   await page.getByRole('option', { name: /Egypt/ }).click();
@@ -104,8 +102,6 @@ test('economics is final after a landmark image failure', async ({ page }) => {
 test('Big Mac shows a modeled-estimate prefix and no separate tooltip', async ({ page }) => {
   await blockExternalRequests(page);
   await page.goto('/');
-  await page.locator('#btn-landing-explorer-game').click();
-  await page.locator('#btn-open-explorer').click();
   const search = page.locator('#explorer-country-search');
   await search.fill('Andorra');
   await page.getByRole('option', { name: /Andorra/ }).click();
@@ -118,8 +114,6 @@ test('Big Mac shows a modeled-estimate prefix and no separate tooltip', async ({
 test('Big Mac shows "No McDonald\'s" for a country with no market', async ({ page }) => {
   await blockExternalRequests(page);
   await page.goto('/');
-  await page.locator('#btn-landing-explorer-game').click();
-  await page.locator('#btn-open-explorer').click();
   const search = page.locator('#explorer-country-search');
   await search.fill('Afghanistan');
   await page.getByRole('option', { name: /Afghanistan/ }).click();
@@ -132,8 +126,6 @@ test('Big Mac shows "No McDonald\'s" for a country with no market', async ({ pag
 test('Explorer still hides economics for territories', async ({ page }) => {
   await blockExternalRequests(page);
   await page.goto('/');
-  await page.locator('#btn-landing-explorer-game').click();
-  await page.locator('#btn-open-explorer').click();
   const search = page.locator('#explorer-country-search');
   await search.fill('French Guiana');
   await page.getByRole('option', { name: /French Guiana/ }).click();
@@ -150,9 +142,9 @@ test('preservation: country values and territory exclusion ignore sibling order'
   await expect(page.locator('#explorer-economics-title')).toHaveText('Economic comparison');
   await expect(economics.locator('small')).toHaveText('2026 · USD');
   await expect(economics.locator('dt')).toHaveText([
-    'Annual net salary', 'Big Mac', 'Coke · 330 ml'
+    'Avg annual gross salary', 'Big Mac', 'Coke · 330 ml'
   ]);
-  await expect(page.locator('#explorer-economics-salary')).toHaveText('$1,737');
+  await expect(page.locator('#explorer-economics-salary')).toHaveText('$1,620');
   await expect(page.locator('#explorer-economics-big-mac')).toHaveText('$2.65');
   await expect(page.locator('#explorer-economics-coke')).toHaveText('$0.34');
 
@@ -179,15 +171,13 @@ test('preservation: country values and territory exclusion ignore sibling order'
 test('preservation: selection, disclosure, hunt, keyboard, focus, roles, and names remain stable', async ({ page }) => {
   await blockExternalRequests(page);
   await page.goto('/');
-  await page.locator('#btn-landing-explorer-game').click();
-  await page.locator('#btn-open-explorer').click();
 
   const search = page.getByRole('combobox', { name: 'Find a country or territory' });
   const canvas = page.locator('#explorer-globe-canvas');
   const details = page.locator('#explorer-more-details');
   const summary = details.locator('summary');
 
-  await expect(page.getByRole('group', { name: 'World Explorer mode' })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'World Explorer mode', includeHidden: true })).toBeAttached();
   await expect(page.getByRole('listbox', { name: 'Place search results', includeHidden: true })).toBeAttached();
   await expect(canvas).toHaveAccessibleName(
     /^Interactive country globe\. .+ is centered\. Use arrow keys to rotate, plus or minus to zoom, and Enter to select\.$/
@@ -201,7 +191,10 @@ test('preservation: selection, disclosure, hunt, keyboard, focus, roles, and nam
   await expect(page.locator('#explorer-country-name')).toHaveText('Egypt');
   await expect(canvas).toHaveAccessibleName(centeredNameBeforeSelection);
   await expect(details).toHaveJSProperty('open', true);
-  await expect(page.getByRole('button', { name: 'Practice Africa' })).toBeVisible();
+  // The regional-practice button was removed from the explorer; confirm the
+  // selected country card still renders its details, including the economics
+  // callout for a country selection.
+  await expect(page.locator('#explorer-economics-callout')).toBeVisible();
 
   await summary.focus();
   await summary.press('Enter');
@@ -224,13 +217,14 @@ test('preservation: selection, disclosure, hunt, keyboard, focus, roles, and nam
   await canvas.press('+');
   await expect(canvas).toBeFocused();
 
-  const hunt = page.getByRole('button', { name: /Country Hunt/ });
-  await hunt.click();
-  await expect(hunt).toHaveAttribute('aria-pressed', 'true');
+  // Country Hunt is entered from the always-visible Explore/Hunt mode toggle.
+  const huntMode = page.locator('#btn-explorer-hunt');
+  await huntMode.click();
+  await expect(huntMode).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByRole('timer', { name: 'Country Hunt time remaining' })).toBeVisible();
   await expect(canvas).toBeFocused();
   const endHunt = page.locator('#btn-explorer-hunt-exit');
   await endHunt.click();
-  await expect(hunt).toHaveAttribute('aria-pressed', 'false');
+  await expect(huntMode).toHaveAttribute('aria-pressed', 'false');
   expect(await page.evaluate(() => document.activeElement === document.body)).toBe(true);
 });

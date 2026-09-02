@@ -10,7 +10,7 @@ const requiredFields = [
 ];
 
 assert.strictEqual(europeCountries, namedEuropeCountries, 'default and named exports reference the same chunk');
-assert.equal(europeCountries.length, 44, 'Europe chunk contains all 44 countries');
+assert.equal(europeCountries.length, 45, 'Europe chunk contains all 45 countries');
 assert.ok(Object.isFrozen(europeCountries), 'Europe chunk array is immutable');
 assert.deepEqual(
   europeCountries.map(country => country.id),

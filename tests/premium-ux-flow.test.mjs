@@ -8,27 +8,33 @@ const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(testDirectory, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 
-test('selected landing game drives the hero copy and visual preview', () => {
+test('Explorer-first landing uses canonical content and discloses the shape challenge', () => {
   const html = read('index.html');
   const app = read('app.js');
   const styles = read('ux-polish.css');
+  const explorerStyles = read('globe-explorer.css');
 
   assert.ok(html.includes('id="landing-shape-preview"'));
   assert.ok(html.includes('id="landing-shape-preview-flag"'));
   assert.ok(html.includes('id="landing-shape-preview-country"'));
   assert.ok(html.includes('class="landing-shape-preview-answer"'));
-  assert.ok(html.includes('<span class="landing-title-accent">shape</span>'));
-  assert.ok(html.includes('id="landing-globe-shell" class="landing-globe-shell hidden"'));
+  assert.ok(html.includes('id="explorer-stage-title"'));
+  assert.ok(html.includes('>Explore the world<'));
+  assert.ok(html.includes('id="explorer-globe-canvas"'));
+  assert.ok(html.includes('id="explorer-country-card"'));
+  assert.ok(html.includes('id="explorer-secondary-content"'));
   assert.ok(html.includes('id="setup-title">Choose a mode'));
+  assert.ok(html.includes('id="landing-preview-country"'));
+  assert.ok(html.includes('id="shape-challenge-panel" class="landing-game-panel landing-border-outline-setup hidden"'));
   assert.equal(html.includes('Test your country knowledge'), false);
 
-  const selectionStart = app.indexOf('function selectLandingGame(game)');
-  const selectionEnd = app.indexOf("selectLandingGame('shape')");
-  const selectionFlow = app.slice(selectionStart, selectionEnd);
-  assert.ok(selectionFlow.includes('setLandingPreviewVisibility($landingShapePreview, shapeSelected)'));
-  assert.ok(selectionFlow.includes('setLandingPreviewVisibility($landingGlobeShell, !shapeSelected)'));
-  assert.ok(selectionFlow.includes('updateLandingPresentation(selectedGame)'));
-  assert.ok(selectionFlow.includes('$landing.dataset.selectedGame = selectedGame'));
+  const disclosureStart = app.indexOf('function setShapeChallengeExpanded(expanded)');
+  const disclosureEnd = app.indexOf('syncLandingShapePreviewDisclosure();', disclosureStart);
+  const disclosureFlow = app.slice(disclosureStart, disclosureEnd);
+  assert.ok(disclosureFlow.includes('$shapeChallengePanel.hidden = !expanded'));
+  assert.ok(disclosureFlow.includes("setAttribute('aria-expanded', String(expanded))"));
+  assert.ok(app.includes('function composeExplorerHomepage()'));
+  assert.ok(app.includes('$explorerSecondaryContent.append(element)'));
 
   assert.ok(styles.includes('.landing-shape-preview-stage'));
   assert.ok(styles.includes('.landing-shape-preview-answer'));
@@ -37,9 +43,9 @@ test('selected landing game drives the hero copy and visual preview', () => {
   assert.ok(styles.includes('@keyframes landing-shape-title'));
   assert.ok(app.includes('const LANDING_PREVIEW_COUNTRY_IDS'));
   assert.ok(app.includes('const cards = shuffle(LANDING_PREVIEW_COUNTRY_IDS'));
-  assert.ok(app.includes("accent.className = 'landing-title-accent'"));
-  assert.ok(styles.includes(".landing[data-selected-game='shape'] .landing-tagline"));
-  assert.ok(styles.includes('.landing-game-option[aria-pressed='));
+  assert.ok(styles.includes('.landing-challenge-grid'));
+  assert.ok(explorerStyles.includes('#explorer-stage-title'));
+  assert.ok(explorerStyles.includes('.explorer-secondary-content .landing-challenges'));
 });
 
 test('region reveal uses the answer panel without changing score or timer state', () => {
