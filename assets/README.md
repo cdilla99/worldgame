@@ -20,5 +20,5 @@ bundled locally so the page makes no runtime map-data request.
 - Rebuild it with
   `node scripts/build-globe-country-data.mjs <path-to-ne_50m_admin_0_countries.geojson>`.
 - The generator joins geometry to the canonical EARTHLING records through the
-  ISO alpha-2 code encoded in each flag. All 195 game countries are covered,
+  ISO alpha-2 code encoded in each flag. All 197 game countries are covered,
   including visible markers and larger hit targets for small countries.

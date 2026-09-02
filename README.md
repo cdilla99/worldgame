@@ -27,7 +27,7 @@ The app uses Vite with a vanilla JavaScript/TypeScript runtime. Existing gamepla
 
 ## Data scope
 
-- Canonical dataset: 195 countries.
+- Canonical dataset: 197 countries.
 - Explorer also includes territory records for map browsing.
 - Globe geometry is bundled locally in the repository and loaded lazily when Explorer opens.
 

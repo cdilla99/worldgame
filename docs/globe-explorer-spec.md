@@ -51,7 +51,7 @@ This turns the product from a single quiz loop into a learning system with both 
 
 ### Product risk
 
-The explorer must not weaken the primary game proposition. It should be presented as a clear secondary pathâ€”â€œExplore the globeâ€â€”while â€œStart sprintâ€ remains the dominant landing-page action.
+World Explorer is the primary product proposition. The landing page should lead with low-pressure discovery, while Country Hunt and Border Outline appear later as optional challenges. Border Outline should be described as advanced so beginners do not mistake it for the expected starting experience.
 
 ## 3. Goals
 
@@ -81,9 +81,9 @@ Spoken narration, pronunciation, collections, achievements, and classroom modes 
 
 ### Entry point
 
-Add a secondary landing-page action labeled **Explore the globe**. It should be visually subordinate to **Start sprint** but more prominent than settings or statistics.
+Lead the landing page with an Explorer showcase and a primary action labeled **Explore the world**. Use a lightweight globe preview and an example country card to demonstrate the learning loop without loading country-level geometry until the dedicated Explorer opens. Place Country Hunt and Border Outline in a quieter **Now find them without the labels** section below the Explorer feature, styled as a compact next-step strip rather than a feature-card grid.
 
-Selecting the globe on the landing page should continue to choose a game region. It should not silently change into a country explorer.
+Selecting the landing-page globe or its primary action should open the dedicated country Explorer. Region and difficulty selection remain part of the progressively disclosed Border Outline setup.
 
 ### Explorer screen
 

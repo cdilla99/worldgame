@@ -8,7 +8,7 @@
 ## Architecture
 - Vite builds the app, but most runtime files remain ordered classic scripts.
 - Preserve the script order in `index.html` unless migrating all affected globals.
-- `data/countries.js` is the canonical 195-country model.
+- `data/countries.js` is the canonical 197-country model.
 - `data/country-economics-2026.min.json` is the sole economics data source. Never paste, regenerate, normalize, or duplicate it.
 - Use `data/country-economics.ts` for economics access and preserve `null` values.
 - Explorer-only territories must not display country economics.
