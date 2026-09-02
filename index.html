@@ -4,51 +4,193 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#07111f" />
-  <title>EARTHLING | World Shape Game</title>
+  <title>EARTHLING | World Geography Game</title>
+  <meta name="description" content="EARTHLING is a browser geography game: explore an interactive globe, learn 197 countries, and test yourself with shape and country-hunt challenges." />
+  <meta name="robots" content="index, follow" />
+  <link rel="icon" href="assets/geowars-logo.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="assets/geowars-logo.svg" />
+  <link rel="manifest" href="assets/site.webmanifest" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="EARTHLING" />
+  <meta property="og:title" content="EARTHLING | World Geography Game" />
+  <meta property="og:description" content="Explore an interactive globe, learn 197 countries, and test yourself with shape and country-hunt challenges." />
+  <meta property="og:image" content="assets/geowars-logo.svg" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="EARTHLING | World Geography Game" />
+  <meta name="twitter:description" content="Explore an interactive globe, learn 197 countries, and test yourself with shape and country-hunt challenges." />
+  <meta name="twitter:image" content="assets/geowars-logo.svg" />
+
   <link rel="stylesheet" href="styles.css?v=20260802-game-choice2" />
-  <link rel="stylesheet" href="ux-polish.css?v=20260802-stats-disclosure1" />
-  <link rel="stylesheet" href="globe-explorer.css?v=20260802-landmark-media3" />
+  <link rel="stylesheet" href="ux-polish.css?v=20260821-globe-focus1" />
+  <link rel="stylesheet" href="globe-explorer.css?v=20260830-globe-fix1" />
 </head>
-<body>
+<body class="is-explorer-active">
   <div class="app">
 
-    <!-- Landing / Game Select -->
+    <!-- Explorer-first landing -->
     <section
       id="landing"
-      class="screen landing"
+      class="screen landing hidden"
       aria-labelledby="landing-title"
-      data-explorer-eyebrow="Interactive world atlas"
-      data-explorer-title="Explore the world."
-      data-explorer-objective="Discover 195 countries. Then race to find them."
     >
       <header class="landing-utility-header landing-top">
         <button id="btn-landing-home" class="brand-lockup" type="button" aria-label="Return to the EARTHLING home page">
           <img class="brand-logo" src="assets/geowars-logo.svg" alt="EARTHLING">
-          <p class="landing-utility-copy">Country shape game</p>
         </button>
         <section id="player-context" class="player-context landing-player-context" aria-labelledby="player-context-title">
           <div class="player-context-copy">
-            <p id="player-context-title" class="player-context-eyebrow">Playing as</p>
+            <p id="player-context-title" class="player-context-eyebrow">Exploring as</p>
             <p id="player-context-name" class="player-context-name">Guest</p>
-            <p id="player-context-detail" class="player-context-detail">Guest stats are shared on this browser/device.</p>
+            <p id="player-context-detail" class="player-context-detail">Progress stays on this device.</p>
           </div>
-          <button id="btn-choose-player" class="player-context-action" type="button">Switch</button>
+          <button id="btn-choose-player" class="player-context-action" type="button">Choose player</button>
         </section>
       </header>
 
-      <section class="landing-proposition" aria-labelledby="landing-title">
-        <div class="landing-copy">
-          <p id="landing-eyebrow" class="landing-eyebrow">Country shape challenge</p>
-          <h1 id="landing-title" class="landing-tagline">See the <span class="landing-title-accent">shape</span>. Name the country.</h1>
-          <p id="landing-objective" class="landing-objective">Race through country outlines in a 60-second sprint, or learn at your own pace.</p>
-          <ul class="landing-proof" aria-label="Game highlights">
-            <li><strong id="landing-proof-one-value">195</strong><span id="landing-proof-one-label">countries</span></li>
-            <li><strong id="landing-proof-two-value">60s</strong><span id="landing-proof-two-label">sprint</span></li>
-            <li><strong id="landing-proof-three-value">Free</strong><span id="landing-proof-three-label">practice</span></li>
-          </ul>
+      <section class="landing-hero" aria-labelledby="landing-title">
+        <h1 id="landing-title" class="landing-tagline">Explore the world.</h1>
+        <p id="landing-objective" class="landing-objective">Drag the globe and select a country to discover something new.</p>
+        <p id="landing-eyebrow" class="landing-eyebrow" hidden>Interactive world atlas</p>
+        <ul class="landing-proof" aria-label="Explorer highlights" hidden>
+          <li><strong id="landing-proof-one-value">197</strong><span id="landing-proof-one-label">countries</span></li>
+          <li><strong id="landing-proof-two-value">Free</strong><span id="landing-proof-two-label">to explore</span></li>
+          <li><strong id="landing-proof-three-value">Your pace</strong><span id="landing-proof-three-label">no pressure</span></li>
+        </ul>
+      </section>
+
+      <section id="world-explorer-panel" class="landing-proposition landing-explorer-showcase" aria-labelledby="landing-explorer-title">
+        <div class="landing-explorer-globe-card">
+          <h2 id="landing-explorer-title" class="sr-only">World Explorer globe</h2>
+          <div id="landing-globe-shell" class="landing-globe-shell">
+            <div id="landing-globe" class="landing-globe">
+              <canvas id="landing-globe-canvas" width="360" height="360" tabindex="-1" role="img" aria-label="Animated preview of the World Explorer globe."></canvas>
+              <img class="landing-globe-art" src="assets/landing-globe.svg" alt="" aria-hidden="true">
+              <span class="landing-globe-atmosphere" aria-hidden="true"></span>
+            </div>
+            <p id="landing-globe-status" class="landing-globe-status" role="status" aria-live="polite">Drag to explore. Select a country to learn more.</p>
+          </div>
+          <div class="landing-globe-legacy-controls" hidden aria-hidden="true">
+            <button id="btn-globe-region-mode" type="button" aria-pressed="false" tabindex="-1"><span id="globe-region-toggle-label">Regions</span></button>
+            <button id="btn-globe-worldwide" type="button" aria-pressed="true" tabindex="-1">Worldwide</button>
+            <div id="globe-selection-card"><strong id="globe-selection-label">Worldwide</strong></div>
+          </div>
         </div>
-        <details id="landing-shape-preview" class="landing-shape-preview" aria-label="Shape Challenge preview. Identify a country from its outline.">
-          <summary class="landing-shape-preview-toggle">Demo</summary>
+
+        <aside class="landing-country-preview" aria-labelledby="landing-country-preview-title">
+          <h2 id="landing-country-preview-title" class="sr-only">Selected country details</h2>
+          <div class="landing-country-example" aria-label="Selected country details">
+            <div class="landing-country-example-identity">
+              <span id="landing-preview-flag" class="landing-country-example-flag" aria-hidden="true">🌍</span>
+              <div><span id="landing-preview-region">Select a country</span><h3 id="landing-preview-country">Your discovery will appear here</h3></div>
+            </div>
+            <dl class="landing-country-example-facts">
+              <div><dt>Capital</dt><dd id="landing-preview-capital">—</dd></div>
+              <div><dt>Languages</dt><dd id="landing-preview-languages">—</dd></div>
+              <div><dt>Landmark</dt><dd id="landing-preview-landmark">—</dd></div>
+            </dl>
+            <p id="landing-preview-fact" class="landing-country-example-fact">Select a country on the globe to see its details.</p>
+          </div>
+          <button id="btn-open-explorer" class="landing-explore-action landing-explore-primary" type="button" hidden aria-hidden="true" tabindex="-1">Open Explorer</button>
+        </aside>
+      </section>
+
+      <section class="landing-challenges" aria-labelledby="landing-challenges-title">
+        <div class="landing-challenges-heading">
+          <h2 id="landing-challenges-title">Now find them without the labels</h2>
+          <p>Two ways to check what actually stuck.</p>
+        </div>
+        <div class="landing-challenge-grid">
+          <button id="btn-open-explorer-hunt" class="landing-challenge-card landing-challenge-card-primary" type="button">
+            <span><strong>Country Hunt</strong><small>We name a country, you find it on the globe. 60 seconds.</small></span>
+            <span class="landing-challenge-action">Start</span>
+          </button>
+          <button id="btn-landing-shape-game" class="landing-challenge-card" type="button" aria-expanded="false" aria-controls="shape-challenge-panel">
+            <span><strong>Border Outline <em>Advanced</em></strong><small>Just the outline, no coastline context. Name it.</small></span>
+            <span class="landing-challenge-action">Play</span>
+          </button>
+        </div>
+
+        <section id="shape-challenge-panel" class="landing-game-panel landing-border-outline-setup hidden" aria-labelledby="btn-landing-shape-game" hidden>
+          <div class="landing-mode-heading">
+            <h3 id="setup-title">Choose a mode</h3>
+            <p>Race the clock or learn without a timer.</p>
+          </div>
+
+          <div class="mode-select" role="group" aria-labelledby="mode-title">
+            <h3 id="mode-title" class="setup-subheading sr-only">Game modes</h3>
+            <button id="btn-sprint" class="mode-card mode-secondary active" type="button" aria-pressed="true" aria-describedby="sprint-description">
+              <svg class="mode-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <use href="assets/geowars-icons.svg#icon-mode-sprint"></use>
+              </svg>
+              <span class="mode-title">Sprint</span>
+              <span id="sprint-description" class="mode-desc">60 seconds. Name as many as you can.</span>
+            </button>
+            <button id="btn-showoff" class="mode-card mode-secondary" type="button" aria-pressed="false" aria-describedby="practice-description">
+              <svg class="mode-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <use href="assets/geowars-icons.svg#icon-mode-practice"></use>
+              </svg>
+              <span class="mode-title">Practice</span>
+              <span id="practice-description" class="mode-desc">No timer. Answer, reveal, repeat.</span>
+            </button>
+          </div>
+
+          <div class="game-setup-wrap">
+            <details id="challenge-settings" class="game-setup">
+              <summary class="game-setup-summary">
+                <span class="game-setup-copy">
+                  <span class="game-setup-title">Select difficulty and region</span>
+                  <span id="filter-summary" class="filter-summary">Hard · Worldwide</span>
+                </span>
+                <span class="game-setup-chevron" aria-hidden="true"></span>
+              </summary>
+              <div class="game-setup-content">
+                <fieldset class="setup-group">
+                  <legend>Difficulty ladder</legend>
+                  <div class="option-grid difficulty-grid">
+                    <button type="button" class="diff-btn" data-level="cadet" aria-pressed="false">Easy <em>Cadet</em></button>
+                    <button type="button" class="diff-btn" data-level="explorer" aria-pressed="false">Medium <em>Explorer</em></button>
+                    <button type="button" class="diff-btn active" data-level="earthling" aria-pressed="true">Hard <em>Earthling</em></button>
+                    <button type="button" class="diff-btn" data-level="expert" aria-pressed="false">Expert <em>Verification</em></button>
+                  </div>
+                </fieldset>
+                <fieldset class="setup-group">
+                  <legend>Region</legend>
+                  <div id="continent-row" class="option-grid region-grid">
+                    <button type="button" class="diff-btn active" data-continent="all" aria-pressed="true">Worldwide</button>
+                    <button type="button" class="diff-btn" data-continent="Africa" aria-pressed="false">Africa</button>
+                    <button type="button" class="diff-btn" data-continent="Asia" aria-pressed="false">Asia</button>
+                    <button type="button" class="diff-btn" data-continent="Europe" aria-pressed="false">Europe</button>
+                    <button type="button" class="diff-btn" data-continent="North America" aria-pressed="false">Americas</button>
+                    <button type="button" class="diff-btn" data-continent="Oceania" aria-pressed="false">Oceania</button>
+                  </div>
+                </fieldset>
+              </div>
+            </details>
+          </div>
+
+          <div class="landing-selection-status" role="status" aria-live="polite">
+            <span class="landing-selection-check" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" focusable="false"><path d="m6.5 12 3.5 3.5 7.5-8"></path></svg>
+            </span>
+            <span class="landing-selection-copy">
+              <span>Ready</span>
+              <p id="mode-summary">Sprint · 60 seconds · Hard · Worldwide</p>
+            </span>
+          </div>
+          <button id="btn-start-game" class="cta landing-start-action" type="button">
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <use href="assets/geowars-icons.svg#icon-next"></use>
+            </svg>
+            <span id="start-game-label">Start sprint</span>
+          </button>
+          <p class="landing-start-note">No account required. Your best scores stay on this device.</p>
+
+        <details id="landing-shape-preview" class="landing-shape-preview" aria-label="Border Outline preview. Identify a country from its outline.">
+          <summary class="landing-shape-preview-toggle">See a sample round</summary>
           <div class="landing-shape-preview-stage">
             <span class="landing-shape-preview-kicker landing-shape-preview-kicker-desktop">Sample round</span>
             <span class="landing-shape-preview-kicker landing-shape-preview-kicker-mobile">How it works</span>
@@ -66,179 +208,6 @@
             </div>
           </div>
         </details>
-        <div id="landing-globe-shell" class="landing-globe-shell hidden" aria-hidden="true">
-          <div id="landing-globe" class="landing-globe">
-            <canvas
-              id="landing-globe-canvas"
-              width="360"
-              height="360"
-              tabindex="0"
-              role="button"
-              aria-describedby="landing-globe-status"
-              aria-label="Interactive world globe. Drag to rotate, use arrow keys to explore, and press Enter to select the centered continent."
-            ></canvas>
-            <img class="landing-globe-art" src="assets/landing-globe.svg" alt="A blue and green globe">
-            <span class="landing-globe-atmosphere" aria-hidden="true"></span>
-          </div>
-          <div class="landing-globe-meta">
-            <span class="landing-globe-kicker">Choose the map</span>
-          </div>
-          <div class="globe-scope-switch" role="group" aria-label="Challenge scope">
-            <button id="btn-globe-region-mode" class="globe-scope-option" type="button" aria-pressed="false">
-              <span class="globe-scope-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" focusable="false"><path d="M4 7.5h16M7.5 4v16M4 16.5h16M16.5 4v16"></path></svg>
-              </span>
-              <span class="globe-scope-copy">
-                <strong id="globe-region-toggle-label">Regions</strong>
-                <small>On globe</small>
-              </span>
-            </button>
-            <button id="btn-globe-worldwide" class="globe-scope-option globe-scope-worldwide is-active" type="button" aria-pressed="true">
-              <span class="globe-scope-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="8.5"></circle><path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.3 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.8 8.6 12s1.2 6.1 3.4 8.5"></path></svg>
-              </span>
-              <span class="globe-scope-copy">
-                <strong>Worldwide</strong>
-                <small>195 countries</small>
-              </span>
-           </button>
-          </div>
-          <div id="globe-selection-card" class="globe-selection-card" aria-live="polite">
-            <span class="globe-selection-check" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" focusable="false"><path d="m7 12 3.2 3.2L17.5 8"></path></svg>
-            </span>
-            <span class="globe-selection-copy">
-              <span>Game region</span>
-              <strong id="globe-selection-label">Worldwide</strong>
-            </span>
-            <span class="globe-selection-applied">Selected</span>
-          </div>
-          <p id="landing-globe-status" class="landing-globe-status" role="status" aria-live="polite">Drag to rotate. Select a continent.</p>
-
-        </div>
-      </section>
-
-      <section class="landing-setup-panel landing-games-panel" aria-labelledby="landing-games-title">
-        <div class="landing-games-heading">
-          <p class="landing-setup-kicker">Games</p>
-          <h2 id="landing-games-title">Choose a game</h2>
-          <p>Two ways to learn the world.</p>
-        </div>
-
-        <div class="landing-game-switch" role="group" aria-labelledby="landing-games-title">
-          <button id="btn-landing-shape-game" class="landing-game-option is-active" type="button" aria-pressed="true" aria-controls="shape-challenge-panel">
-            <svg class="landing-game-option-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <use href="assets/geowars-icons.svg#icon-mode-practice"></use>
-            </svg>
-            <span>
-              <strong>Shape Challenge</strong>
-              <small>Name countries from their shapes.</small>
-            </span>
-          </button>
-          <button id="btn-landing-explorer-game" class="landing-game-option" type="button" aria-pressed="false" aria-controls="world-explorer-panel">
-            <svg class="landing-game-option-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <circle cx="12" cy="12" r="8.5"></circle>
-              <path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.3 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.8 8.6 12s1.2 6.1 3.4 8.5"></path>
-            </svg>
-            <span>
-              <strong>World Explorer</strong>
-              <small>Explore freely or race in Country Hunt.</small>
-            </span>
-          </button>
-        </div>
-
-        <section id="shape-challenge-panel" class="landing-game-panel" aria-labelledby="btn-landing-shape-game">
-          <div class="landing-mode-heading">
-            <h3 id="setup-title">Choose a mode</h3>
-            <p>Race the clock or learn without a timer.</p>
-          </div>
-
-        <div class="mode-select" role="group" aria-labelledby="mode-title">
-          <h3 id="mode-title" class="setup-subheading sr-only">Game modes</h3>
-          <button id="btn-sprint" class="mode-card mode-secondary active" type="button" aria-pressed="true" aria-describedby="sprint-description">
-            <svg class="mode-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <use href="assets/geowars-icons.svg#icon-mode-sprint"></use>
-            </svg>
-            <span class="mode-title">Sprint</span>
-            <span id="sprint-description" class="mode-desc">60 seconds. Name as many as you can.</span>
-          </button>
-          <button id="btn-showoff" class="mode-card mode-secondary" type="button" aria-pressed="false" aria-describedby="practice-description">
-            <svg class="mode-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <use href="assets/geowars-icons.svg#icon-mode-practice"></use>
-            </svg>
-            <span class="mode-title">Practice</span>
-            <span id="practice-description" class="mode-desc">No timer. Answer, reveal, repeat.</span>
-          </button>
-        </div>
-
-        <div class="game-setup-wrap">
-          <details id="challenge-settings" class="game-setup">
-            <summary class="game-setup-summary">
-              <span class="game-setup-copy">
-                <span class="game-setup-title">Choose a ladder</span>
-                <span id="filter-summary" class="filter-summary">Earthling · Worldwide</span>
-              </span>
-              <span class="game-setup-chevron" aria-hidden="true"></span>
-            </summary>
-            <div class="game-setup-content">
-              <fieldset class="setup-group">
-                <legend>Difficulty ladder</legend>
-                <div class="option-grid difficulty-grid">
-                  <button type="button" class="diff-btn" data-level="cadet" aria-pressed="false">Cadet</button>
-                  <button type="button" class="diff-btn" data-level="explorer" aria-pressed="false">Explorer</button>
-                  <button type="button" class="diff-btn active" data-level="earthling" aria-pressed="true">Earthling</button>
-                  <button type="button" class="diff-btn" data-level="expert" aria-pressed="false">Expert Verification</button>
-                </div>
-              </fieldset>
-              <fieldset class="setup-group">
-                <legend>Region</legend>
-                <div id="continent-row" class="option-grid region-grid">
-                  <button type="button" class="diff-btn active" data-continent="all" aria-pressed="true">Worldwide</button>
-                  <button type="button" class="diff-btn" data-continent="Africa" aria-pressed="false">Africa</button>
-                  <button type="button" class="diff-btn" data-continent="Asia" aria-pressed="false">Asia</button>
-                  <button type="button" class="diff-btn" data-continent="Europe" aria-pressed="false">Europe</button>
-                  <button type="button" class="diff-btn" data-continent="North America" aria-pressed="false">Americas</button>
-                  <button type="button" class="diff-btn" data-continent="Oceania" aria-pressed="false">Oceania</button>
-                </div>
-              </fieldset>
-            </div>
-          </details>
-        </div>
-
-        <div class="landing-selection-status" role="status" aria-live="polite">
-          <span class="landing-selection-check" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" focusable="false"><path d="m6.5 12 3.5 3.5 7.5-8"></path></svg>
-          </span>
-          <span class="landing-selection-copy">
-            <span>Ready</span>
-            <p id="mode-summary">Sprint · 60 seconds · Earthling · Worldwide</p>
-          </span>
-        </div>
-        <button id="btn-start-game" class="cta landing-start-action" type="button">
-          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <use href="assets/geowars-icons.svg#icon-next"></use>
-          </svg>
-          <span id="start-game-label">Start sprint</span>
-        </button>
-        <p class="landing-start-note">No account required. Your best scores stay on this device.</p>
-        </section>
-
-        <section id="world-explorer-panel" class="landing-game-panel landing-explore-feature hidden" aria-labelledby="landing-explorer-title">
-          <span class="landing-explore-visual" aria-hidden="true">
-            <svg viewBox="0 0 24 24" focusable="false">
-              <circle cx="12" cy="12" r="8.5"></circle>
-              <path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.3 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.8 8.6 12s1.2 6.1 3.4 8.5"></path>
-            </svg>
-          </span>
-          <span class="landing-explore-copy">
-            <span>World Explorer</span>
-            <strong id="landing-explorer-title">Explore or race</strong>
-            <small>Discover every country at your pace, or find as many as you can in 60 seconds.</small>
-          </span>
-          <span class="landing-explore-actions">
-            <button id="btn-open-explorer" class="landing-explore-action landing-explore-primary" type="button">Explore freely <span aria-hidden="true">→</span></button>
-            <button id="btn-open-explorer-hunt" class="landing-explore-action landing-explore-hunt-action" type="button"><span>Country Hunt</span><small>60-second challenge</small></button>
-          </span>
         </section>
       </section>
 
@@ -262,6 +231,7 @@
           </div>
         </details>
       </aside>
+
       <dialog id="stats-reset-dialog" class="stats-reset-dialog" aria-labelledby="stats-reset-title" aria-describedby="stats-reset-description">
         <div class="stats-reset-dialog-card">
           <p class="landing-setup-kicker">Device stats</p>
@@ -277,16 +247,12 @@
     </section>
 
     <!-- Globe Explorer -->
-    <section id="explorer" class="screen hidden explorer-screen" aria-labelledby="explorer-title">
+    <section id="explorer" class="screen explorer-screen" aria-labelledby="explorer-stage-title">
       <header class="explorer-utility">
         <div class="explorer-brand">
-          <button class="explorer-home-logo" type="button" data-explorer-home aria-label="Return to the EARTHLING home page">
-            <img src="assets/geowars-logo.svg" alt="" aria-hidden="true">
+          <button id="btn-explorer-home" class="explorer-home-logo" type="button" data-explorer-home aria-label="Return to the EARTHLING home page">
+            <img src="assets/geowars-logo.svg" alt="EARTHLING">
           </button>
-          <div class="explorer-heading-copy">
-            <p class="explorer-eyebrow">Explore</p>
-            <h1 id="explorer-title" tabindex="-1">World explorer</h1>
-          </div>
         </div>
         <div class="explorer-utility-actions">
           <button id="btn-explorer-music" class="explorer-music-toggle" type="button" aria-label="Start music" aria-pressed="false">
@@ -297,31 +263,26 @@
             <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="8" y="4" width="8" height="16" rx="2"></rect><path d="M5.5 8.5a5 5 0 0 0 0 7M18.5 8.5a5 5 0 0 1 0 7M11 17h2"></path></svg>
             <span>Haptics off</span>
           </button>
-          <button class="explorer-home-action" type="button" data-explorer-home aria-label="Back to home">
-            <svg class="icon explorer-home-action-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-geowars-mark"></use></svg>
-            <span>Back to home</span>
-          </button>
         </div>
       </header>
 
       <div class="explorer-layout">
         <section class="explorer-stage" aria-labelledby="explorer-stage-title">
-          <header class="explorer-stage-heading">
-            <div>
-              <p class="explorer-eyebrow">195 countries</p>
-              <h2 id="explorer-stage-title">Choose a country</h2>
-            </div>
-            <p>Drag, zoom, or search the world.</p>
-          </header>
-
           <div class="explorer-mode-switch" role="group" aria-label="World Explorer mode">
             <button id="btn-explorer-free" class="is-active" type="button" aria-pressed="true">
-              <span>Explore freely</span><small>Learn at your pace</small>
+              <span>Explore</span><small>Learn at your pace</small>
             </button>
             <button id="btn-explorer-hunt" type="button" aria-pressed="false">
               <span>Country Hunt</span><small>60-second challenge</small>
             </button>
           </div>
+
+          <header class="explorer-stage-heading">
+            <div>
+              <p class="explorer-eyebrow">197 countries</p>
+              <h2 id="explorer-stage-title" tabindex="-1">Explore the world</h2>
+            </div>
+          </header>
 
           <section id="explorer-hunt-hud" class="explorer-hunt-hud hidden" aria-labelledby="explorer-hunt-target">
             <div class="explorer-hunt-timer" role="timer" aria-label="Country Hunt time remaining">
@@ -339,10 +300,9 @@
           </section>
 
           <div class="explorer-search">
-            <label for="explorer-country-search">Find a country or territory</label>
             <div class="explorer-search-input-wrap">
               <svg class="explorer-search-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 4 4"></path></svg>
-              <input id="explorer-country-search" class="explorer-country-search" type="search" autocomplete="off" placeholder="Search countries and territories" role="combobox" aria-autocomplete="list" aria-controls="explorer-search-results" aria-expanded="false">
+              <input id="explorer-country-search" class="explorer-country-search" type="search" autocomplete="off" aria-label="Find a country or territory" placeholder="Search countries and territories" role="combobox" aria-autocomplete="list" aria-controls="explorer-search-results" aria-expanded="false">
             </div>
             <div id="explorer-search-results" class="explorer-search-results hidden" role="listbox" aria-label="Place search results"></div>
           </div>
@@ -364,11 +324,13 @@
                 <strong>Correct!</strong>
                 <span id="explorer-hunt-celebration-country"></span>
               </div>
-              <div class="explorer-globe-controls" aria-label="Globe controls">
-                <button id="btn-explorer-zoom-out" type="button" aria-label="Zoom out">−</button>
-                <button id="btn-explorer-reset" type="button">Reset</button>
-                <button id="btn-explorer-zoom-in" type="button" aria-label="Zoom in">+</button>
-              </div>
+            </div>
+            <!-- Kept outside the globe frame: the frame is a circle with
+                 overflow:hidden, so anything in its corners is clipped away. -->
+            <div class="explorer-globe-controls" aria-label="Globe controls">
+              <button id="btn-explorer-zoom-out" type="button" aria-label="Zoom out">−</button>
+              <button id="btn-explorer-reset" type="button">Reset</button>
+              <button id="btn-explorer-zoom-in" type="button" aria-label="Zoom in">+</button>
             </div>
           </div>
 
@@ -393,7 +355,7 @@
         </section>
 
         <aside class="explorer-info-panel" aria-label="Place information">
-          <div id="explorer-empty-card" class="explorer-empty-card">
+          <div id="explorer-empty-card" class="explorer-empty-card hidden">
             <span class="explorer-empty-mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="8.5"></circle><path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.3 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.8 8.6 12s1.2 6.1 3.4 8.5"></path></svg></span>
             <h2>Select a country or territory</h2>
             <p>Its flag, capital, status, and essential facts will appear here.</p>
@@ -433,6 +395,7 @@
             <p class="explorer-country-kicker">Country Hunt complete</p>
             <h2 id="explorer-hunt-summary-title">Time!</h2>
             <p>You found <strong id="explorer-hunt-final-score">0</strong> countries.</p>
+            <p id="explorer-hunt-avg-guesses" class="explorer-hunt-avg-guesses hidden"></p>
             <div class="explorer-hunt-summary-actions">
               <button id="btn-explorer-hunt-again" class="explorer-practice-action" type="button">Play again</button>
               <button id="btn-explorer-hunt-free" class="explorer-home-action" type="button">Explore freely</button>
@@ -448,13 +411,13 @@
                 <p id="explorer-country-status" class="explorer-country-status hidden"></p>
               </div>
             </header>
-            <p id="explorer-country-fact" class="explorer-fact"></p>
             <dl class="explorer-country-facts">
               <div><dt>Capital</dt><dd id="explorer-country-capital"></dd></div>
               <div><dt>Population</dt><dd id="explorer-country-population"></dd></div>
               <div><dt>Languages</dt><dd id="explorer-country-languages"></dd></div>
               <div><dt>Currency</dt><dd id="explorer-country-currency"></dd></div>
             </dl>
+            <p id="explorer-country-fact" class="explorer-fact"></p>
             <details id="explorer-more-details" class="explorer-more-details">
               <summary>More country details</summary>
               <dl class="explorer-more-facts">
@@ -474,16 +437,16 @@
                   <small>2026 · USD</small>
                 </header>
                 <dl class="explorer-economics-values">
-                  <div><dt>Annual net salary</dt><dd id="explorer-economics-salary">Data unavailable</dd></div>
+                  <div><dt>Avg annual gross salary</dt><dd id="explorer-economics-salary">Data unavailable</dd></div>
                   <div><dt>Big Mac</dt><dd id="explorer-economics-big-mac">Data unavailable</dd></div>
                   <div><dt>Coke · 330 ml</dt><dd id="explorer-economics-coke">Data unavailable</dd></div>
                 </dl>
               </section>
             </details>
-            <button id="btn-explorer-practice" class="explorer-practice-action" type="button">Practice this region</button>
           </article>
         </aside>
       </div>
+      <div id="explorer-secondary-content" class="explorer-secondary-content"></div>
       <p id="explorer-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
     </section>
     <!-- Game Screen -->
@@ -674,7 +637,7 @@
         <section class="results-summary" aria-labelledby="results-summary-title">
           <h3 id="results-summary-title">Run results</h3>
           <div class="results-stats">
-            <div class="result-stat"><strong id="res-level">Earthling</strong><span>Level</span></div>
+            <div class="result-stat"><strong id="res-level">Hard</strong><span>Level</span></div>
             <div class="result-stat"><strong id="res-score">0</strong><span>Score</span></div>
             <div class="result-stat"><strong id="res-streak">0</strong><span>Best streak</span></div>
             <div class="result-stat"><strong id="res-correct">0/0</strong><span>Correct</span></div>
@@ -724,7 +687,7 @@
     </div>
   </div>
 
-  <script src="data/countries.js?v=20260802-moldova-encoding1"></script>
+  <script src="data/countries.js?v=20260831-cy-ps197"></script>
   <script src="data/territories.js?v=20260730-territories3"></script>
   <script src="difficulty-ladder.js?v=20260803-ladder1"></script>
   <script src="ladder-progress.js?v=20260803-ladder1"></script>
@@ -736,10 +699,10 @@
   <script src="celebration-text.js"></script>
   <script src="background-music.js?v=20260730-explorer2"></script>
   <script src="asset-fallbacks.js"></script>
-  <script src="app.js?v=20260802-premium-flow1"></script>
+  <script src="app.js?v=20260821-homepage1"></script>
   <script src="assets/globe-data.js?v=20260729-natural-earth"></script>
   <script src="interactive-globe.js?v=20260729-editorial-layout3"></script>
   <script src="geography.js?v=20260730-guidance1"></script>
-  <script src="globe-explorer.js?v=20260802-landmark-media7"></script>
+  <script src="globe-explorer.js?v=20260831-cy-ps197"></script>
 </body>
 </html>

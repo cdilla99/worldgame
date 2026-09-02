@@ -1,7 +1,7 @@
 /* ============================================================
    GLOBE EXPLORER
-   Dedicated country discovery surface. The landing globe remains
-   a region selector; this screen prioritizes precision and learning.
+   Dedicated country discovery surface. The landing globe is an
+   animated preview; the full Explorer prioritizes precision and learning.
    ============================================================ */
 
 .landing-explore-feature {
@@ -295,10 +295,42 @@
 .explorer-hunt-prompt strong { overflow: hidden; color: #fff; font-size: clamp(1.15rem, 2.1vw, 1.55rem); letter-spacing: -0.02em; line-height: 1.08; text-overflow: ellipsis; white-space: nowrap; }
 .explorer-hunt-target-flag { display: grid; width: 42px; height: 30px; place-items: center; overflow: hidden; border: 1px solid rgba(169, 198, 224, 0.5); border-radius: 6px; background: rgba(4, 14, 27, 0.7); font-size: 1.55rem; }
 .explorer-hunt-target-flag img { width: 100%; height: 100%; object-fit: cover; }
+.explorer-hunt-target-flag img.is-nonrect-flag { object-fit: contain; }
 .explorer-hunt-score { display: grid; justify-items: center; gap: 1px; min-width: 46px; }
 .explorer-hunt-score strong { color: #fff; font-size: 1.25rem; font-variant-numeric: tabular-nums; }
 #btn-explorer-hunt-exit { min-height: 40px; padding: 8px 12px; border: 1px solid rgba(125, 156, 189, 0.48); border-radius: 10px; background: rgba(5, 18, 32, 0.62); color: #c6d7e7; cursor: pointer; font: inherit; font-size: 0.65rem; font-weight: 850; }
 .explorer-screen.is-hunt-active .explorer-search { display: none; }
+.explorer-screen:not(.is-hunt-active) .explorer-search { display: block; }
+/* The Explore <-> Country Hunt toggle is the primary mode control and stays
+   visible in both modes so players always know how to switch. */
+.explorer-heading-hunt-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 9px 14px;
+  border: 1px solid rgba(85, 228, 168, 0.52);
+  border-radius: 11px;
+  background: rgba(43, 178, 127, 0.1);
+  color: #cffff0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.73rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+.explorer-heading-hunt-btn small {
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(85, 228, 168, 0.18);
+  color: #7bf3bf;
+  font-size: 0.58rem;
+  font-weight: 900;
+}
+.explorer-heading-hunt-btn:hover {
+  border-color: #a4ffd5;
+  background: rgba(43, 178, 127, 0.18);
+}
 .explorer-screen.is-hunt-active .explorer-globe-canvas { cursor: crosshair; }
 .explorer-screen.is-hunt-active .explorer-info-panel { border-color: rgba(99, 232, 176, 0.56); }
 .explorer-hunt-compare {
@@ -325,6 +357,7 @@
 .explorer-hunt-panel-flag { display: grid; width: 78px; height: 54px; place-items: center; overflow: hidden; border: 1px solid rgba(157, 185, 212, 0.46); border-radius: 10px; background: rgba(3, 13, 25, 0.7); font-size: 2.45rem; }
 .explorer-hunt-panel-flag:empty::before { content: '?'; color: #7890a8; font-size: 1.4rem; font-weight: 900; }
 .explorer-hunt-panel-flag img { width: 100%; height: 100%; object-fit: cover; }
+.explorer-hunt-panel-flag img.is-nonrect-flag { object-fit: contain; }
 .explorer-hunt-country-row > div { min-width: 0; }
 .explorer-hunt-country-row > div > span { color: #91a8bf; font-size: 0.62rem; font-weight: 850; letter-spacing: 0.09em; text-transform: uppercase; }
 .explorer-hunt-country-row h2 { overflow-wrap: anywhere; color: #f7fbff; font-size: clamp(1.55rem, 3vw, 2.2rem); letter-spacing: -0.035em; line-height: 1.04; }
@@ -397,6 +430,8 @@
 .explorer-hunt-summary h2 { color: #f7fbff; font-size: clamp(2.1rem, 4vw, 3.2rem); letter-spacing: -0.045em; line-height: 1; }
 .explorer-hunt-summary > p:not(.explorer-country-kicker) { color: #a9bfd3; font-size: 1rem; }
 .explorer-hunt-summary > p strong { color: #65ecb2; font-size: 1.35em; }
+.explorer-hunt-avg-guesses { color: #98aec7; font-size: 0.86rem; font-weight: 700; }
+.explorer-hunt-avg-guesses.hidden { display: none; }
 .explorer-hunt-summary-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-top: 12px; }
 .explorer-hunt-summary-actions .explorer-practice-action { margin-top: 0; }
 .explorer-hunt-summary-actions .explorer-home-action { width: 100%; }
@@ -426,6 +461,11 @@
   width: 18px;
   height: 18px;
   color: #89a0ba;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   pointer-events: none;
   transform: translateY(-50%);
 }
@@ -511,9 +551,14 @@
 }
 
 .explorer-globe-wrap {
+  position: relative;
   display: grid;
+  /* Frame gets its own row; the zoom controls get a dedicated row beneath it so
+     they never overlap the circular frame or sit behind it. */
+  grid-template-rows: minmax(0, 1fr) auto;
   align-items: center;
   justify-items: center;
+  gap: 12px;
   min-height: 0;
 }
 
@@ -638,7 +683,16 @@
 }
 
 .explorer-stage-footer {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Country Hunt is a secondary mode, so it sits below the globe rather than
+   competing with the main interaction above it. */
+.explorer-stage-footer .explorer-heading-hunt-btn {
+  margin-top: 2px;
 }
 
 .explorer-hunt-feedback {
@@ -793,35 +847,47 @@
 }
 
 .explorer-globe-controls {
-  position: absolute;
-  right: 14px;
-  bottom: 14px;
   z-index: 7;
   display: grid;
   grid-template-columns: repeat(3, auto);
-  gap: 6px;
-  padding: 5px;
-  border: 1px solid rgba(126, 157, 193, 0.28);
-  border-radius: 14px;
-  background: rgba(4, 15, 29, 0.78);
-  box-shadow: 0 10px 28px rgba(1, 8, 18, 0.28);
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid rgba(126, 157, 193, 0.16);
+  border-radius: 12px;
+  background: rgba(4, 15, 29, 0.55);
+  box-shadow: 0 6px 18px rgba(1, 8, 18, 0.18);
   backdrop-filter: blur(9px);
 }
 
+/* These are utility controls, so they read quietly next to the globe rather
+   than like a primary call to action. */
 .explorer-globe-controls button {
   display: inline-grid;
   min-width: 44px;
   min-height: 44px;
-  padding: 8px 10px;
+  padding: 6px 10px;
   place-items: center;
-  border: 1px solid rgba(118, 151, 188, 0.42);
-  border-radius: 10px;
-  background: rgba(6, 17, 31, 0.52);
-  color: #d9e7f5;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: rgba(6, 17, 31, 0.55);
+  color: #c9d8ea;
   cursor: pointer;
   font: inherit;
-  font-size: 1.08rem;
-  font-weight: 900;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.explorer-globe-controls button:hover {
+  border-color: rgba(118, 151, 188, 0.3);
+  background: rgba(6, 17, 31, 0.55);
+  color: #d9e7f5;
+}
+
+#btn-explorer-reset {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #d9e7f5;
 }
 
 .explorer-globe-controls button:disabled {
@@ -890,7 +956,7 @@
   grid-template-columns: 72px minmax(0, 1fr);
   align-items: center;
   gap: 16px;
-  padding-bottom: 20px;
+  padding-bottom: 15px;
   border-bottom: 1px solid rgba(121, 151, 184, 0.3);
 }
 
@@ -913,12 +979,40 @@
   height: 100%;
   object-fit: cover;
 }
+.explorer-country-flag img.is-nonrect-flag {
+  object-fit: contain;
+}
 
 .explorer-country-flag .asset-fallback {
   min-width: 100%;
   min-height: 100%;
   padding: 6px;
   border: 0;
+}
+
+/* Flag chips cannot host prose, so the degraded state is a code chip. Size it
+   per slot so it reads as a deliberate placeholder rather than clipped text. */
+.explorer-country-flag .asset-fallback__code,
+.explorer-hunt-panel-flag .asset-fallback__code {
+  font-size: 0.95rem;
+}
+
+.explorer-hunt-target-flag .asset-fallback__code {
+  font-size: 0.7rem;
+}
+
+.explorer-search-option-flag .asset-fallback__code {
+  font-size: 0.56rem;
+}
+
+.explorer-country-flag.is-flag-code,
+.explorer-hunt-panel-flag.is-flag-code,
+.explorer-hunt-target-flag.is-flag-code,
+.explorer-search-option-flag.is-flag-code {
+  color: #8ea4bb;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
 }
 .explorer-country-kicker {
   margin-bottom: 5px;
@@ -959,8 +1053,8 @@
 
 .explorer-fact {
   position: relative;
-  margin: 20px 0;
-  padding: 17px 18px 17px 20px;
+  margin: 11px 0 0;
+  padding: 11px 16px 11px 18px;
   border: 1px solid rgba(84, 220, 160, 0.28);
   border-radius: 13px;
   background: rgba(46, 183, 127, 0.08);
@@ -993,7 +1087,7 @@
 
 .explorer-country-facts > div {
   min-width: 0;
-  padding: 13px 14px;
+  padding: 10px 13px;
   background: rgba(5, 16, 30, 0.54);
 }
 
@@ -1327,8 +1421,20 @@
     gap: 10px;
   }
 
+  /* The country card already announces the selection visually on mobile, so the
+     footer status duplicates it. Hide it visually but keep the aria-live region
+     available to assistive tech. */
   .explorer-globe-status {
-    font-size: 0.7rem;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   .explorer-globe-controls button {
@@ -1342,7 +1448,7 @@
     z-index: 10;
     min-height: 0;
     margin-top: 12px;
-    padding: 18px;
+    padding: 14px;
   }
 
   .explorer-empty-card {
@@ -1488,12 +1594,15 @@
     min-height: 46px;
   }
 
+  /* Keep the four facts in a 2x2 grid on phones. A single column stacked the
+     labels and values into a tall, sparse column (the "Capital / Rome" wasted
+     space); a 2x2 grid roughly halves the vertical footprint and reads denser. */
   .explorer-country-facts {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .explorer-country-facts > div {
-    padding: 11px 12px;
+    padding: 9px 11px;
   }
 }
 
@@ -1509,5 +1618,770 @@
   .explorer-hunt-selection-card,
   .explorer-globe-frame > .celebration-text {
     animation: none;
+  }
+}
+
+/* Unified World Explorer landing composition. */
+.landing[data-selected-game='explorer'] .landing-proposition {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
+.landing[data-selected-game='explorer'] .landing-copy {
+  order: 0;
+}
+
+.landing[data-selected-game='explorer'] .landing-explore-feature {
+  order: 1;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 12px;
+  min-height: 0;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid rgba(106, 241, 184, 0.58);
+  border-radius: 16px;
+}
+
+.landing[data-selected-game='explorer'] .landing-explore-visual {
+  width: 52px;
+  height: 52px;
+  border-radius: 15px;
+}
+
+.landing[data-selected-game='explorer'] .landing-explore-copy strong {
+  font-size: 1.35rem;
+}
+
+.landing[data-selected-game='explorer'] .landing-explore-actions {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+
+.landing[data-selected-game='explorer'] .landing-explore-action {
+  width: 100%;
+  min-height: 54px;
+  padding: 11px 14px;
+  font-size: 0.86rem;
+}
+
+.landing[data-selected-game='explorer'] .landing-explore-hunt-action small {
+  font-size: 0.68rem;
+}
+
+.landing[data-selected-game='explorer'] .landing-globe-shell {
+  order: 2;
+  gap: 0;
+  cursor: pointer;
+}
+
+.landing[data-selected-game='explorer'] .landing-globe {
+  width: min(100%, 320px);
+}
+
+.landing[data-selected-game='explorer'] .landing-globe canvas {
+  cursor: pointer;
+  pointer-events: none;
+  touch-action: auto;
+}
+
+.landing[data-selected-game='explorer'] .landing-globe:hover {
+  filter: brightness(1.08);
+  transition: filter 200ms ease;
+}
+
+.landing[data-selected-game='explorer'] .landing-globe-meta,
+.landing[data-selected-game='explorer'] .globe-scope-switch,
+.landing[data-selected-game='explorer'] .globe-selection-card,
+.landing[data-selected-game='explorer'] .landing-globe-status {
+  display: none !important;
+}
+
+.landing[data-selected-game='explorer'] .landing-proof li {
+  padding-block: 12px;
+}
+
+.landing[data-selected-game='explorer'] .landing-proof strong {
+  font-size: 1.15rem;
+}
+
+.landing[data-selected-game='explorer'] .landing-proof span {
+  font-size: 0.68rem;
+}
+
+@media (max-width: 420px) {
+  .landing[data-selected-game='explorer'] .landing-explore-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .landing[data-selected-game='explorer'] .landing-explore-action {
+    min-height: 50px;
+  }
+
+  .landing[data-selected-game='explorer'] .landing-globe {
+    width: min(100%, 300px);
+  }
+}
+
+@media (min-width: 768px) {
+  .landing[data-selected-game='explorer'] .landing-proposition {
+    grid-template-areas:
+      'explorer-copy explorer-globe'
+      'explorer-launch explorer-globe';
+    grid-template-columns: minmax(300px, 0.9fr) minmax(340px, 1.1fr);
+    grid-template-rows: auto auto;
+    align-content: center;
+    align-items: center;
+    gap: 24px 36px;
+  }
+
+  .landing[data-selected-game='explorer'] .landing-copy {
+    grid-area: explorer-copy;
+    align-self: end;
+  }
+
+  .landing[data-selected-game='explorer'] .landing-explore-feature {
+    grid-area: explorer-launch;
+    align-self: start;
+    max-width: 560px;
+  }
+
+  .landing[data-selected-game='explorer'] .landing-globe-shell {
+    grid-area: explorer-globe;
+    align-self: center;
+  }
+
+  .landing[data-selected-game='explorer'] .landing-globe {
+    width: min(100%, 390px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing[data-selected-game='explorer'] {
+    grid-template-areas:
+      'header header'
+      'chooser chooser'
+      'proposition proposition'
+      'statistics profile';
+  }
+
+  .landing[data-selected-game='explorer'] .landing-proposition {
+    grid-template-columns: minmax(340px, 0.82fr) minmax(420px, 1.18fr);
+    gap: clamp(36px, 5vw, 76px);
+    min-height: clamp(460px, 55vh, 560px);
+    padding: clamp(36px, 4.5vw, 64px);
+  }
+
+  .landing[data-selected-game='explorer'] .landing-tagline {
+    max-width: 8ch;
+    font-size: clamp(3.6rem, 5vw, 5.4rem);
+  }
+
+  .landing[data-selected-game='explorer'] .landing-proof {
+    max-width: 500px;
+  }
+
+  .landing[data-selected-game='explorer'] .landing-explore-feature {
+    grid-template-columns: 58px minmax(0, 1fr);
+    gap: 14px;
+    padding: 18px;
+  }
+
+  .landing[data-selected-game='explorer'] .landing-explore-visual {
+    width: 58px;
+    height: 58px;
+  }
+
+  .landing[data-selected-game='explorer'] .landing-explore-copy strong {
+    font-size: 1.55rem;
+  }
+
+  .landing[data-selected-game='explorer'] .landing-explore-action {
+    min-height: 58px;
+    font-size: 0.92rem;
+  }
+
+  .landing[data-selected-game='explorer'] .landing-globe {
+    width: clamp(380px, 32vw, 470px);
+  }
+}
+
+/* Unified Border Outline landing composition. */
+.landing[data-selected-game='shape'] .landing-proposition {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
+.landing[data-selected-game='shape'] .landing-copy {
+  order: 0;
+}
+
+.landing[data-selected-game='shape'] .landing-border-outline-setup {
+  order: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid rgba(120, 184, 255, 0.3);
+  border-radius: 18px;
+  background: linear-gradient(160deg, rgba(20, 40, 65, 0.9), rgba(11, 25, 43, 0.94));
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.035);
+}
+
+.landing[data-selected-game='shape'] .landing-shape-preview {
+  order: 2;
+  justify-self: center;
+}
+
+.landing[data-selected-game='shape'] .landing-mode-heading {
+  margin-bottom: 12px;
+}
+
+.landing[data-selected-game='shape'] .landing-border-outline-setup .game-setup-content {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 768px) {
+  .landing[data-selected-game='shape'] .landing-proposition {
+    grid-template-areas:
+      'shape-copy shape-setup'
+      'shape-preview shape-setup';
+    grid-template-columns: minmax(300px, 0.92fr) minmax(340px, 1.08fr);
+    grid-template-rows: auto auto;
+    align-content: center;
+    align-items: start;
+    gap: 24px 32px;
+  }
+
+  .landing[data-selected-game='shape'] .landing-copy {
+    grid-area: shape-copy;
+  }
+
+  .landing[data-selected-game='shape'] .landing-shape-preview {
+    grid-area: shape-preview;
+    width: min(100%, 360px);
+  }
+
+  .landing[data-selected-game='shape'] .landing-shape-preview-stage {
+    width: 100%;
+    min-height: 360px;
+  }
+
+  .landing[data-selected-game='shape'] .landing-border-outline-setup {
+    grid-area: shape-setup;
+    align-self: center;
+    width: 100%;
+    padding: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing[data-selected-game='shape'] {
+    grid-template-areas:
+      'header header'
+      'chooser chooser'
+      'proposition proposition'
+      'statistics profile';
+  }
+
+  .landing[data-selected-game='shape'] .landing-proposition {
+    grid-template-areas: 'shape-copy shape-preview shape-setup';
+    grid-template-columns: minmax(260px, 0.72fr) minmax(300px, 0.9fr) minmax(390px, 1fr);
+    grid-template-rows: auto;
+    gap: clamp(24px, 3vw, 44px);
+    min-height: clamp(480px, 56vh, 600px);
+    padding: clamp(32px, 3.5vw, 52px);
+  }
+
+  .landing[data-selected-game='shape'] .landing-copy {
+    align-self: center;
+  }
+
+  .landing[data-selected-game='shape'] .landing-tagline {
+    max-width: 8ch;
+    font-size: clamp(3.15rem, 4vw, 4.5rem);
+  }
+
+  .landing[data-selected-game='shape'] .landing-shape-preview {
+    align-self: center;
+    width: 100%;
+  }
+
+  .landing[data-selected-game='shape'] .landing-shape-preview-stage {
+    grid-template-rows: auto minmax(280px, 1fr) auto;
+    min-height: 430px;
+  }
+
+  .landing[data-selected-game='shape'] .landing-border-outline-setup {
+    padding: 24px;
+  }
+
+  .landing[data-selected-game='shape'] .landing-border-outline-setup .mode-card {
+    min-height: 112px;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1180px) {
+  .landing[data-selected-game='shape'] .landing-proposition {
+    grid-template-areas:
+      'shape-copy shape-setup'
+      'shape-preview shape-setup';
+    grid-template-columns: minmax(320px, 0.9fr) minmax(400px, 1.1fr);
+  }
+
+  .landing[data-selected-game='shape'] .landing-shape-preview {
+    width: min(100%, 360px);
+  }
+}
+
+/* Explorer-first homepage. The live learning loop is the hero; games and
+   device statistics are intentionally secondary. */
+.explorer-screen {
+  gap: clamp(18px, 2.4vw, 32px);
+  width: min(100%, 1320px);
+}
+
+.explorer-utility {
+  min-height: 66px;
+  padding-bottom: 12px;
+  border-bottom-color: rgba(116, 145, 178, 0.28);
+}
+
+.explorer-home-logo {
+  width: clamp(178px, 17vw, 220px);
+  cursor: pointer;
+}
+
+.explorer-utility-actions {
+  gap: 8px;
+}
+
+.explorer-utility-actions .player-context {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  margin: 0;
+  padding: 5px 5px 5px 12px;
+  border: 1px solid rgba(126, 157, 193, 0.32);
+  border-radius: 11px;
+  background: rgba(12, 26, 44, 0.54);
+}
+
+.explorer-utility-actions .player-context-eyebrow,
+.explorer-utility-actions .player-context-detail {
+  display: none;
+}
+
+.explorer-utility-actions .player-context-name {
+  color: #dce9f5;
+  font-size: 0.76rem;
+}
+
+.explorer-utility-actions .player-context-action {
+  min-height: 32px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.68rem;
+}
+
+/* The stage title is the programmatic focus target when the Explorer screen
+   opens; suppress the focus ring since focus here is scripted, not user-driven. */
+#explorer-stage-title:focus {
+  outline: 0 !important;
+}
+
+.explorer-layout {
+  grid-template-columns: minmax(0, 1.1fr) minmax(340px, 0.9fr);
+  align-items: stretch;
+  gap: clamp(24px, 3.4vw, 46px);
+  width: min(100%, 1180px);
+  margin: 0 auto;
+}
+
+.explorer-stage-heading > p,
+.explorer-stage-heading .explorer-eyebrow {
+  display: none;
+}
+
+.explorer-screen:not(.is-hunt-active) .explorer-stage-heading {
+  display: none;
+}
+
+/* Primary mode toggle stays pinned at the top of the stage in both modes. */
+.explorer-mode-switch {
+  display: grid;
+  width: min(100%, 540px);
+  margin: 0 auto;
+}
+
+.explorer-stage {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  align-content: start;
+  gap: 13px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.explorer-search {
+  width: min(100%, 540px);
+  margin: 0 auto;
+}
+
+.explorer-search label {
+  margin-bottom: 7px;
+  color: #a9bdd1;
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+
+.explorer-search-input-wrap {
+  border-color: rgba(126, 157, 193, 0.36);
+  background: rgba(7, 19, 34, 0.62);
+}
+
+.explorer-globe-wrap {
+  min-height: 0;
+}
+
+.explorer-globe-frame {
+  width: min(100%, 540px);
+  border-color: rgba(111, 158, 204, 0.2);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(14, 43, 70, 0.5), rgba(4, 14, 27, 0) 70%);
+  box-shadow: 0 24px 70px rgba(0, 8, 20, 0.25);
+}
+
+.explorer-stage-footer {
+  justify-content: center;
+}
+
+.explorer-globe-status {
+  min-height: 0;
+  text-align: center;
+}
+
+.explorer-info-panel {
+  min-height: 100%;
+  padding: clamp(20px, 2.3vw, 30px);
+  border: 1px solid rgba(113, 145, 180, 0.34);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(15, 34, 57, 0.78), rgba(7, 20, 36, 0.84));
+  box-shadow: 0 22px 54px rgba(1, 7, 18, 0.18);
+}
+
+.explorer-empty-card {
+  min-height: 480px;
+}
+
+.explorer-secondary-content {
+  display: grid;
+  gap: 16px;
+  width: min(100%, 1180px);
+  margin: clamp(34px, 6vw, 76px) auto 0;
+}
+
+.explorer-secondary-content .landing-challenges {
+  gap: 14px;
+  padding: clamp(24px, 3vw, 36px) 0 0;
+  border: 0;
+  border-top: 1px solid rgba(120, 184, 255, 0.2);
+  border-radius: 0;
+  background: transparent;
+}
+
+.explorer-secondary-content .landing-challenges-heading h2 {
+  margin: 0;
+  color: #f5f8fc;
+  font-size: clamp(1.3rem, 1.9vw, 1.7rem);
+  letter-spacing: -0.025em;
+}
+
+.explorer-secondary-content .landing-challenge-card {
+  min-height: 72px;
+  border-color: rgba(120, 184, 255, 0.2);
+  background: rgba(7, 19, 34, 0.5);
+}
+
+.explorer-secondary-content .landing-statistics {
+  margin-top: 4px;
+  border: 0;
+  background: transparent;
+}
+
+@media (min-width: 768px) and (max-height: 820px) {
+  .explorer-globe-frame {
+    /* Leaves room for the zoom control row now reserved below the frame. */
+    width: min(100%, max(430px, calc(100vh - 360px)), 520px);
+  }
+}
+
+@media (max-width: 900px) {
+  .explorer-layout {
+    grid-template-columns: minmax(0, 1fr);
+    width: min(100%, 620px);
+  }
+
+  .explorer-info-panel {
+    min-height: 0;
+  }
+
+  .explorer-empty-card {
+    min-height: 190px;
+  }
+}
+
+@media (max-width: 767px) {
+  .explorer-screen {
+    gap: 16px;
+  }
+
+  .explorer-utility {
+    min-height: 58px;
+    gap: 10px;
+  }
+
+  .explorer-home-logo {
+    width: min(43vw, 178px);
+  }
+
+  .explorer-music-toggle {
+    width: 40px;
+    min-height: 40px;
+    padding: 8px;
+  }
+
+  .explorer-music-toggle span,
+  .explorer-utility-actions .player-context-copy {
+    display: none;
+  }
+
+  .explorer-utility-actions .player-context {
+    padding: 3px;
+    border: 0;
+    background: transparent;
+  }
+
+  .explorer-utility-actions .player-context-action {
+    min-height: 38px;
+    padding-inline: 9px;
+  }
+
+  .explorer-layout {
+    gap: 18px;
+  }
+
+  .explorer-search label {
+    text-align: center;
+  }
+
+  .explorer-globe-frame {
+    width: min(91vw, 430px);
+  }
+
+  .explorer-globe-controls button {
+    min-width: 38px;
+    min-height: 38px;
+  }
+
+  .explorer-info-panel {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  /* Sit the landmark thumbnail beside its caption on mobile so the details
+     read compactly instead of stacking and eating vertical space. */
+  .explorer-landmark-media {
+    grid-template-columns: 132px minmax(0, 1fr);
+    align-items: center;
+    column-gap: 12px;
+  }
+
+  .explorer-landmark-media-toggle {
+    width: 100%;
+  }
+
+  .explorer-landmark-media figcaption {
+    align-self: center;
+    margin: 0;
+  }
+
+  /* When expanded, let the image reclaim the full width and drop the caption
+     back underneath it. */
+  .explorer-landmark-media.is-expanded {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .explorer-empty-card {
+    min-height: 160px;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .explorer-empty-mark {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+  }
+
+  .explorer-secondary-content {
+    margin-top: 38px;
+  }
+
+  .explorer-secondary-content .landing-challenges {
+    padding-top: 30px;
+  }
+
+  .explorer-secondary-content .landing-challenge-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Explorer-first mobile product pass: preserve the immersive globe while
+   keeping the primary promise, search, and challenge entry in one viewport. */
+.explorer-search-option-flag {
+  display: grid;
+  width: 28px;
+  height: 21px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(169, 198, 224, 0.42);
+  border-radius: 4px;
+  background: rgba(4, 14, 27, 0.7);
+}
+
+.explorer-search-option-flag img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.explorer-search-option-flag img.is-nonrect-flag {
+  object-fit: contain;
+}
+
+@media (max-width: 767px) {
+  .is-explorer-active .app {
+    width: 100%;
+    max-width: 680px;
+    padding: 0 16px 32px;
+  }
+
+  .explorer-screen {
+    gap: 12px;
+  }
+
+  .explorer-utility {
+    min-height: 60px;
+    gap: 8px;
+    padding-bottom: 10px;
+  }
+
+  .explorer-home-logo {
+    width: clamp(142px, 34vw, 170px);
+  }
+
+  .explorer-utility-actions {
+    gap: 6px;
+  }
+
+  .explorer-music-toggle,
+  .explorer-utility-actions .player-context-action {
+    min-height: 44px;
+  }
+
+  .explorer-music-toggle {
+    width: 44px;
+    padding: 9px;
+  }
+
+  .explorer-utility-actions .player-context {
+    padding: 0;
+  }
+
+  .explorer-utility-actions .player-context-action {
+    padding-inline: 12px;
+  }
+
+  .explorer-layout {
+    gap: 14px;
+    width: min(100%, 620px);
+  }
+
+  .explorer-screen:not(.is-hunt-active) .explorer-stage-heading {
+    display: flex;
+    justify-content: flex-end;
+    width: min(100%, 540px);
+    margin: 0 auto -2px;
+  }
+
+  .explorer-screen:not(.is-hunt-active) .explorer-stage-heading > div,
+  .explorer-screen:not(.is-hunt-active) .explorer-stage-heading > p {
+    display: none;
+  }
+
+  .explorer-heading-hunt-btn {
+    min-height: 44px;
+    padding: 9px 13px;
+    border-radius: 999px;
+  }
+
+  .explorer-search label {
+    padding-left: 2px;
+    text-align: left;
+  }
+
+  .explorer-search-input-wrap {
+    min-height: 52px;
+    border-radius: 14px;
+  }
+
+  .explorer-search-option {
+    min-height: 48px;
+  }
+
+  .explorer-globe-frame {
+    width: min(88vw, 380px);
+  }
+
+  .explorer-globe-controls button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .explorer-info-panel {
+    padding: 16px;
+  }
+
+  .explorer-empty-card {
+    min-height: 132px;
+  }
+
+  .explorer-secondary-content {
+    margin-top: 24px;
+  }
+
+  .explorer-secondary-content .landing-challenges {
+    padding-top: 24px;
+  }
+}
+
+@media (max-width: 420px) {
+  .is-explorer-active .app {
+    padding-inline: 12px;
+  }
+
+  .explorer-home-logo {
+    width: clamp(132px, 39vw, 156px);
+  }
+
+  .explorer-globe-frame {
+    width: min(91vw, 350px);
   }
 }

@@ -1,0 +1,19 @@
+{
+  "name": "EARTHLING — World Geography Game",
+  "short_name": "EARTHLING",
+  "description": "Explore an interactive globe, learn 195 countries, and test yourself with shape and country-hunt challenges.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#07111f",
+  "theme_color": "#07111f",
+  "icons": [
+    {
+      "src": "assets/geowars-logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    }
+  ]
+}

@@ -67,7 +67,7 @@ function getLevelConfig(levelId) {
   }
   return {
     id: levelId || 'earthling',
-    name: 'Earthling',
+    name: 'Hard',
     recommendation: 'Name the country from the shape.',
     defaultMode: 'sprint',
     allowedModes: ['showoff', 'sprint'],
@@ -180,7 +180,7 @@ function loadLocalSilhouetteGeometry() {
 
   localSilhouetteGeometryPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
-    script.src = 'assets/globe-countries.js?v=20260730-territories3';
+    script.src = 'assets/globe-countries.js?v=20260831-cy-ps197';
     script.async = true;
     script.onload = () => Array.isArray(window.GeoWarsGlobeCountries)
       ? resolve(window.GeoWarsGlobeCountries)
@@ -334,6 +334,8 @@ function renderFlagHintAsset(card) {
   const image = document.createElement('img');
   image.id = 'flag-img';
   image.alt = '';
+  const code = assetFallbacks.getCountryCode(card);
+  if (code === 'NP') image.classList.add('is-nonrect-flag');
   $flagHint.appendChild(image);
   assetFallbacks.prepareImage(image, 'flag', card, { countryName: card.name, alt: '' });
 }
@@ -342,6 +344,8 @@ function renderFeedbackFlagAsset(card) {
   if (!assetFallbacks) return;
   const flag = document.createElement('img');
   flag.className = 'reveal-flag';
+  const code = assetFallbacks.getCountryCode(card);
+  if (code === 'NP') flag.classList.add('is-nonrect-flag');
   $feedbackFlag.appendChild(flag);
   assetFallbacks.prepareImage(flag, 'flag', card, {
     countryName: card.name,
@@ -370,7 +374,7 @@ function returnHomeFromAssetRecovery() {
   state.gameOver = true;
   invokeBackgroundMusic('stop');
   clearAssetRecovery();
-  showScreen($landing);
+  showExplorerFirstLanding();
   loadStats();
 }
 
@@ -472,6 +476,7 @@ const $statisticsTitle = document.getElementById('statistics-title');
 const $playerContextName = document.getElementById('player-context-name');
 const $playerContextDetail = document.getElementById('player-context-detail');
 const $choosePlayerButton = document.getElementById('btn-choose-player');
+const $playerContext = document.getElementById('player-context');
 const $playerProfileModal = document.getElementById('player-profile-modal');
 const $playerProfileForm = document.getElementById('player-profile-form');
 const $playerProfileName = document.getElementById('player-profile-name');
@@ -480,23 +485,22 @@ const $playerProfileStatus = document.getElementById('player-profile-status');
 const $playerProfileDescription = document.getElementById('player-profile-description');
 const $sendPlayerLinkButton = document.getElementById('btn-send-player-link');
 const $landingShapeGameButton = document.getElementById('btn-landing-shape-game');
-const $landingExplorerGameButton = document.getElementById('btn-landing-explorer-game');
 const $shapeChallengePanel = document.getElementById('shape-challenge-panel');
-const $worldExplorerPanel = document.getElementById('world-explorer-panel');
 const $landingShapePreview = document.getElementById('landing-shape-preview');
-const $landingGlobeShell = document.getElementById('landing-globe-shell');
-const $landingEyebrow = document.getElementById('landing-eyebrow');
-const $landingHeroTitle = document.getElementById('landing-title');
-const $landingObjective = document.getElementById('landing-objective');
-const $landingProofOneValue = document.getElementById('landing-proof-one-value');
-const $landingProofOneLabel = document.getElementById('landing-proof-one-label');
-const $landingProofTwoValue = document.getElementById('landing-proof-two-value');
-const $landingProofTwoLabel = document.getElementById('landing-proof-two-label');
-const $landingProofThreeValue = document.getElementById('landing-proof-three-value');
-const $landingProofThreeLabel = document.getElementById('landing-proof-three-label');
 const $landingShapePreviewArt = document.getElementById('landing-shape-preview-art');
 const $landingShapePreviewFlag = document.getElementById('landing-shape-preview-flag');
 const $landingShapePreviewCountry = document.getElementById('landing-shape-preview-country');
+const $landingPreviewFlag = document.getElementById('landing-preview-flag');
+const $landingPreviewCountry = document.getElementById('landing-preview-country');
+const $landingPreviewRegion = document.getElementById('landing-preview-region');
+const $landingPreviewCapital = document.getElementById('landing-preview-capital');
+const $landingPreviewLanguages = document.getElementById('landing-preview-languages');
+const $landingPreviewLandmark = document.getElementById('landing-preview-landmark');
+const $landingPreviewFact = document.getElementById('landing-preview-fact');
+const $landingChallenges = document.querySelector('.landing-challenges');
+const $landingStatistics = document.querySelector('.landing-statistics');
+const $explorerUtilityActions = document.querySelector('.explorer-utility-actions');
+const $explorerSecondaryContent = document.getElementById('explorer-secondary-content');
 const $levelButtons = Array.from(document.querySelectorAll('.diff-btn[data-level]'));
 const $btnIKnow = document.getElementById('btn-i-know');
 const $btnShowOptions = document.getElementById('btn-show-options');
@@ -509,34 +513,12 @@ const $btnBail = document.getElementById('btn-bail');
 function showScreen(screen) {
   [$landing, $explorer, $game, $results].forEach(s => s.classList.add('hidden'));
   screen.classList.remove('hidden');
+  document.body.classList.toggle('is-explorer-active', screen === $explorer);
 }
 
 // ============================================================
 // LANDING
 // ============================================================
-
-const LANDING_GAME_PRESENTATION = Object.freeze({
-  shape: Object.freeze({
-    eyebrow: 'Country shape challenge',
-    title: 'See the shape. Name the country.',
-    objective: 'Race through country outlines in a 60-second sprint, or learn at your own pace.',
-    proof: Object.freeze([
-      Object.freeze(['195', 'countries']),
-      Object.freeze(['60s', 'sprint']),
-      Object.freeze(['Free', 'practice'])
-    ])
-  }),
-  explorer: Object.freeze({
-    eyebrow: 'Interactive world atlas',
-    title: 'Explore the world.',
-    objective: 'Discover 195 countries at your pace, then race to find them in Country Hunt.',
-    proof: Object.freeze([
-      Object.freeze(['195', 'countries']),
-      Object.freeze(['Free', 'explore']),
-      Object.freeze(['60s', 'country hunt'])
-    ])
-  })
-});
 
 const LANDING_PREVIEW_COUNTRY_IDS = Object.freeze([1, 4, 7, 12, 14, 16, 18, 23]);
 let landingShapePreviewIndex = 0;
@@ -545,7 +527,7 @@ const landingShapePreviewDesktopQuery = window.matchMedia?.('(min-width: 768px)'
 
 function syncLandingShapePreviewDisclosure() {
   if (!$landingShapePreview || !landingShapePreviewDesktopQuery) return;
-  $landingShapePreview.open = landingShapePreviewDesktopQuery.matches;
+  $landingShapePreview.open = !$shapeChallengePanel?.hidden && landingShapePreviewDesktopQuery.matches;
 }
 
 function renderLandingShapePreview(cards, geometry) {
@@ -563,7 +545,7 @@ function renderLandingShapePreview(cards, geometry) {
   }
   if ($landingShapePreviewCountry) $landingShapePreviewCountry.textContent = card.name;
   if ($landingShapePreview) {
-    $landingShapePreview.setAttribute('aria-label', 'Shape Challenge preview. ' + card.flag + ' ' + card.name + ' revealed.');
+    $landingShapePreview.setAttribute('aria-label', 'Border Outline preview. ' + card.flag + ' ' + card.name + ' revealed.');
   }
   void $landingShapePreviewArt.offsetWidth;
   $landingShapePreviewArt.classList.add('is-changing');
@@ -586,76 +568,195 @@ function initializeLandingShapePreview() {
   }).catch(() => {});
 }
 
-function setLandingPreviewVisibility(preview, visible) {
-  if (!preview) return;
-  preview.hidden = !visible;
-  preview.classList.toggle('hidden', !visible);
-  preview.setAttribute('aria-hidden', String(!visible));
+function renderLandingCountryPreview(card) {
+  const chosen = card || countryCards.find(country => country.id === 2);
+  if (!chosen) return;
+  if ($landingPreviewFlag) $landingPreviewFlag.textContent = chosen.flag;
+  if ($landingPreviewCountry) $landingPreviewCountry.textContent = chosen.name;
+  if ($landingPreviewRegion) $landingPreviewRegion.textContent = chosen.continent;
+  if ($landingPreviewCapital) $landingPreviewCapital.textContent = chosen.capital;
+  if ($landingPreviewLanguages) {
+    $landingPreviewLanguages.textContent = Array.isArray(chosen.main_languages)
+      ? chosen.main_languages.join(', ')
+      : '—';
+  }
+  if ($landingPreviewLandmark) {
+    $landingPreviewLandmark.textContent = chosen.landmarks?.[0] || '—';
+  }
+  if ($landingPreviewFact) {
+    $landingPreviewFact.textContent = chosen.fun_facts?.[0] || '';
+  }
 }
 
-function updateLandingPresentation(game) {
-  const presentation = LANDING_GAME_PRESENTATION[game] || LANDING_GAME_PRESENTATION.shape;
-  if ($landingEyebrow) $landingEyebrow.textContent = presentation.eyebrow;
-  if ($landingHeroTitle) {
-    if (game === 'shape') {
-      const accent = document.createElement('span');
-      accent.className = 'landing-title-accent';
-      accent.textContent = 'shape';
-      $landingHeroTitle.replaceChildren('See the ', accent, '. Name the country.');
-    } else {
-      $landingHeroTitle.textContent = presentation.title;
-    }
-  }
-  if ($landingObjective) $landingObjective.textContent = presentation.objective;
+// While the landing globe idly rotates and the visitor has not interacted yet,
+// spotlight a random country in the otherwise-empty preview panel. The showcase
+// stops permanently on the first real interaction (globe drag/click/keys or a
+// search focus) so it never fights with an intentional selection.
+let landingShowcaseTimer = null;
+let landingShowcaseStopped = false;
+const landingShowcaseExampleCard = document.querySelector('.landing-country-example');
 
-  const proofNodes = [
-    [$landingProofOneValue, $landingProofOneLabel],
-    [$landingProofTwoValue, $landingProofTwoLabel],
-    [$landingProofThreeValue, $landingProofThreeLabel]
-  ];
-  proofNodes.forEach((nodes, index) => {
-    if (nodes[0]) nodes[0].textContent = presentation.proof[index][0];
-    if (nodes[1]) nodes[1].textContent = presentation.proof[index][1];
+// Lazily-populated map of country id -> { longitude, latitude } sourced from the
+// heavy explorer geometry (assets/globe-countries.js). Loaded only after the
+// landing page is idle so it never weighs down first paint; if it never arrives
+// the panel showcase still runs, just without the globe pin.
+let landingCountryCoords = null;
+let landingGeometryRequested = false;
+
+function loadLandingCountryCoords() {
+  if (landingGeometryRequested) return;
+  landingGeometryRequested = true;
+  const apply = () => {
+    if (landingShowcaseStopped) return;
+    const geometry = window.GeoWarsGlobeCountries;
+    if (!Array.isArray(geometry)) return;
+    landingCountryCoords = new Map();
+    geometry.forEach(entry => {
+      if (entry && Number.isFinite(entry.x) && Number.isFinite(entry.y)) {
+        landingCountryCoords.set(entry.i, { longitude: entry.x, latitude: entry.y });
+      }
+    });
+    // Immediately place a pin for whatever country is currently showcased.
+    spotlightShowcasedCountry();
+  };
+  if (Array.isArray(window.GeoWarsGlobeCountries)) {
+    apply();
+    return;
+  }
+  const script = document.createElement('script');
+  script.src = 'assets/globe-countries.js?v=20260831-cy-ps197';
+  script.async = true;
+  script.onload = apply;
+  script.onerror = () => {}; // Silent: the panel showcase degrades gracefully.
+  document.head.appendChild(script);
+}
+
+function spotlightShowcasedCountry() {
+  if (!landingCountryCoords) return;
+  const globeApi = window.GeoWars?.globe;
+  if (!globeApi?.spotlight || globeApi.isShowcaseActive?.() === false) return;
+  const current = countryCards.find(
+    country => country.name === $landingPreviewCountry?.textContent
+  );
+  const coords = current && landingCountryCoords.get(current.id);
+  if (coords) globeApi.spotlight(coords.longitude, coords.latitude);
+}
+
+function pickRandomLandingCard(previousId) {
+  if (!Array.isArray(countryCards) || !countryCards.length) return null;
+  if (countryCards.length === 1) return countryCards[0];
+  let candidate = null;
+  for (let attempt = 0; attempt < 8; attempt++) {
+    candidate = countryCards[Math.floor(Math.random() * countryCards.length)];
+    if (candidate && candidate.id !== previousId) break;
+  }
+  return candidate;
+}
+
+function showcaseNextLandingCountry() {
+  if (landingShowcaseStopped) return;
+  const previousId = countryCards.find(
+    country => country.name === $landingPreviewCountry?.textContent
+  )?.id;
+  const next = pickRandomLandingCard(previousId);
+  if (!next) return;
+  if (landingShowcaseExampleCard) {
+    // Brief fade so swapped content reads as an intentional transition, not a flicker.
+    landingShowcaseExampleCard.classList.add('is-showcasing');
+    window.requestAnimationFrame(() => {
+      renderLandingCountryPreview(next);
+      landingShowcaseExampleCard.classList.remove('is-showcasing');
+      spotlightShowcasedCountry();
+    });
+  } else {
+    renderLandingCountryPreview(next);
+    spotlightShowcasedCountry();
+  }
+}
+
+function stopLandingShowcase() {
+  if (landingShowcaseStopped) return;
+  landingShowcaseStopped = true;
+  if (landingShowcaseTimer) {
+    window.clearInterval(landingShowcaseTimer);
+    landingShowcaseTimer = null;
+  }
+  window.GeoWars?.globe?.clearSpotlight?.();
+}
+
+function startLandingShowcase() {
+  if (landingShowcaseStopped || landingShowcaseTimer) return;
+  if (!Array.isArray(countryCards) || !countryCards.length) return;
+  // Kick off immediately so the panel is populated on first paint, then cycle.
+  showcaseNextLandingCountry();
+  // Defer the heavy country geometry until the page is idle so the globe pin can
+  // join in without slowing first paint.
+  const scheduleGeometry = () => {
+    if (landingShowcaseStopped) return;
+    loadLandingCountryCoords();
+  };
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(scheduleGeometry, { timeout: 4000 });
+  } else {
+    window.setTimeout(scheduleGeometry, 2500);
+  }
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  landingShowcaseTimer = window.setInterval(showcaseNextLandingCountry, 4200);
+}
+
+function wireLandingShowcaseInteractionStop() {
+  const stopEvents = ['pointerdown', 'keydown'];
+  const landingCanvas = document.getElementById('landing-globe-canvas');
+  const landingShell = document.getElementById('landing-globe-shell');
+  [landingCanvas, landingShell].filter(Boolean).forEach(target => {
+    stopEvents.forEach(type =>
+      target.addEventListener(type, stopLandingShowcase, { once: true, passive: true })
+    );
   });
+  const explorerSearch = document.getElementById('explorer-country-search');
+  explorerSearch?.addEventListener('focus', stopLandingShowcase, { once: true });
 }
 
-function selectLandingGame(game) {
-  const shapeSelected = game !== 'explorer';
-  const selectedGame = shapeSelected ? 'shape' : 'explorer';
-  if ($landingShapeGameButton) {
-    $landingShapeGameButton.classList.toggle('is-active', shapeSelected);
-    $landingShapeGameButton.setAttribute('aria-pressed', String(shapeSelected));
-  }
-  if ($landingExplorerGameButton) {
-    $landingExplorerGameButton.classList.toggle('is-active', !shapeSelected);
-    $landingExplorerGameButton.setAttribute('aria-pressed', String(!shapeSelected));
-  }
-  if ($shapeChallengePanel) {
-    $shapeChallengePanel.hidden = !shapeSelected;
-    $shapeChallengePanel.classList.toggle('hidden', !shapeSelected);
-  }
-  if ($worldExplorerPanel) {
-    $worldExplorerPanel.hidden = shapeSelected;
-    $worldExplorerPanel.classList.toggle('hidden', shapeSelected);
-  }
-  setLandingPreviewVisibility($landingShapePreview, shapeSelected);
-  setLandingPreviewVisibility($landingGlobeShell, !shapeSelected);
-  updateLandingPresentation(selectedGame);
-  if ($landing) {
-    $landing.dataset.selectedGame = selectedGame;
-    $landing.classList.toggle('is-world-explorer-selected', !shapeSelected);
+function setShapeChallengeExpanded(expanded) {
+  if (!$shapeChallengePanel || !$landingShapeGameButton) return;
+  $shapeChallengePanel.hidden = !expanded;
+  $shapeChallengePanel.classList.toggle('hidden', !expanded);
+  $landingShapeGameButton.setAttribute('aria-expanded', String(expanded));
+  const action = $landingShapeGameButton.querySelector('.landing-challenge-action');
+  if (action) action.textContent = expanded ? 'Hide' : 'Play';
+  syncLandingShapePreviewDisclosure();
+  if (expanded) $shapeChallengePanel.querySelector('button')?.focus({ preventScroll: true });
+}
+
+function showExplorerFirstLanding() {
+  setShapeChallengeExpanded(false);
+  showScreen($explorer);
+  if (window.GeoWars?.explorer?.open) {
+    window.GeoWars.explorer.open();
   }
 }
 
-if ($landingShapeGameButton) {
-  $landingShapeGameButton.addEventListener('click', () => selectLandingGame('shape'));
+function composeExplorerHomepage() {
+  if ($explorerUtilityActions && $playerContext) {
+    $explorerUtilityActions.append($playerContext);
+  }
+  if ($explorerSecondaryContent) {
+    [$landingChallenges, $landingStatistics, $statsResetDialog, $statsResetStatus]
+      .filter(Boolean)
+      .forEach(element => $explorerSecondaryContent.append(element));
+  }
 }
-if ($landingExplorerGameButton) {
-  $landingExplorerGameButton.addEventListener('click', () => selectLandingGame('explorer'));
-}
+
+composeExplorerHomepage();
+$landingShapeGameButton?.addEventListener('click', () => {
+  setShapeChallengeExpanded($landingShapeGameButton.getAttribute('aria-expanded') !== 'true');
+});
 syncLandingShapePreviewDisclosure();
 landingShapePreviewDesktopQuery?.addEventListener?.('change', syncLandingShapePreviewDisclosure);
-selectLandingGame('shape');
+setShapeChallengeExpanded(false);
+renderLandingCountryPreview();
+wireLandingShowcaseInteractionStop();
+startLandingShowcase();
 initializeLandingShapePreview();
 
 // Keep internal filter state synchronized with the visibly active controls.
@@ -671,7 +772,7 @@ function updateFilterSummary() {
   const $summary = document.getElementById('filter-summary');
   if (!$summary) return;
   const level = getLevelConfig(state.level);
-  const diffLabel = level.name || 'Earthling';
+  const diffLabel = level.name || 'Hard';
   const continentLabel = state.continent === 'all'
     ? 'Worldwide'
     : (state.continent === 'North America' ? 'Americas' : state.continent);
@@ -744,7 +845,7 @@ const $startGameLabel = document.getElementById('start-game-label');
 function updateModeSummary() {
   const level = getLevelConfig(state.level);
   const isSprint = state.mode === 'sprint';
-  const diffLabel = level.name || 'Earthling';
+  const diffLabel = level.name || 'Hard';
   const continentLabel = state.continent === 'all'
     ? 'Worldwide'
     : (state.continent === 'North America' ? 'Americas' : state.continent);
@@ -1496,7 +1597,7 @@ function finishPracticeSession(destination) {
   quitGame();
 
   if (destination === 'home') {
-    showScreen($landing);
+    showExplorerFirstLanding();
     loadStats();
     return;
   }
@@ -1650,12 +1751,12 @@ if ($gameHomeLogo) {
     state.gameOver = true;
     invokeBackgroundMusic('stop');
     if (state.total > 0) Promise.resolve(saveStats()).then(() => loadStats());
-    showScreen($landing);
+    showExplorerFirstLanding();
   });
 }
 
 if ($landingHomeLogo) {
-  $landingHomeLogo.addEventListener('click', () => showScreen($landing));
+  $landingHomeLogo.addEventListener('click', showExplorerFirstLanding);
 }
 
 $btnQuit.addEventListener('click', () => {
@@ -1703,7 +1804,7 @@ function quitGame() {
     Promise.resolve(savePromise).then(() => loadStats());
     showScreen($results);
   } else {
-    showScreen($landing);
+    showExplorerFirstLanding();
     loadStats();
   }
 }
@@ -1714,7 +1815,7 @@ document.getElementById('btn-again').addEventListener('click', () => {
 
 document.getElementById('btn-home').addEventListener('click', () => {
   invokeBackgroundMusic('stop');
-  showScreen($landing);
+  showExplorerFirstLanding();
   loadStats();
 });
 
@@ -1767,7 +1868,7 @@ async function renderPlayerContext(identityOverride) {
     $playerContextDetail.textContent = 'Guest stats are shared on this browser/device. Choose a player for a personal saved record.';
   }
 
-  $choosePlayerButton.textContent = identity.claimed ? 'Switch' : 'Choose';
+  $choosePlayerButton.textContent = identity.claimed ? 'Switch player' : 'Choose player';
   $choosePlayerButton.disabled = false;
   $choosePlayerButton.setAttribute('aria-label', identity.claimed ? 'Switch to another player' : 'Choose a player');
 }
@@ -2029,7 +2130,7 @@ document.addEventListener('keydown', (e) => {
 // ============================================================
 
 const $landingTitle = document.getElementById('landing-title');
-const $explorerTitle = document.getElementById('explorer-title');
+const $explorerTitle = document.getElementById('explorer-stage-title');
 const $gameTitle = document.getElementById('game-title');
 const $quitConfirm = document.getElementById('quit-confirm');
 const $quitConfirmTitle = document.getElementById('quit-confirm-title');
@@ -2040,7 +2141,8 @@ const $hintRow = document.querySelector('.hint-row');
 const $btnSkip = document.getElementById('btn-skip');
 const $gameUtility = document.querySelector('.game-utility');
 const $gameStage = document.querySelector('.game-stage');
-let currentScreen = $landing;
+let currentScreen = [$landing, $explorer, $game, $results]
+  .find(screen => !screen.classList.contains('hidden')) || $landing;
 let lastQuitDialogTrigger = null;
 
 function setAccessibilityAvailability(element, available) {
@@ -2171,7 +2273,7 @@ showScreen = function(screen) {
 
 window.GeoWars = window.GeoWars || {};
 window.GeoWars.navigate = Object.freeze({
-  showHome: () => showScreen($landing),
+  showHome: showExplorerFirstLanding,
   showExplorer: () => showScreen($explorer)
 });
 

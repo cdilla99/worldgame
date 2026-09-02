@@ -19,6 +19,12 @@
       source: 'FlagCDN country flags',
       documentationUrl: 'https://flagcdn.com',
       urlTemplate: 'https://flagcdn.com/w160/{code}.png',
+      // A single flag host is a single point of failure: network filters, DNS
+      // failures, and blocked third-party requests all leave every flag slot
+      // empty. Mirrors are tried in order before any placeholder is shown.
+      mirrorTemplates: Object.freeze([
+        'https://cdn.jsdelivr.net/npm/flag-icons@7.5.0/flags/4x3/{code}.svg'
+      ]),
       aspectRatio: '3 / 2', fallbackIcon: 'flag', fallback: 'Local SVG and country-name-preserving flag state.'
     }),
     font: Object.freeze({
@@ -53,7 +59,11 @@
     var metadata = SOURCE_METADATA[type];
     if (!metadata || !metadata.urlTemplate) return null;
     var code = getCountryCode(cardOrCode);
-    return Object.freeze({ type: type, code: code, url: code ? metadata.urlTemplate.replace('{code}', code.toLowerCase()) : '', source: metadata.source, documentationUrl: metadata.documentationUrl, aspectRatio: metadata.aspectRatio, fallback: metadata.fallback });
+    var templates = [metadata.urlTemplate].concat(metadata.mirrorTemplates || []);
+    var urls = code
+      ? templates.map(function (template) { return template.replace('{code}', code.toLowerCase()); })
+      : [];
+    return Object.freeze({ type: type, code: code, url: urls[0] || '', urls: Object.freeze(urls), source: metadata.source, documentationUrl: metadata.documentationUrl, aspectRatio: metadata.aspectRatio, fallback: metadata.fallback });
   }
 
   function reserveSpace(element, type) {
@@ -105,11 +115,34 @@
     container.appendChild(button);
   }
 
+  // Small slots (search rows, HUD chips, card thumbnails) are only a few dozen
+  // pixels wide and clip their content. The full fallback card renders as a
+  // meaningless letter fragment there, which reads as a rendering bug, so the
+  // compact variant shows the ISO alpha-2 code and keeps the prose for readers.
+  function renderCompactFallback(type, options, copy) {
+    var fallback = document.createElement('span');
+    fallback.className = 'asset-fallback asset-fallback--' + type +
+      ' asset-fallback--compact' + (options.className ? ' ' + options.className : '');
+    fallback.dataset.assetFallback = type;
+    var code = document.createElement('span');
+    code.className = 'asset-fallback__code';
+    code.setAttribute('aria-hidden', 'true');
+    code.textContent = options.code || '\u2014';
+    fallback.appendChild(code);
+    var described = document.createElement('span');
+    described.className = 'sr-only';
+    described.textContent = options.title ||
+      (type === 'flag' && options.countryName ? options.countryName + ' flag unavailable' : copy.title);
+    fallback.appendChild(described);
+    return fallback;
+  }
+
   function renderFallback(type, options) {
     options = options || {};
     var copy = FALLBACK_COPY[type];
     var metadata = SOURCE_METADATA[type];
     if (!copy || !metadata) return null;
+    if (options.variant === 'compact') return renderCompactFallback(type, options, copy);
     var fallback = document.createElement('section');
     fallback.className = 'asset-fallback asset-fallback--' + type + (options.className ? ' ' + options.className : '');
     fallback.dataset.assetFallback = type;
@@ -142,10 +175,20 @@
 
   function bindImageFallback(image, type, options) {
     if (!image) return function () {};
+    options = options || {};
     reserveSpace(image.parentElement || image, type);
+    var pending = Array.isArray(options.sources) ? options.sources.slice() : [];
     var handled = false;
     function onError() {
       if (handled) return;
+      // Exhaust every mirror before degrading: a blocked primary host should
+      // not cost the player the flag itself.
+      var next = pending.shift();
+      if (next) {
+        image.addEventListener('error', onError, { once: true });
+        image.src = next;
+        return;
+      }
       handled = true;
       replaceImageWithFallback(image, type, options);
     }
@@ -157,10 +200,16 @@
     options = options || {};
     var asset = getAssetSource(type, cardOrCode);
     if (!asset || !image) return asset;
-    bindImageFallback(image, type, options);
+    var candidates = (asset.urls || []).slice();
+    var primary = candidates.shift();
+    var bindOptions = {};
+    Object.keys(options).forEach(function (key) { bindOptions[key] = options[key]; });
+    bindOptions.sources = candidates;
+    if (!bindOptions.code) bindOptions.code = asset.code;
+    bindImageFallback(image, type, bindOptions);
     if (options.alt) image.alt = options.alt;
-    if (asset.url) image.src = asset.url;
-    else replaceImageWithFallback(image, type, options);
+    if (primary) image.src = primary;
+    else replaceImageWithFallback(image, type, bindOptions);
     return asset;
   }
 

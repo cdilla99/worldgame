@@ -58,6 +58,19 @@
     const hitContext = hitCanvas.getContext('2d', { willReadFrequently: true });
     if (!context || !hitContext) return;
 
+    const REGION_COUNTRY_COUNTS = {
+      'Africa': '54 countries',
+      'Asia': '48 countries',
+      'Europe': '44 countries',
+      'North America': '23 countries',
+      'South America': '12 countries',
+      'Oceania': '14 countries'
+    };
+    const tooltip = document.createElement('div');
+    tooltip.className = 'landing-globe-tooltip';
+    tooltip.setAttribute('aria-hidden', 'true');
+    globe.appendChild(tooltip);
+
     const prefersReducedMotion = root.matchMedia('(prefers-reduced-motion: reduce)');
     let size = 320;
     let radius = 142;
@@ -82,6 +95,14 @@
     let idleRotationFrame = 0;
     let idleRotationActive = !prefersReducedMotion.matches;
     let idleRotationLastTime = 0;
+
+    // Optional showcase marker: a pulsing pin the landing showcase drops on the
+    // country it is spotlighting in the side panel. Purely decorative, never
+    // hit-tested, and disabled the moment the visitor interacts with the globe.
+    let showcaseMarker = null;
+    let showcaseMarkerEnabled = true;
+    let showcasePulseFrame = 0;
+    let showcasePulseStart = 0;
     function project(longitudeValue, latitudeValue) {
       const lambda = toRadians(normalizeLongitude(longitudeValue - longitude));
       const phi = toRadians(latitudeValue);
@@ -104,6 +125,11 @@
       idleRotationActive = false;
       if (idleRotationFrame) root.cancelAnimationFrame(idleRotationFrame);
       idleRotationFrame = 0;
+      // The showcase marker is an idle-only affordance; once the visitor takes
+      // control it retires with the auto-rotation.
+      showcaseMarkerEnabled = false;
+      showcaseMarker = null;
+      stopShowcasePulse();
     }
 
     function startIdleRotation() {
@@ -122,6 +148,56 @@
         idleRotationFrame = root.requestAnimationFrame(step);
       };
       idleRotationFrame = root.requestAnimationFrame(step);
+    }
+
+    function stopShowcasePulse() {
+      if (showcasePulseFrame) root.cancelAnimationFrame(showcasePulseFrame);
+      showcasePulseFrame = 0;
+    }
+
+    function startShowcasePulse() {
+      if (showcasePulseFrame || prefersReducedMotion.matches) return;
+      showcasePulseStart = root.performance.now();
+      const step = () => {
+        if (!showcaseMarker || !showcaseMarkerEnabled) {
+          showcasePulseFrame = 0;
+          return;
+        }
+        // The idle rotation already repaints continuously; only drive our own
+        // frames when it is not running (e.g. reduced motion is off but the
+        // globe is momentarily still) so we never double-schedule draws.
+        if (!idleRotationFrame) draw();
+        showcasePulseFrame = root.requestAnimationFrame(step);
+      };
+      showcasePulseFrame = root.requestAnimationFrame(step);
+    }
+
+    function drawShowcaseMarker(targetContext) {
+      if (!showcaseMarker || !showcaseMarkerEnabled) return;
+      const projected = project(showcaseMarker.longitude, showcaseMarker.latitude);
+      if (!projected.visible) return;
+      // A gentle 0..1 pulse so the pin reads as "alive" without distracting.
+      const pulse = prefersReducedMotion.matches
+        ? 0.5
+        : (Math.sin((root.performance.now() - showcasePulseStart) / 520) + 1) / 2;
+      const haloRadius = 7 + pulse * 6;
+      targetContext.save();
+      // Outer halo.
+      targetContext.beginPath();
+      targetContext.arc(projected.x, projected.y, haloRadius, 0, Math.PI * 2);
+      targetContext.fillStyle = `rgba(122, 240, 185, ${0.26 - pulse * 0.16})`;
+      targetContext.fill();
+      // Solid pin.
+      targetContext.beginPath();
+      targetContext.arc(projected.x, projected.y, 4.4, 0, Math.PI * 2);
+      targetContext.fillStyle = '#f1fff7';
+      targetContext.strokeStyle = '#31d493';
+      targetContext.lineWidth = 2;
+      targetContext.shadowColor = 'rgba(72, 227, 160, 0.7)';
+      targetContext.shadowBlur = 10;
+      targetContext.fill();
+      targetContext.stroke();
+      targetContext.restore();
     }
 
     function appendProjectedLine(targetContext, points) {
@@ -289,6 +365,7 @@
       drawOcean(context);
       drawGraticule(context);
       Object.keys(REGION_CENTERS).forEach(region => drawRegion(context, region, false));
+      drawShowcaseMarker(context);
       drawAtmosphere(context);
 
       hitContext.save();
@@ -457,6 +534,23 @@
             : 'Drag to rotate. Select a continent.');
           draw();
         }
+        if (hoveredRegion) {
+          const rect = globe.getBoundingClientRect();
+          const x = event.clientX - rect.left + 14;
+          const y = event.clientY - rect.top + 14;
+          tooltip.textContent = '';
+          const nameEl = document.createElement('strong');
+          nameEl.textContent = selectedLabel(hoveredRegion);
+          const countEl = document.createElement('span');
+          countEl.textContent = REGION_COUNTRY_COUNTS[hoveredRegion] || '';
+          tooltip.appendChild(nameEl);
+          tooltip.appendChild(countEl);
+          tooltip.style.left = x + 'px';
+          tooltip.style.top = y + 'px';
+          tooltip.classList.add('is-visible');
+        } else {
+          tooltip.classList.remove('is-visible');
+        }
         return;
       }
       const deltaX = event.clientX - lastX;
@@ -490,11 +584,47 @@
       if (dragging) return;
       hoveredRegion = null;
       globe.dataset.hoveredRegion = '';
+      tooltip.classList.remove('is-visible');
       updateStatus(selectedRegion === 'all'
         ? 'Drag to rotate. Select a continent.'
         : `${selectedLabel(selectedRegion)} selected.`);
       draw();
     });
+
+    const globeShell = document.getElementById('landing-globe-shell');
+    if (globeShell) {
+      globeShell.addEventListener('pointermove', event => {
+        const nextHovered = readRegionAt(event.clientX, event.clientY);
+        if (nextHovered !== hoveredRegion) {
+          hoveredRegion = nextHovered;
+          globe.dataset.hoveredRegion = selectedLabel(hoveredRegion || '');
+          draw();
+        }
+        if (hoveredRegion) {
+          const rect = globe.getBoundingClientRect();
+          const x = event.clientX - rect.left + 14;
+          const y = event.clientY - rect.top + 14;
+          tooltip.textContent = '';
+          const nameEl = document.createElement('strong');
+          nameEl.textContent = selectedLabel(hoveredRegion);
+          const countEl = document.createElement('span');
+          countEl.textContent = REGION_COUNTRY_COUNTS[hoveredRegion] || '';
+          tooltip.appendChild(nameEl);
+          tooltip.appendChild(countEl);
+          tooltip.style.left = x + 'px';
+          tooltip.style.top = y + 'px';
+          tooltip.classList.add('is-visible');
+        } else {
+          tooltip.classList.remove('is-visible');
+        }
+      });
+      globeShell.addEventListener('pointerleave', () => {
+        hoveredRegion = null;
+        globe.dataset.hoveredRegion = '';
+        tooltip.classList.remove('is-visible');
+        draw();
+      });
+    }
 
     canvas.addEventListener('keydown', event => {
       const keySteps = {
@@ -578,7 +708,23 @@
         centeredRegion: keyboardRegion,
         longitude,
         latitude
-      })
+      }),
+      // Landing showcase hook: spotlight a lon/lat with a decorative pin while
+      // the globe idly rotates. Ignored once the visitor has interacted.
+      spotlight(longitudeValue, latitudeValue) {
+        if (!showcaseMarkerEnabled) return false;
+        if (!Number.isFinite(longitudeValue) || !Number.isFinite(latitudeValue)) return false;
+        showcaseMarker = { longitude: longitudeValue, latitude: latitudeValue };
+        startShowcasePulse();
+        draw();
+        return true;
+      },
+      clearSpotlight() {
+        showcaseMarker = null;
+        stopShowcasePulse();
+        draw();
+      },
+      isShowcaseActive: () => showcaseMarkerEnabled
     };
 
     globe.classList.add('is-enhanced');

@@ -155,6 +155,41 @@ button.brand-lockup:focus-visible {
   font-weight: 650;
 }
 
+.landing-globe-tooltip {
+  position: absolute;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid rgba(85, 228, 168, 0.5);
+  border-radius: 8px;
+  background: rgba(6, 17, 31, 0.92);
+  color: #effff8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+}
+
+.landing-globe-tooltip.is-visible {
+  opacity: 1;
+}
+
+.landing-globe-tooltip strong {
+  color: #fff;
+  font-size: 0.78rem;
+}
+
+.landing-globe-tooltip span {
+  color: #7bf3bf;
+  font-size: 0.62rem;
+  font-weight: 750;
+}
+
 .landing-selection-status {
   display: flex !important;
   align-items: center;
@@ -769,6 +804,11 @@ button.brand-lockup:focus-visible {
   object-fit: cover;
   border-radius: 7px;
   box-shadow: 0 10px 22px rgba(1, 7, 18, 0.26);
+}
+
+/* Nepal and other non-rectangular flags need contain rather than cover. */
+img.is-nonrect-flag {
+  object-fit: contain !important;
 }
 
 .feedback-facts {
@@ -2482,5 +2522,1020 @@ button.brand-lockup:focus-visible {
   .landing-title-accent,
   .landing-title-accent::after {
     animation: none;
+  }
+}
+
+/* Mobile-first landing hierarchy: brand, game choice, selected setup, records, player. */
+.landing {
+  gap: 16px;
+}
+
+.landing-utility-header {
+  justify-content: center;
+  padding: 22px 0 4px;
+  border-bottom: 0;
+}
+
+button.brand-lockup {
+  width: 100%;
+  justify-items: center;
+  text-align: center;
+}
+
+.brand-logo {
+  width: min(82vw, 320px);
+}
+
+.landing-utility-copy {
+  display: block;
+  margin-top: 7px;
+  padding-left: 0;
+  color: #b8c8da;
+  font-size: 1rem;
+  font-weight: 650;
+  letter-spacing: 0;
+  line-height: 1.35;
+  text-transform: none;
+}
+
+.landing-experience-chooser {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid rgba(120, 184, 255, 0.38);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(20, 43, 72, 0.94), rgba(9, 22, 40, 0.98));
+  box-shadow: 0 20px 50px rgba(1, 7, 18, 0.22);
+}
+
+.landing-experience-chooser .landing-games-heading {
+  margin-bottom: 0;
+  text-align: center;
+}
+
+.landing-experience-chooser .landing-games-heading h2 {
+  font-size: clamp(1.75rem, 8vw, 2.25rem);
+}
+
+.landing-experience-chooser .landing-game-switch {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.landing-experience-chooser .landing-game-option {
+  position: relative;
+  min-height: 86px;
+  padding: 14px 48px 14px 14px;
+}
+
+.landing-experience-chooser .landing-game-option strong {
+  font-size: 0.95rem;
+}
+
+.landing-experience-chooser .landing-game-option small {
+  font-size: 0.75rem;
+}
+
+.landing-experience-chooser .landing-game-option.is-active::after,
+.landing-experience-chooser .landing-game-option[aria-pressed='true']::after {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: #43dc9e;
+  color: #06271d;
+  content: '✓';
+  font-size: 0.8rem;
+  font-weight: 950;
+  transform: translateY(-50%);
+}
+
+.landing-setup-panel > .landing-game-panel {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.landing > .landing-player-context {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  width: 100%;
+  max-width: none;
+  padding: 13px 14px;
+  border-color: rgba(129, 157, 190, 0.32);
+  border-radius: 14px;
+  background: rgba(7, 17, 31, 0.48);
+  backdrop-filter: none;
+}
+
+.landing > .landing-player-context .player-context-copy {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 3px 7px;
+  padding-left: 0;
+}
+
+.landing > .landing-player-context .player-context-eyebrow {
+  display: block;
+  align-self: baseline;
+}
+
+.landing > .landing-player-context .player-context-name {
+  align-self: baseline;
+  font-size: 0.9rem;
+}
+
+.landing > .landing-player-context .player-context-detail {
+  position: static;
+  grid-column: 1 / -1;
+  width: auto;
+  height: auto;
+  margin-top: 2px;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+  color: #8fa4bf;
+  font-size: 0.7rem;
+  white-space: normal;
+}
+
+.landing > .landing-player-context .player-context-action {
+  min-width: 104px;
+  min-height: 44px;
+  padding-inline: 12px;
+  border-color: rgba(120, 184, 255, 0.3);
+  border-radius: 10px;
+  font-size: 0.72rem;
+}
+
+@media (min-width: 600px) {
+  .landing-experience-chooser .landing-game-switch {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .landing-utility-header {
+    justify-content: flex-start;
+    padding-top: 20px;
+  }
+
+  button.brand-lockup {
+    width: auto;
+    justify-items: start;
+    text-align: left;
+  }
+
+  .brand-logo {
+    width: min(38vw, 270px);
+  }
+
+  .landing-utility-copy {
+    padding-left: 55px;
+    font-size: 0.9rem;
+  }
+
+  .landing-experience-chooser {
+    padding: 20px;
+  }
+
+  .landing-experience-chooser .landing-games-heading {
+    text-align: left;
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing {
+    grid-template-areas:
+      'header header'
+      'chooser chooser'
+      'proposition setup'
+      'statistics setup'
+      'profile setup';
+  }
+
+  .landing-utility-header {
+    grid-area: header;
+  }
+
+  .landing-experience-chooser {
+    grid-area: chooser;
+    grid-template-columns: minmax(240px, 0.42fr) minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .landing-experience-chooser .landing-game-option {
+    min-height: 92px;
+  }
+
+  .landing-proposition {
+    grid-area: proposition;
+  }
+
+  .landing-setup-panel {
+    grid-area: setup;
+  }
+
+  .landing-statistics {
+    grid-area: statistics;
+  }
+
+  .landing > .landing-player-context {
+    grid-area: profile;
+  }
+}
+
+@media (max-width: 420px) {
+  .landing-proposition,
+  .landing-setup-panel {
+    padding: 16px;
+  }
+
+  .landing-experience-chooser {
+    padding: 16px;
+  }
+
+  .landing > .landing-player-context .player-context-action {
+    min-width: 96px;
+    padding-inline: 10px;
+  }
+}
+
+/* Explorer-first landing hierarchy. Keep the globe as the product signature and
+   move scored challenges into a quieter, progressive section below it. */
+.landing {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(18px, 2.5vw, 30px);
+  width: min(100%, 1400px);
+  margin-inline: auto;
+}
+
+.landing-utility-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 72px;
+  padding: 8px 0 14px;
+  border-bottom: 1px solid rgba(129, 157, 190, 0.2);
+}
+
+.landing-utility-header button.brand-lockup {
+  width: auto;
+  justify-items: start;
+  text-align: left;
+}
+
+.landing-utility-header .brand-logo {
+  width: clamp(178px, 18vw, 248px);
+}
+
+.landing-utility-header .landing-player-context {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: auto;
+  max-width: 360px;
+  padding: 5px;
+  border-color: rgba(120, 184, 255, 0.26);
+  background: rgba(7, 17, 31, 0.58);
+}
+
+.landing-utility-header .player-context-copy {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 2px 6px;
+  padding-left: 10px;
+}
+
+.landing-utility-header .player-context-detail {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.landing-utility-header .player-context-action {
+  min-height: 42px;
+  padding-inline: 14px;
+  border: 1px solid rgba(120, 184, 255, 0.24);
+  background: rgba(25, 49, 78, 0.9);
+  font-size: 0.75rem;
+}
+
+.landing-hero {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: clamp(8px, 1.5vw, 20px) 16px 0;
+  text-align: center;
+}
+
+.landing-hero .landing-tagline {
+  max-width: 23ch;
+  margin: 0;
+  color: #f8fbff;
+  font-size: clamp(2.6rem, 4.6vw, 4.9rem);
+  line-height: 1.02;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.landing-hero .landing-title-accent {
+  display: inline;
+  color: #63e4a9;
+  text-decoration: none;
+}
+
+.landing-hero .landing-title-accent::after {
+  content: none;
+}
+
+.landing-hero .landing-objective {
+  max-width: 68ch;
+  margin: 0;
+  color: #b8c8da;
+  font-size: clamp(0.95rem, 1.3vw, 1.15rem);
+  line-height: 1.55;
+  text-align: center;
+}
+
+.landing-hero .landing-proof {
+  width: min(100%, 530px);
+  margin-top: 8px;
+}
+
+.landing-hero .landing-proof li {
+  min-height: 58px;
+}
+
+.landing-explorer-showcase {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+  align-items: stretch;
+  gap: clamp(18px, 2.2vw, 30px);
+  min-height: 520px;
+  padding: clamp(18px, 2.4vw, 34px);
+  overflow: visible;
+  border-color: rgba(120, 184, 255, 0.32);
+  background: linear-gradient(140deg, rgba(19, 46, 76, 0.98), rgba(7, 20, 35, 0.98));
+}
+
+.landing-explorer-showcase::before {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image:
+    linear-gradient(rgba(120, 184, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 184, 255, 0.035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  content: '' !important;
+  pointer-events: none;
+}
+
+.landing-explorer-globe-card,
+.landing-country-preview {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  border: 1px solid rgba(120, 184, 255, 0.22);
+  border-radius: 20px;
+  background: rgba(5, 17, 31, 0.52);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.landing-explorer-globe-card {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  padding: clamp(16px, 2vw, 24px);
+}
+
+.landing-explorer-card-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.landing-explorer-card-heading h2,
+.landing-country-preview-heading h2,
+.landing-challenges-heading h2 {
+  margin-top: 5px;
+  color: #f8fbff;
+  font-family: var(--font-display);
+  font-weight: 850;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+}
+
+.landing-explorer-card-heading h2 {
+  font-size: clamp(1.4rem, 2vw, 2rem);
+}
+
+.landing-explorer-free {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border: 1px solid rgba(99, 228, 169, 0.36);
+  border-radius: 999px;
+  color: #9af0c9;
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.landing-explorer-showcase .landing-globe-shell {
+  align-content: center;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.landing-explorer-showcase .landing-globe {
+  width: min(100%, 390px);
+}
+
+.landing-explorer-showcase .landing-globe-status {
+  max-width: 48ch;
+  color: #a9bdd3;
+  font-size: 0.78rem;
+}
+
+.landing-country-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: clamp(20px, 2.5vw, 34px);
+}
+
+.landing-country-preview-heading h2 {
+  max-width: 18ch;
+  font-size: clamp(1.7rem, 2.5vw, 2.65rem);
+}
+
+.landing-country-preview-heading > p:last-child {
+  max-width: 42ch;
+  margin-top: 10px;
+  color: #a9bdd3;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.landing-country-example {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid rgba(120, 184, 255, 0.24);
+  border-radius: 16px;
+  background: rgba(17, 38, 62, 0.72);
+  transition: opacity 260ms ease;
+}
+
+.landing-country-example.is-showcasing {
+  opacity: 0.28;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-country-example { transition: none; }
+  .landing-country-example.is-showcasing { opacity: 1; }
+}
+
+.landing-country-example-identity {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.landing-country-example-flag {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+  place-items: center;
+  border: 1px solid rgba(120, 184, 255, 0.22);
+  border-radius: 16px;
+  background: rgba(4, 15, 28, 0.72);
+  font-size: 2rem;
+}
+
+.landing-country-example-identity span,
+.landing-country-example-facts dt {
+  color: #93a9c1;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.landing-country-example-identity h3 {
+  margin-top: 2px;
+  color: #f8fbff;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+}
+
+.landing-country-example-identity p {
+  color: #9af0c9;
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.landing-country-example-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid rgba(120, 184, 255, 0.18);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.landing-country-example-facts > div {
+  min-width: 0;
+  padding: 10px;
+}
+
+.landing-country-example-facts > div + div {
+  border-left: 1px solid rgba(120, 184, 255, 0.18);
+}
+
+.landing-country-example-facts dd {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+  color: #f8fbff;
+  font-size: 0.75rem;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.landing-country-example-fact {
+  padding-left: 12px;
+  border-left: 3px solid #63e4a9;
+  color: #c8d6e5;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.landing-country-preview .landing-explore-primary {
+  width: 100%;
+  min-height: 58px;
+  margin-top: auto;
+  border-color: #43dc9e;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #63e4a9, #35d7a1);
+  color: #05251a;
+  font-size: 1rem;
+  font-weight: 900;
+  box-shadow: 0 16px 34px rgba(31, 190, 126, 0.2);
+}
+
+.landing-challenges {
+  display: grid;
+  gap: 18px;
+  padding: clamp(20px, 2.5vw, 32px);
+  border: 1px solid rgba(120, 184, 255, 0.24);
+  border-radius: 22px;
+  background: linear-gradient(145deg, rgba(13, 32, 53, 0.86), rgba(6, 18, 32, 0.9));
+}
+
+/* Left-aligned and low-chrome on purpose: this block is the next step after
+   exploring, not a marketing pitch, so it reads as a toolbar rather than a
+   centered hero with feature cards. */
+.landing-challenges-heading {
+  text-align: left;
+}
+
+.landing-challenges-heading h2 {
+  margin-top: 0;
+  font-size: clamp(1.25rem, 1.7vw, 1.6rem);
+}
+
+.landing-challenges-heading > p:last-child {
+  margin-top: 4px;
+  color: #9fb2c8;
+  font-size: 0.82rem;
+}
+
+.landing-challenge-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.landing-challenge-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 72px;
+  padding: 14px 16px;
+  border: 1px solid rgba(120, 184, 255, 0.26);
+  border-radius: 12px;
+  background: rgba(7, 19, 34, 0.7);
+  color: #f8fbff;
+  cursor: pointer;
+  text-align: left;
+}
+
+.landing-challenge-card:hover,
+.landing-challenge-card:focus-visible,
+.landing-challenge-card[aria-expanded='true'] {
+  border-color: rgba(99, 228, 169, 0.66);
+  background: rgba(25, 63, 74, 0.55);
+}
+
+/* Primary challenge (Country Hunt): dominant, filled, higher contrast so the
+   main call to action clearly wins the eye over the advanced/secondary card. */
+.landing-challenge-card-primary {
+  min-height: 92px;
+  border-color: rgba(99, 228, 169, 0.55);
+  background: linear-gradient(135deg, rgba(24, 74, 71, 0.72), rgba(13, 38, 52, 0.82));
+  box-shadow: 0 10px 28px -18px rgba(99, 228, 169, 0.7);
+}
+
+.landing-challenge-card-primary:hover,
+.landing-challenge-card-primary:focus-visible {
+  border-color: rgba(99, 228, 169, 0.9);
+  background: linear-gradient(135deg, rgba(30, 90, 86, 0.85), rgba(18, 48, 64, 0.9));
+}
+
+.landing-challenge-card-primary strong {
+  font-size: 1.12rem;
+}
+
+.landing-challenge-card strong,
+.landing-challenge-card small {
+  display: block;
+}
+
+.landing-challenge-card strong {
+  font-size: 1rem;
+}
+
+.landing-challenge-card strong em {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: rgba(255, 208, 113, 0.12);
+  color: #ffd071;
+  font-size: 0.56rem;
+  font-style: normal;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  vertical-align: 2px;
+}
+
+.landing-challenge-card small {
+  margin-top: 5px;
+  color: #9fb2c8;
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+.landing-challenge-action {
+  padding: 7px 13px;
+  border: 1px solid rgba(99, 228, 169, 0.4);
+  border-radius: 9px;
+  color: #9af0c9;
+  font-size: 0.72rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+/* Filled action pill on the primary card reinforces "this is the button to press". */
+.landing-challenge-card-primary .landing-challenge-action {
+  border-color: transparent;
+  background: #63e4a9;
+  color: #06231a;
+}
+
+.landing-challenge-card-primary:hover .landing-challenge-action,
+.landing-challenge-card-primary:focus-visible .landing-challenge-action {
+  background: #7dfcc0;
+}
+
+.landing-border-outline-setup {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(260px, 0.7fr);
+  gap: 16px 24px;
+  margin-top: 4px;
+  padding: 22px;
+  border: 1px solid rgba(120, 184, 255, 0.28);
+  border-radius: 18px;
+  background: rgba(5, 16, 29, 0.66);
+}
+
+.landing-border-outline-setup .landing-mode-heading,
+.landing-border-outline-setup .mode-select,
+.landing-border-outline-setup .game-setup-wrap,
+.landing-border-outline-setup .landing-selection-status,
+.landing-border-outline-setup .landing-start-action,
+.landing-border-outline-setup > .landing-start-note {
+  grid-column: 1;
+}
+
+.landing-border-outline-setup .landing-shape-preview {
+  grid-column: 2;
+  grid-row: 1 / span 6;
+  align-self: stretch;
+  width: 100%;
+}
+
+.landing-border-outline-setup .landing-shape-preview-stage {
+  min-height: 100%;
+}
+
+.landing-statistics {
+  padding: 10px 16px;
+  border-color: rgba(120, 184, 255, 0.18);
+  background: rgba(6, 16, 29, 0.4);
+}
+
+@media (min-width: 1024px) {
+  .landing {
+    display: flex;
+    min-height: 0;
+  }
+
+  .landing-utility-header,
+  .landing-hero,
+  .landing-explorer-showcase,
+  .landing-challenges,
+  .landing-statistics {
+    width: 100%;
+  }
+}
+
+@media (max-width: 900px) {
+  .landing-explorer-showcase {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .landing-explorer-globe-card {
+    min-height: 430px;
+  }
+
+  .landing-challenge-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .landing {
+    gap: 16px;
+  }
+
+  .landing-utility-header {
+    justify-content: space-between;
+    min-height: 60px;
+    padding: 6px 0 10px;
+  }
+
+  .landing-utility-header .brand-logo {
+    width: min(47vw, 190px);
+  }
+
+  .landing-utility-header .landing-player-context {
+    gap: 0;
+    max-width: 48vw;
+    border: 0;
+    background: transparent;
+  }
+
+  .landing-utility-header .player-context-copy {
+    display: none;
+  }
+
+  .landing-utility-header .player-context-action {
+    min-width: 0;
+    min-height: 42px;
+    padding-inline: 11px;
+    white-space: nowrap;
+  }
+
+  .landing-hero {
+    gap: 9px;
+    padding: 12px 2px 4px;
+  }
+
+  .landing-hero .landing-tagline {
+    max-width: 13ch;
+    font-size: clamp(2.25rem, 10.7vw, 3.35rem);
+    line-height: 1.02;
+  }
+
+  .landing-hero .landing-objective {
+    max-width: 38ch;
+    font-size: 0.88rem;
+    line-height: 1.45;
+  }
+
+  .landing-hero .landing-proof {
+    margin-top: 5px;
+  }
+
+  .landing-hero .landing-proof li {
+    min-height: 52px;
+    padding-inline: 7px;
+  }
+
+  .landing-explorer-showcase {
+    gap: 12px;
+    min-height: 0;
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .landing-explorer-globe-card {
+    min-height: 0;
+    padding: 15px;
+    border-radius: 15px;
+  }
+
+  .landing-explorer-showcase .landing-globe {
+    width: min(100%, 310px);
+  }
+
+  .landing-country-preview {
+    gap: 14px;
+    padding: 18px;
+    border-radius: 15px;
+  }
+
+  .landing-country-preview-heading h2 {
+    font-size: 1.65rem;
+  }
+
+  .landing-country-example-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .landing-country-example-facts > div + div {
+    border-top: 1px solid rgba(120, 184, 255, 0.18);
+    border-left: 0;
+  }
+
+  .landing-challenges {
+    padding: 18px 14px;
+    border-radius: 18px;
+  }
+
+  .landing-challenge-card {
+    grid-template-columns: auto minmax(0, 1fr);
+    min-height: 124px;
+  }
+
+  .landing-challenge-action {
+    grid-column: 2;
+  }
+
+  .landing-border-outline-setup {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 15px;
+  }
+
+  .landing-border-outline-setup .landing-mode-heading,
+  .landing-border-outline-setup .mode-select,
+  .landing-border-outline-setup .game-setup-wrap,
+  .landing-border-outline-setup .landing-selection-status,
+  .landing-border-outline-setup .landing-start-action,
+  .landing-border-outline-setup > .landing-start-note,
+  .landing-border-outline-setup .landing-shape-preview {
+    grid-column: 1;
+  }
+
+  .landing-border-outline-setup .landing-shape-preview {
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 390px) {
+  .landing-hero .landing-tagline {
+    font-size: clamp(2.05rem, 10.2vw, 2.65rem);
+  }
+
+  .landing-hero .landing-proof strong {
+    font-size: 0.92rem;
+  }
+
+  .landing-country-example {
+    padding: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-explorer-showcase .landing-globe canvas,
+  .landing-explorer-showcase .landing-globe-art,
+  .landing-explorer-showcase .landing-globe-atmosphere {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Focus the landing page on the globe. Details remain available in Explorer
+   after a country is selected, while the home screen stays intentionally quiet. */
+.landing-hero {
+  gap: 8px;
+  padding: 12px 16px 0;
+}
+
+.landing-hero .landing-tagline {
+  max-width: none;
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  line-height: 1.05;
+}
+
+.landing-hero .landing-objective {
+  max-width: 42ch;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.landing-hero .landing-eyebrow,
+.landing-hero .landing-proof {
+  display: none !important;
+}
+
+.landing-explorer-showcase {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  min-height: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.landing-explorer-showcase::before,
+.landing-explorer-card-heading,
+.landing-country-preview-heading,
+.landing-country-preview .landing-explore-primary,
+.landing-country-preview .landing-start-note {
+  display: none;
+}
+
+.landing-explorer-globe-card,
+.landing-country-preview {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.landing-explorer-globe-card {
+  display: grid;
+  min-height: 0;
+  padding: 0;
+}
+
+.landing-explorer-showcase .landing-globe-shell {
+  grid-area: auto;
+  justify-items: center;
+  min-height: 0;
+  padding: 0;
+  gap: 10px;
+}
+
+.landing-explorer-showcase .landing-globe {
+  width: clamp(320px, 56vw, 680px);
+  max-width: 100%;
+}
+
+.landing-explorer-showcase .landing-globe-status {
+  max-width: 42ch;
+  color: #b8c8da;
+  font-size: 0.9rem;
+}
+
+.landing-country-preview {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .landing-hero {
+    padding-top: 8px;
+  }
+
+  .landing-hero .landing-tagline {
+    max-width: none;
+    font-size: clamp(1.7rem, 8vw, 2.35rem);
+  }
+
+  .landing-explorer-showcase .landing-globe {
+    width: min(88vw, 430px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-explorer-showcase .landing-globe {
+    width: clamp(550px, 48vw, 700px);
   }
 }
