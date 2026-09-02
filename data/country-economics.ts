@@ -4,7 +4,7 @@ export type EconomicQuality = "D" | "M" | "P";
 export type BigMacQuality = "O" | "R" | "A" | "M" | "N";
 
 export type CountryEconomicTuple = readonly [
-  annualNetSalaryUsd: number,
+  annualGrossSalaryUsd: number | null,
   bigMacUsd: number | null,
   mcdMealUsd: number,
   coke330Usd: number,
@@ -13,7 +13,7 @@ export type CountryEconomicTuple = readonly [
 ];
 
 export interface CountryEconomics {
-  annualNetSalaryUsd: number;
+  annualGrossSalaryUsd: number | null;
   bigMacUsd: number | null;
   mcdMealUsd: number;
   coke330Usd: number;
@@ -32,7 +32,7 @@ export function getCountryEconomics(iso2: string): CountryEconomics | null {
   if (!row) return null;
 
   return {
-    annualNetSalaryUsd: row[0],
+    annualGrossSalaryUsd: row[0],
     bigMacUsd: row[1],
     mcdMealUsd: row[2],
     coke330Usd: row[3],
