@@ -1461,9 +1461,10 @@
       if (selectedCountryId) {
         renderCountryCard(cardsById.get(selectedCountryId));
       } else {
-        // No placeholder card before a selection: the info panel stays empty
-        // until the user taps a country, so the globe leads the experience.
-        emptyCard.classList.add('hidden');
+        // Show the "select a country" placeholder before a selection. On
+        // narrow/mobile layouts the globe leads the experience instead, so
+        // CSS hides .explorer-empty-card below the mobile breakpoint.
+        emptyCard.classList.remove('hidden');
         countryCard.classList.add('hidden');
       }
       setStatus(geometryState === 'partial'

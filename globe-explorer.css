@@ -2132,8 +2132,11 @@
     min-height: 0;
   }
 
+  /* Below this breakpoint the layout stacks into a single column and the
+     globe leads the experience, so skip the "select a country" placeholder
+     rather than showing an empty box above/below the stage. */
   .explorer-empty-card {
-    min-height: 190px;
+    display: none;
   }
 }
 
