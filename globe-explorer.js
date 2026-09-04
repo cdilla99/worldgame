@@ -73,6 +73,7 @@
     const landmark = document.getElementById('explorer-country-landmark');
     const fact = document.getElementById('explorer-country-fact');
     const details = document.getElementById('explorer-more-details');
+    const focusCountryButton = document.getElementById('btn-explorer-focus-country');
     const landmarkMedia = document.getElementById('explorer-landmark-media');
     const landmarkMediaImage = document.getElementById('explorer-landmark-media-image');
     const landmarkMediaToggle = document.getElementById('explorer-landmark-media-toggle');
@@ -1292,17 +1293,45 @@
       renderCountryCard(country);
       dismissSearch();
       searchInput.value = country.name;
-      setStatus(`${country.name} ${country.kind === 'territory' ? 'territory' : 'country'} selected.`);
-      live.textContent = `${country.name} selected. Capital: ${country.capital}.`;
-      if (options.animate !== false) animateToCountry(country);
+      setStatus(`${country.name} ${country.kind === 'territory' ? 'territory' : 'country'} selected. Use Zoom to country to center and magnify it.`);
+      live.textContent = `${country.name} selected. Capital: ${country.capital}. Activate Zoom to country to center and magnify it.`;
+      // Selection no longer moves the camera by default. Exploratory taps keep
+      // the current view (and neighbours) in frame; centering + auto-zoom is an
+      // explicit action via focusSelectedCountry() (card button, second tap on
+      // the selected country, or a second keyboard activation).
+      if (options.animate === true) animateToCountry(country);
       else draw();
+      syncFocusControl();
       root.dispatchEvent(new CustomEvent('geowars:explorer-country', {
         detail: { countryId: country.id, placeId: country.id, kind: country.kind || 'country', source: options.source || 'globe' }
       }));
     }
 
+    // Explicit "center + auto-zoom on the selected country" action. Kept
+    // separate from selectCountry so exploratory selection stays calm; this is
+    // reached via the card button, a second tap on the already-selected
+    // country, or a second keyboard activation. No-op during a hunt (the hunt
+    // flow owns its own camera behaviour).
+    function focusSelectedCountry() {
+      if (huntActive || !selectedCountryId) return;
+      const country = cardsById.get(selectedCountryId);
+      if (!country) return;
+      animateToCountry(country);
+      setStatus(`Centered on ${country.name}.`);
+      live.textContent = `Centered and zoomed to ${country.name}.`;
+    }
+
+    // The card focus button only makes sense once a country is selected and we
+    // are not mid-hunt.
+    function syncFocusControl() {
+      if (!focusCountryButton) return;
+      const available = !huntActive && Boolean(selectedCountryId);
+      focusCountryButton.disabled = !available;
+    }
+
     function setExplorerMode(mode) {
       const isHunt = mode === 'hunt';
+      syncFocusControl();
       freeModeButton?.classList.toggle('is-active', !isHunt);
       huntModeButton?.classList.toggle('is-active', isHunt);
       freeModeButton?.setAttribute('aria-pressed', String(!isHunt));
@@ -1463,6 +1492,7 @@
       endHunt(false);
       huntSummary?.classList.add('hidden');
       huntCompare?.classList.add('hidden');
+      syncFocusControl();
       if (selectedCountryId) {
         renderCountryCard(cardsById.get(selectedCountryId));
       } else {
@@ -1480,7 +1510,14 @@
 
     function handleCountryActivation(countryId, options = {}) {
       if (!huntActive) {
-        selectCountry(countryId, options);
+        // Activating the already-selected country is the "confirm" gesture that
+        // centers and zooms — the deliberate second step after an exploratory
+        // first selection. A different country just selects (no camera move).
+        if (Number(countryId) === selectedCountryId) {
+          focusSelectedCountry();
+        } else {
+          selectCountry(countryId, options);
+        }
         return;
       }
       const country = cardsById.get(Number(countryId));
@@ -1719,6 +1756,9 @@
       try { root.AudioEngine?.init?.(); } catch (audioError) {}
       renderMusicControl(false);
       navigation?.showExplorer?.();
+      // Establish the focus button's disabled state on open: with no country
+      // selected (and no hunt running) "Zoom to country" has nothing to act on.
+      syncFocusControl();
       setStatus('Drag to explore. Select a country or territory to learn more.');
       loadGeometry().then(() => root.requestAnimationFrame(() => {
         resize();
@@ -1737,6 +1777,7 @@
       selectedCountryId = null;
       hoveredCountryId = null;
       centeredCountryId = null;
+      syncFocusControl();
       resetGlobeView();
       try { root.BackgroundMusic?.stop?.(); } catch (musicError) {}
       renderMusicControl(false);
@@ -1765,6 +1806,7 @@
     huntExitButton?.addEventListener('click', () => endHunt(true));
     huntAgainButton?.addEventListener('click', startHunt);
     huntFreeButton?.addEventListener('click', showFreeExplorer);
+    focusCountryButton?.addEventListener('click', focusSelectedCountry);
     homeButtons.forEach(button => button.addEventListener('click', returnHome));
     musicButton?.addEventListener('click', toggleExplorerMusic);
     hapticsButton?.addEventListener('click', toggleExplorerHaptics);
@@ -1954,7 +1996,9 @@
         setStatus(huntActive
           ? `Find ${getCountryName(huntTargetId)}. Press Enter to choose the centered country.`
           : centeredCountryId
-            ? `${getCountryName(centeredCountryId)} centered. Press Enter to select.`
+            ? centeredCountryId === selectedCountryId
+              ? `${getCountryName(centeredCountryId)} selected. Press Enter again to zoom in.`
+              : `${getCountryName(centeredCountryId)} centered. Press Enter to select.`
             : 'Use arrow keys to explore.');
       } else if (event.key === '+' || event.key === '=') {
         event.preventDefault();
@@ -1983,6 +2027,7 @@
       open: openExplorer,
       close: returnHome,
       selectCountry,
+      focusSelectedCountry,
       startHunt,
       endHunt,
       submitCountry: handleCountryActivation,
