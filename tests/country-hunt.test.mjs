@@ -40,7 +40,11 @@ test('Country Hunt exposes a complete 60-second game loop', () => {
   assert.match(html, /id="explorer-hunt-score"/);
   assert.match(html, /id="explorer-hunt-summary"/);
   assert.match(script, /function startHunt\(\)/);
-  assert.match(script, /function startHunt\(\) \{[\s\S]*longitude = -16;[\s\S]*latitude = 12;[\s\S]*zoom = MIN_ZOOM;/);
+  // startHunt resets the globe to the default view via the shared resetGlobeView()
+  // helper (DEFAULT_VIEW = { longitude: -16, latitude: 12, zoom: MIN_ZOOM }).
+  assert.match(script, /function startHunt\(\) \{[\s\S]*resetGlobeView\(\);/);
+  assert.match(script, /function resetGlobeView\(\) \{[\s\S]*longitude = DEFAULT_VIEW\.longitude;[\s\S]*latitude = DEFAULT_VIEW\.latitude;[\s\S]*zoom = DEFAULT_VIEW\.zoom;/);
+  assert.match(script, /DEFAULT_VIEW = Object\.freeze\(\{ longitude: -16, latitude: 12, zoom: MIN_ZOOM \}\)/);
   assert.match(script, /huntDeadline = Date\.now\(\) \+ 60000/);
   assert.match(script, /function handleCountryActivation/);
   assert.match(script, /country\.id === target\.id/);

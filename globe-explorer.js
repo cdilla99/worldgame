@@ -11,6 +11,7 @@
   const geometryUrl = 'assets/globe-countries.js?v=20260831-cy-ps197';
   const territoryGeometryUrl = 'assets/globe-territories.js?v=20260730-guidance1';
   const MIN_ZOOM = 1;
+  const DEFAULT_VIEW = Object.freeze({ longitude: -16, latitude: 12, zoom: MIN_ZOOM });
   // Zoom 9 stopped well short of small island and microstate outlines. At 60 the
   // globe renders roughly 180 px per degree, which resolves Malta, Singapore,
   // and Bahrain as real shapes; true microstates keep their marker dot.
@@ -156,9 +157,9 @@
     let size = 560;
     let center = 280;
     let baseRadius = 252;
-    let longitude = -16;
-    let latitude = 12;
-    let zoom = 1;
+    let longitude = DEFAULT_VIEW.longitude;
+    let latitude = DEFAULT_VIEW.latitude;
+    let zoom = DEFAULT_VIEW.zoom;
     let hoveredCountryId = null;
     let selectedCountryId = null;
     let centeredCountryId = null;
@@ -588,6 +589,12 @@
 
     function setStatus(message) {
       status.textContent = message;
+    }
+
+    function resetGlobeView() {
+      longitude = DEFAULT_VIEW.longitude;
+      latitude = DEFAULT_VIEW.latitude;
+      zoom = DEFAULT_VIEW.zoom;
     }
 
     function syncGlobeControls() {
@@ -1386,9 +1393,7 @@
       clearHuntTimers();
       const sessionId = ++huntSessionId;
       stopAnimation();
-      longitude = -16;
-      latitude = 12;
-      zoom = MIN_ZOOM;
+      resetGlobeView();
       centeredCountryId = null;
       huntActive = true;
       huntDeadline = 0;
@@ -1724,8 +1729,19 @@
     function returnHome() {
       stopAnimation();
       endHunt(false);
+      // Explorer is the app's home screen, so navigating "home" from within it
+      // must reset selection/view state itself: showScreen() is a no-op when
+      // Explorer is already visible, and openExplorer() would otherwise
+      // re-center on a still-selected country instead of returning to the
+      // default, unselected view.
+      selectedCountryId = null;
+      hoveredCountryId = null;
+      centeredCountryId = null;
+      resetGlobeView();
       try { root.BackgroundMusic?.stop?.(); } catch (musicError) {}
       renderMusicControl(false);
+      showFreeExplorer();
+      live.textContent = status.textContent;
       navigation?.showHome?.();
     }
 
@@ -1767,9 +1783,7 @@
     zoomOutButton.addEventListener('click', () => setZoom(zoom / ZOOM_STEP));
     resetButton.addEventListener('click', () => {
       stopAnimation();
-      longitude = -16;
-      latitude = 12;
-      zoom = 1;
+      resetGlobeView();
       hoveredCountryId = null;
       setStatus(huntActive
         ? `Find ${getCountryName(huntTargetId)}.`
