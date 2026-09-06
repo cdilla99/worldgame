@@ -37,6 +37,18 @@ const state = {
 
 const difficultyLadder = window.GeoWarsDifficulty || null;
 const ladderProgress = window.GeoWarsLadderProgress || null;
+const learningProgress = window.GeoWarsLearning || null;
+
+// Feed a single answered round into the spaced-repetition store. Central helper
+// so every answer path (typed, choices, skip) records consistently. Skips are
+// treated as a miss so unknown countries resurface. Guarded/defensive: a
+// storage failure must never interrupt gameplay.
+function recordLearningOutcome(card, correct) {
+  if (!learningProgress || !card || !Number.isFinite(Number(card.id))) return;
+  try {
+    learningProgress.record(card.id, Boolean(correct));
+  } catch (e) { /* storage unavailable: ignore */ }
+}
 
 // ============================================================
 // HELPERS
@@ -485,6 +497,7 @@ const $playerProfileStatus = document.getElementById('player-profile-status');
 const $playerProfileDescription = document.getElementById('player-profile-description');
 const $sendPlayerLinkButton = document.getElementById('btn-send-player-link');
 const $landingShapeGameButton = document.getElementById('btn-landing-shape-game');
+const $atlasShapeChallengeButton = document.getElementById('btn-atlas-shape-challenge');
 const $shapeChallengePanel = document.getElementById('shape-challenge-panel');
 const $landingShapePreview = document.getElementById('landing-shape-preview');
 const $landingShapePreviewArt = document.getElementById('landing-shape-preview-art');
@@ -501,6 +514,10 @@ const $landingChallenges = document.querySelector('.landing-challenges');
 const $landingStatistics = document.querySelector('.landing-statistics');
 const $explorerUtilityActions = document.querySelector('.explorer-utility-actions');
 const $explorerSecondaryContent = document.getElementById('explorer-secondary-content');
+const $atlasPlayerSlot = document.getElementById('atlas-player-slot');
+const $atlasStatsSlot = document.getElementById('atlas-stats-slot');
+const $atlasShapeSetupSlot = document.getElementById('atlas-shape-setup-slot');
+const $atlasMenuSetupSlot = document.getElementById('atlas-menu-setup-slot');
 const $levelButtons = Array.from(document.querySelectorAll('.diff-btn[data-level]'));
 const $btnIKnow = document.getElementById('btn-i-know');
 const $btnShowOptions = document.getElementById('btn-show-options');
@@ -514,6 +531,8 @@ function showScreen(screen) {
   [$landing, $explorer, $game, $results].forEach(s => s.classList.add('hidden'));
   screen.classList.remove('hidden');
   document.body.classList.toggle('is-explorer-active', screen === $explorer);
+  const themeColor = screen === $explorer && $explorer?.dataset.atlasView === 'shapes' ? '#e8e3d7' : '#07111f';
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
 }
 
 // ============================================================
@@ -538,10 +557,9 @@ function renderLandingShapePreview(cards, geometry) {
 
   $landingShapePreviewArt.classList.remove('is-changing');
   $landingShapePreviewArt.replaceChildren(silhouette);
-  const flagCode = assetFallbacks?.getCountryCode?.(card);
-  if ($landingShapePreviewFlag && flagCode) {
-    $landingShapePreviewFlag.src = 'https://flagcdn.com/w80/' + flagCode.toLowerCase() + '.png';
-    $landingShapePreviewFlag.alt = card.name + ' flag';
+  if ($landingShapePreviewFlag) {
+    $landingShapePreviewFlag.textContent = card.flag || '🌍';
+    $landingShapePreviewFlag.setAttribute('aria-label', card.name + ' flag');
   }
   if ($landingShapePreviewCountry) $landingShapePreviewCountry.textContent = card.name;
   if ($landingShapePreview) {
@@ -718,11 +736,19 @@ function wireLandingShowcaseInteractionStop() {
 }
 
 function setShapeChallengeExpanded(expanded) {
-  if (!$shapeChallengePanel || !$landingShapeGameButton) return;
-  $shapeChallengePanel.hidden = !expanded;
-  $shapeChallengePanel.classList.toggle('hidden', !expanded);
-  $landingShapeGameButton.setAttribute('aria-expanded', String(expanded));
-  const action = $landingShapeGameButton.querySelector('.landing-challenge-action');
+  if (!$shapeChallengePanel) return;
+  // When the panel lives in the atlas Menu, the Menu dropdown is the disclosure
+  // and the form stays visible inside it; the landing Play toggle no longer
+  // hides it. Only apply hidden/aria toggling on the landing homepage mount.
+  const inMenu = $atlasMenuSetupSlot && $atlasMenuSetupSlot.contains($shapeChallengePanel);
+  if (!inMenu) {
+    $shapeChallengePanel.hidden = !expanded;
+    $shapeChallengePanel.classList.toggle('hidden', !expanded);
+  }
+  [$landingShapeGameButton, $atlasShapeChallengeButton].filter(Boolean).forEach(button => {
+    button.setAttribute('aria-expanded', String(expanded));
+  });
+  const action = $landingShapeGameButton?.querySelector('.landing-challenge-action');
   if (action) action.textContent = expanded ? 'Hide' : 'Play';
   syncLandingShapePreviewDisclosure();
   if (expanded) $shapeChallengePanel.querySelector('button')?.focus({ preventScroll: true });
@@ -730,6 +756,7 @@ function setShapeChallengeExpanded(expanded) {
 
 function showExplorerFirstLanding() {
   setShapeChallengeExpanded(false);
+  window.GeoWars?.atlas?.showGlobe?.({ focus: false, announce: false });
   showScreen($explorer);
   if (window.GeoWars?.explorer?.open) {
     window.GeoWars.explorer.open();
@@ -737,19 +764,81 @@ function showExplorerFirstLanding() {
 }
 
 function composeExplorerHomepage() {
-  if ($explorerUtilityActions && $playerContext) {
-    $explorerUtilityActions.append($playerContext);
+  const playerDestination = $atlasPlayerSlot || $explorerUtilityActions;
+  if (playerDestination && $playerContext) playerDestination.append($playerContext);
+
+  // The quiz setup (mode / difficulty / region + Start) belongs with the quiz
+  // launcher, not the settings menu. It lives in the Shapes view's setup slot
+  // and is revealed only when the player chooses "Shape Quiz". Fall back to the
+  // menu slot only if the shape slot is somehow absent.
+  const shapeSetupHome = $atlasShapeSetupSlot || $atlasMenuSetupSlot;
+  if (shapeSetupHome && $shapeChallengePanel) {
+    shapeSetupHome.append($shapeChallengePanel);
+    // Start collapsed; the "Shape Quiz" toggle opens it (see the button wiring).
+    $shapeChallengePanel.hidden = true;
+    $shapeChallengePanel.classList.add('hidden');
   }
-  if ($explorerSecondaryContent) {
-    [$landingChallenges, $landingStatistics, $statsResetDialog, $statsResetStatus]
+  if ($atlasStatsSlot) {
+    [$landingStatistics, $statsResetDialog, $statsResetStatus]
       .filter(Boolean)
-      .forEach(element => $explorerSecondaryContent.append(element));
+      .forEach(element => $atlasStatsSlot.append(element));
+  }
+  if ($explorerSecondaryContent && $landingChallenges) {
+    $explorerSecondaryContent.append($landingChallenges);
   }
 }
 
 composeExplorerHomepage();
-$landingShapeGameButton?.addEventListener('click', () => {
-  setShapeChallengeExpanded($landingShapeGameButton.getAttribute('aria-expanded') !== 'true');
+
+// Landing "Border Outline / Play" keeps its disclosure behaviour: it reveals the
+// setup panel inline on the homepage so a first-time visitor sees the options.
+if ($landingShapeGameButton) {
+  $landingShapeGameButton.addEventListener('click', () => {
+    setShapeChallengeExpanded($landingShapeGameButton.getAttribute('aria-expanded') !== 'true');
+  });
+}
+
+// Reveal or hide the Shape Quiz setup (mode/difficulty/region + Start) inline in
+// the Shapes view. This is the launch step for the quiz — it is NOT in the
+// settings menu. "Explore" collapses it; "Shape Quiz" opens it.
+function setShapeQuizSetupOpen(open) {
+  const exploreButton = document.getElementById('btn-atlas-shape-explore');
+  const setupSlot = document.getElementById('atlas-shape-setup-slot');
+  if (setupSlot) setupSlot.hidden = !open;
+  if ($shapeChallengePanel) {
+    $shapeChallengePanel.hidden = !open;
+    $shapeChallengePanel.classList.toggle('hidden', !open);
+  }
+  if ($atlasShapeChallengeButton) {
+    $atlasShapeChallengeButton.classList.toggle('is-active', open);
+    $atlasShapeChallengeButton.setAttribute('aria-pressed', String(open));
+    $atlasShapeChallengeButton.setAttribute('aria-expanded', String(open));
+  }
+  if (exploreButton) {
+    exploreButton.classList.toggle('is-active', !open);
+    exploreButton.setAttribute('aria-pressed', String(!open));
+  }
+  if (open && $shapeChallengePanel) {
+    $shapeChallengePanel.querySelector('button, select, [tabindex]')?.focus?.({ preventScroll: true });
+  }
+}
+
+if ($atlasShapeChallengeButton) {
+  // "Shape Quiz" reveals the setup right here in the Shapes view; the setup's
+  // own Start button launches the game (seeded with the country on the plate).
+  $atlasShapeChallengeButton.addEventListener('click', () => setShapeQuizSetupOpen(true));
+}
+
+const $atlasShapeExploreButton = document.getElementById('btn-atlas-shape-explore');
+if ($atlasShapeExploreButton) {
+  $atlasShapeExploreButton.addEventListener('click', () => setShapeQuizSetupOpen(false));
+}
+
+// Expose the Shapes sub-mode reset so the atlas view switcher can default the
+// Shapes view back to Explore (collapsed quiz setup) whenever it is opened.
+window.GeoWars = window.GeoWars || {};
+window.GeoWars.shapes = Object.freeze({
+  setQuizSetupOpen: setShapeQuizSetupOpen
 });
 syncLandingShapePreviewDisclosure();
 landingShapePreviewDesktopQuery?.addEventListener?.('change', syncLandingShapePreviewDisclosure);
@@ -901,8 +990,71 @@ $btnShowoff.addEventListener('click', () => selectModeOption($btnShowoff));
 // The sole primary action captures what the player can currently see before play starts.
 $startGameButton.addEventListener('click', () => {
   syncLandingStateFromUI();
-  startGame();
+  // When the setup is launched from inside the Shapes view, seed the quiz with
+  // the country currently on the plate (same behaviour the old direct launcher had).
+  const atlasState = window.GeoWars?.atlas?.getState?.();
+  if (atlasState && atlasState.view === 'shapes' && Number.isFinite(atlasState.countryId)) {
+    startGame({ seedCountryId: atlasState.countryId });
+  } else {
+    startGame();
+  }
 });
+
+// How many countries a single daily review / challenge session serves.
+const DAILY_REVIEW_SIZE = 12;
+const DAILY_CHALLENGE_SIZE = 10;
+
+function allCountryIds() {
+  return (window.countryCards || []).map(c => Number(c.id)).filter(Number.isFinite);
+}
+
+// Adaptive daily review: pull the countries the scheduler says are due (or, for
+// a new player, introduce fresh ones / resurface the weakest). Plays as an
+// untimed Practice session over that finite set, then ends. Falls back to a
+// normal game if the store is unavailable.
+function startDailyReview() {
+  syncLandingStateFromUI();
+  const ids = allCountryIds();
+  let batch = [];
+  if (learningProgress && typeof learningProgress.selectStudyBatch === 'function' && ids.length) {
+    try {
+      batch = learningProgress.selectStudyBatch(ids, DAILY_REVIEW_SIZE);
+    } catch (e) { batch = []; }
+  }
+  if (!batch.length) {
+    // No store / nothing scheduled yet: fall back to a standard game.
+    startGame();
+    return;
+  }
+  state.mode = 'showoff'; // review is calm and untimed
+  startGame({ deckCardIds: batch, sessionKind: 'review' });
+}
+
+// Daily challenge: a deterministic set seeded by today's date so every player
+// (and every reload) gets the same puzzle today, a new one tomorrow. Uses the
+// shared seeded selector in the learning module.
+function startDailyChallenge() {
+  syncLandingStateFromUI();
+  const ids = allCountryIds();
+  let batch = [];
+  if (window.GeoWarsDaily && typeof window.GeoWarsDaily.selectDailySet === 'function' && ids.length) {
+    try {
+      batch = window.GeoWarsDaily.selectDailySet(ids, DAILY_CHALLENGE_SIZE);
+    } catch (e) { batch = []; }
+  }
+  if (!batch.length) {
+    startGame();
+    return;
+  }
+  state.mode = 'sprint'; // the challenge keeps the timed, competitive feel
+  startGame({ deckCardIds: batch, sessionKind: 'daily' });
+}
+
+const $dailyReviewButton = document.getElementById('btn-daily-review');
+if ($dailyReviewButton) $dailyReviewButton.addEventListener('click', () => startDailyReview());
+
+const $dailyChallengeButton = document.getElementById('btn-daily-challenge');
+if ($dailyChallengeButton) $dailyChallengeButton.addEventListener('click', () => startDailyChallenge());
 
 syncLandingStateFromUI();
 
@@ -945,6 +1097,102 @@ async function loadStats() {
     $resetStatsButton.disabled = !canResetDeviceStats;
   }
   await renderPlayerContext(identity);
+  renderLearningProgress();
+}
+
+// Continent display order + friendly labels for the mastery-by-region bars.
+const LEARNING_CONTINENTS = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
+const LEARNING_CONTINENT_LABELS = {
+  'Africa': 'Africa',
+  'Asia': 'Asia',
+  'Europe': 'Europe',
+  'North America': 'Americas',
+  'South America': 'S. America',
+  'Oceania': 'Oceania'
+};
+
+// Populate the learning-progress dashboard from the spaced-repetition store.
+// Reads the global countryCards for the universe of ids and continent grouping.
+// Entirely defensive: if the store or DOM is missing it no-ops.
+function renderLearningProgress() {
+  if (!learningProgress || typeof learningProgress.getSummary !== 'function') return;
+  const cards = Array.isArray(countryCards) ? countryCards : [];
+  if (!cards.length) return;
+
+  const continentById = new Map(cards.map((c) => [Number(c.id), c.continent]));
+  const ids = cards.map((c) => Number(c.id));
+
+  let summary;
+  try {
+    summary = learningProgress.getSummary(ids, {
+      groupOf: (id) => continentById.get(Number(id)) || 'Other'
+    });
+  } catch (e) { return; }
+
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(value);
+  };
+  setText('learning-learned-count', summary.mastered);
+  setText('learning-total-count', summary.total);
+  setText('learning-due-count', summary.dueCount);
+  setText('learning-active-count', summary.learning);
+
+  const pct = summary.total > 0 ? Math.round((summary.mastered / summary.total) * 100) : 0;
+  const fill = document.getElementById('learning-progress-fill');
+  if (fill) fill.style.width = pct + '%';
+
+  const bar = document.querySelector('.learning-progress-bar');
+  if (bar) bar.setAttribute('aria-label', `${summary.mastered} of ${summary.total} countries learned (${pct}%)`);
+
+  const caption = document.getElementById('learning-progress-barlabel');
+  if (caption) {
+    if (summary.seen === 0) {
+      caption.textContent = 'Play a round to start tracking what you have learned.';
+    } else if (summary.dueCount > 0) {
+      caption.textContent = `${summary.mastered} learned · ${summary.dueCount} ${summary.dueCount === 1 ? 'country is' : 'countries are'} due for review.`;
+    } else {
+      caption.textContent = `${summary.mastered} learned · ${summary.learning} in progress · nothing due right now. Nice work.`;
+    }
+  }
+
+  const reviewLabel = document.getElementById('daily-review-label');
+  if (reviewLabel) {
+    reviewLabel.textContent = summary.dueCount > 0
+      ? `Review ${summary.dueCount} due`
+      : "Start today's review";
+  }
+
+  // Daily challenge label reflects today's completion + streak.
+  const challengeLabel = document.getElementById('daily-challenge-label');
+  const challengeButton = document.getElementById('btn-daily-challenge');
+  if (challengeLabel && window.GeoWarsDaily) {
+    try {
+      const done = window.GeoWarsDaily.isCompletedToday();
+      const { streak } = window.GeoWarsDaily.getStreak();
+      if (done) {
+        challengeLabel.textContent = streak > 1 ? `Daily done · ${streak}-day streak` : 'Daily done today';
+        if (challengeButton) challengeButton.classList.add('is-daily-done');
+      } else {
+        challengeLabel.textContent = streak > 0 ? `Daily challenge · ${streak}🔥` : 'Daily challenge';
+        if (challengeButton) challengeButton.classList.remove('is-daily-done');
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  const list = document.getElementById('learning-continents');
+  if (list) {
+    const groups = summary.groups || {};
+    const rows = LEARNING_CONTINENTS.filter((name) => groups[name]).map((name) => {
+      const g = groups[name];
+      const gpct = g.total > 0 ? Math.round((g.mastered / g.total) * 100) : 0;
+      const label = LEARNING_CONTINENT_LABELS[name] || name;
+      return `<div class="learning-continent"><dt>${label}</dt><dd>` +
+        `<span class="learning-continent-track"><span class="learning-continent-fill" style="width:${gpct}%"></span></span>` +
+        `<span class="learning-continent-value">${g.mastered}/${g.total}</span></dd></div>`;
+    }).join('');
+    list.innerHTML = rows;
+  }
 }
 
 function openStatsResetDialog() {
@@ -1034,7 +1282,8 @@ loadStats();
 // GAME
 // ============================================================
 
-function startGame() {
+function startGame(options) {
+  options = options || {};
   AudioEngine.init();
   invokeBackgroundMusic('setMuted', audioMuted);
   invokeBackgroundMusic('start');
@@ -1043,7 +1292,38 @@ function startGame() {
   // Re-read the visible controls at the final start boundary so mode changes
   // can never carry a stale difficulty or continent into the deck.
   syncFiltersFromUI();
-  state.deck = shuffle(filterDeck(state.level));
+
+  // A curated session (daily review / daily challenge) supplies an explicit,
+  // ordered list of country ids. It plays exactly that finite set and then ends
+  // — it does NOT refill with random countries. A normal game leaves
+  // options.deckCardIds undefined and uses the filtered, endless deck.
+  const curatedIds = Array.isArray(options.deckCardIds)
+    ? options.deckCardIds.map(Number).filter(Number.isFinite)
+    : null;
+
+  if (curatedIds && curatedIds.length) {
+    const byId = new Map((window.countryCards || []).map(c => [Number(c.id), c]));
+    const ordered = curatedIds.map(id => byId.get(id)).filter(Boolean);
+    // nextRound() pops from the end, so reverse to serve in the intended order.
+    state.deck = ordered.slice().reverse();
+    state.finiteDeck = true;
+    state.sessionKind = options.sessionKind || 'review';
+  } else {
+    state.deck = shuffle(filterDeck(state.level));
+    state.finiteDeck = false;
+    state.sessionKind = 'standard';
+    // Optional seed: when the Atlas launches the quiz from the study plate, start
+    // with the country the player was just looking at. Move it to the end of the
+    // deck so the first nextRound() pop serves it. If it isn't in the filtered
+    // deck (e.g. a region filter excludes it) the shuffle order stands.
+    if (Number.isFinite(options.seedCountryId)) {
+      const seedIndex = state.deck.findIndex(card => card.id === options.seedCountryId);
+      if (seedIndex >= 0) {
+        const [seedCard] = state.deck.splice(seedIndex, 1);
+        state.deck.push(seedCard);
+      }
+    }
+  }
   state.score = 0;
   state.streak = 0;
   state.bestStreak = 0;
@@ -1192,6 +1472,12 @@ function renderRegionReveal(card) {
 
 function nextRound() {
   if (state.deck.length === 0) {
+    // A curated session (daily review / challenge) is a fixed set: when it's
+    // done, finish and show results rather than refilling with random cards.
+    if (state.finiteDeck) {
+      endGame();
+      return;
+    }
     state.deck = shuffle(filterDeck(state.level));
   }
 
@@ -1539,6 +1825,9 @@ function handleAnswer(correct, btnEl, multiplier) {
   // Track round history
   state.roundHistory.push({ card: state.currentCard, correct: correct, multiplier: multiplier });
 
+  // Feed the spaced-repetition scheduler so real play drives what resurfaces.
+  recordLearningOutcome(state.currentCard, correct);
+
   if (correct) {
     state.correct++;
     state.streak++;
@@ -1729,9 +2018,28 @@ function endGame() {
     });
   }
 
-  // Show results
-  $resultsTitle.textContent = getLevelConfig(state.level).name + ' run complete.';
-  if ($resultsStatus) $resultsStatus.textContent = 'Sprint complete. Review your results or replay.';
+  // A finished daily challenge advances the daily-completion streak.
+  if (state.sessionKind === 'daily' && window.GeoWarsDaily?.recordCompletion) {
+    try {
+      window.GeoWarsDaily.recordCompletion({
+        score: state.score,
+        correct: state.correct,
+        total: state.total
+      });
+    } catch (e) { /* storage unavailable: ignore */ }
+  }
+
+  // Show results. Curated sessions get their own framing.
+  if (state.sessionKind === 'review') {
+    $resultsTitle.textContent = 'Review complete.';
+    if ($resultsStatus) $resultsStatus.textContent = 'Daily review complete. Your progress has been updated.';
+  } else if (state.sessionKind === 'daily') {
+    $resultsTitle.textContent = "Daily challenge complete.";
+    if ($resultsStatus) $resultsStatus.textContent = 'Daily challenge complete. Come back tomorrow for a new one.';
+  } else {
+    $resultsTitle.textContent = getLevelConfig(state.level).name + ' run complete.';
+    if ($resultsStatus) $resultsStatus.textContent = 'Sprint complete. Review your results or replay.';
+  }
   if ($resLevel) $resLevel.textContent = getLevelConfig(state.level).name;
   $resScore.textContent = state.score;
   $resStreak.textContent = state.bestStreak;
@@ -1782,6 +2090,11 @@ function quitGame() {
   clearInterval(state.timer);
   state.gameOver = true;
   invokeBackgroundMusic('stop');
+  // Ending a run early is a bail-out, not a finish: never show the results
+  // scoreboard. We still persist any progress from rounds actually played (so
+  // stats and the learning store stay accurate), then return straight home.
+  // A natural finish (timer end / completed review set) goes through endGame(),
+  // which is what shows results.
   if (state.total > 0) {
     if (ladderProgress && typeof ladderProgress.recordRun === 'function') {
       ladderProgress.recordRun(state.level, {
@@ -1792,21 +2105,10 @@ function quitGame() {
         mode: state.mode
       });
     }
-    const savePromise = saveStats();
-    $resultsTitle.textContent = getLevelConfig(state.level).name + ' run complete.';
-    if ($resultsStatus) $resultsStatus.textContent = 'Run ended. Review your results or replay.';
-    if ($resLevel) $resLevel.textContent = getLevelConfig(state.level).name;
-    $resScore.textContent = state.score;
-    $resStreak.textContent = state.bestStreak;
-    $resCorrect.textContent = state.correct + '/' + state.total;
-    updateSaveProgressUI();
-    buildReview();
-    Promise.resolve(savePromise).then(() => loadStats());
-    showScreen($results);
-  } else {
-    showExplorerFirstLanding();
-    loadStats();
+    Promise.resolve(saveStats()).then(() => loadStats());
   }
+  showExplorerFirstLanding();
+  loadStats();
 }
 
 document.getElementById('btn-again').addEventListener('click', () => {
@@ -2096,6 +2398,9 @@ if ($claimForm) {
 document.getElementById('btn-skip').addEventListener('click', () => {
   if (state.answered || state.gameOver) return;
   state.answered = true;
+  // Skipping means the shape wasn't recognized: record a miss so it resurfaces,
+  // but (as before) don't break the visible streak or dock points.
+  recordLearningOutcome(state.currentCard, false);
   // Skip: no points, no streak break, just move on
   nextRound();
 });
@@ -2302,11 +2607,8 @@ endGame = function() {
 
 const renderQuitGame = quitGame;
 quitGame = function() {
-  const hadRounds = state.total > 0;
   renderQuitGame();
-  if (hadRounds) {
-    announceOutcome('Run ended. Score ' + state.score + ', best streak ' + state.bestStreak + ', ' + state.correct + ' correct out of ' + state.total + '.', 'polite');
-  }
+  announceOutcome('Run ended. Returning to the home screen.', 'polite');
 };
 
 const renderOpenPlayerModal = openPlayerModal;
