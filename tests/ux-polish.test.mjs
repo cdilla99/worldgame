@@ -67,7 +67,7 @@ test('homepage copy leads with educational Explorer value and labels the shape g
   assert.match(fallbacks, /title: 'Shape unavailable'/);
 });
 
-test('the shape preview is disclosed only after choosing the advanced challenge', () => {
+test('the sample-round shape preview is a standalone always-on card', () => {
   const html = read('index.html');
   const styles = read('ux-polish.css');
   const app = read('app.js');
@@ -76,12 +76,15 @@ test('the shape preview is disclosed only after choosing the advanced challenge'
   assert.match(html, /<summary class="landing-shape-preview-toggle">See a sample round<\/summary>/);
   assert.match(html, /landing-shape-preview-kicker-desktop">Sample round</);
   assert.match(html, /landing-shape-preview-kicker-mobile">How it works</);
-  assert.match(app, /function syncLandingShapePreviewDisclosure\(\)[\s\S]*\$landingShapePreview\.open = !\$shapeChallengePanel\?\.hidden && landingShapePreviewDesktopQuery\.matches;/);
-  assert.match(app, /landingShapePreviewDesktopQuery\?\.addEventListener\?\.\('change', syncLandingShapePreviewDisclosure\)/);
+  // The sample-round card is now standalone and always visible, so the
+  // disclosure just keeps it open regardless of viewport/panel state.
+  assert.match(app, /function syncLandingShapePreviewDisclosure\(\)[\s\S]*\$landingShapePreview\.open = true;/);
   assert.match(styles, /@media \(min-width: 1024px\)[\s\S]*\.landing-shape-preview-stage\s*\{[\s\S]*minmax\(350px, 1fr\)[\s\S]*min-height: 470px;/);
   assert.match(styles, /@media \(min-width: 1024px\)[\s\S]*\.landing-shape-preview-art svg\s*\{[\s\S]*width: 300px;[\s\S]*max-height: none;/);
-  assert.match(styles, /@media \(max-width: 767px\)[\s\S]*\.landing-shape-preview-toggle\s*\{[\s\S]*display: flex;/);
-  assert.match(styles, /@media \(max-width: 767px\)[\s\S]*\.landing-shape-preview-kicker-mobile\s*\{[\s\S]*display: block;/);
+  // On mobile the collapse toggle is hidden (always-on card) and the desktop
+  // "Sample round" kicker is shown instead of the "How it works" accordion label.
+  assert.match(styles, /@media \(max-width: 767px\)[\s\S]*\.landing-shape-preview-toggle\s*\{[\s\S]*display: none;/);
+  assert.match(styles, /@media \(max-width: 767px\)[\s\S]*\.landing-shape-preview-kicker-desktop\s*\{[\s\S]*display: block;/);
 });
 
 test('desktop homepage gives Explorer a dominant split and stacks on smaller screens', () => {

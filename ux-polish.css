@@ -208,6 +208,42 @@ button.brand-lockup:focus-visible {
   line-height: 1.35;
 }
 
+/* "Settings" shortcut on the Ready row — sits at the far right (where the
+   summary leaves empty space) and opens the atlas Menu's difficulty & region
+   control so the player can change what the summary describes. */
+.landing-selection-settings {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid rgba(67, 220, 158, 0.42);
+  border-radius: 999px;
+  background: rgba(67, 220, 158, 0.1);
+  color: #cdeede;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.landing-selection-settings svg { flex: none; }
+
+.landing-selection-settings:hover {
+  border-color: rgba(67, 220, 158, 0.7);
+  background: rgba(67, 220, 158, 0.18);
+  color: #eafff5;
+}
+
+.landing-selection-settings:focus-visible {
+  outline: 2px solid #63e4a9;
+  outline-offset: 2px;
+}
+
 /* Game utility bar and home navigation */
 .game-utility {
   position: relative;
@@ -2411,49 +2447,18 @@ img.is-nonrect-flag {
     width: min(100%, 310px);
   }
 
+  /* Option A: the sample-round card is always visible on mobile too, so the
+     collapse toggle is hidden and the card shows expanded like on desktop. */
   .landing-shape-preview-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 11px 13px;
-    border: 1px solid rgba(120, 184, 255, 0.26);
-    border-radius: 10px;
-    background: rgba(7, 19, 34, 0.84);
-    color: #f7fbff;
-    cursor: pointer;
-    font-size: 0.78rem;
-    font-weight: 850;
-    letter-spacing: 0.08em;
-    list-style: none;
-    text-transform: uppercase;
-  }
-
-  .landing-shape-preview-toggle::-webkit-details-marker {
     display: none;
-  }
-
-  .landing-shape-preview-toggle::after {
-    color: #9af0c9;
-    content: '+';
-    font-size: 1.1rem;
-    line-height: 1;
-  }
-
-  .landing-shape-preview[open] .landing-shape-preview-toggle {
-    margin-bottom: 10px;
-  }
-
-  .landing-shape-preview[open] .landing-shape-preview-toggle::after {
-    content: '-';
   }
 
   .landing-shape-preview-kicker-desktop {
-    display: none;
+    display: block;
   }
 
   .landing-shape-preview-kicker-mobile {
-    display: block;
+    display: none;
   }
 
   .landing-shape-preview-stage {

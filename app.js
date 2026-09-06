@@ -545,8 +545,11 @@ let landingShapePreviewTimer = null;
 const landingShapePreviewDesktopQuery = window.matchMedia?.('(min-width: 768px)');
 
 function syncLandingShapePreviewDisclosure() {
-  if (!$landingShapePreview || !landingShapePreviewDesktopQuery) return;
-  $landingShapePreview.open = !$shapeChallengePanel?.hidden && landingShapePreviewDesktopQuery.matches;
+  if (!$landingShapePreview) return;
+  // The rotating sample-round card is a standalone, always-on preview now (it
+  // lives outside the Border Outline setup panel), so it stays open on every
+  // screen size to match the production landing experience.
+  $landingShapePreview.open = true;
 }
 
 function renderLandingShapePreview(cards, geometry) {
@@ -832,6 +835,25 @@ if ($atlasShapeChallengeButton) {
 const $atlasShapeExploreButton = document.getElementById('btn-atlas-shape-explore');
 if ($atlasShapeExploreButton) {
   $atlasShapeExploreButton.addEventListener('click', () => setShapeQuizSetupOpen(false));
+}
+
+// "Settings" on the Ready row opens the atlas Menu and reveals the difficulty &
+// region control, so the player can change what the summary describes without
+// hunting for the Menu themselves.
+const $changeSettingsButton = document.getElementById('btn-change-settings');
+if ($changeSettingsButton) {
+  $changeSettingsButton.addEventListener('click', () => {
+    const menu = document.getElementById('atlas-utility-menu');
+    const settings = document.getElementById('challenge-settings');
+    if (menu) menu.open = true;
+    if (settings) {
+      settings.open = true;
+      settings.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      // Focus the first difficulty option so keyboard users land on the control.
+      const firstControl = settings.querySelector('.diff-btn, button, select');
+      firstControl?.focus?.({ preventScroll: true });
+    }
+  });
 }
 
 // Expose the Shapes sub-mode reset so the atlas view switcher can default the

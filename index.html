@@ -159,8 +159,12 @@
             </svg>
             <span id="start-game-label">Start sprint</span>
           </button>
+        </section>
 
-        <details id="landing-shape-preview" class="landing-shape-preview" aria-label="Border Outline preview. Identify a country from its outline.">
+        <!-- Always-on rotating sample-round card. Sits outside the (hidden until
+             "Play") Border Outline setup panel so it stays visible on every
+             screen size, cycling silhouette + flag + answer via app.js. -->
+        <details id="landing-shape-preview" class="landing-shape-preview" open aria-label="Border Outline preview. Identify a country from its outline.">
           <summary class="landing-shape-preview-toggle">See a sample round</summary>
           <div class="landing-shape-preview-stage">
             <span class="landing-shape-preview-kicker landing-shape-preview-kicker-desktop">Sample round</span>
@@ -179,7 +183,6 @@
             </div>
           </div>
         </details>
-        </section>
       </section>
 
       <section id="learning-progress-panel" class="learning-progress" aria-labelledby="learning-progress-title">
