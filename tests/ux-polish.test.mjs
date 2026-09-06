@@ -16,7 +16,7 @@ test('EARTHLING uses the dedicated SVG lockup on landing and as an in-game home 
 
   assert.match(logo, /<svg[\s\S]*viewBox="0 0 276 64"/);
   assert.match(logo, /<title id="title">EARTHLING<\/title>/);
-  assert.match(logo, /WORLD SHAPE GAME/);
+  assert.match(logo, /WORLD GEOGRAPHY GAME/);
   assert.match(html, /id="btn-landing-home" class="brand-lockup" type="button" aria-label="Return to the EARTHLING home page"/);
   assert.match(html, /class="brand-logo" src="assets\/geowars-logo\.svg" alt="EARTHLING"/);
   assert.match(html, /class="explorer-home-logo"[\s\S]*src="assets\/geowars-logo\.svg" alt="EARTHLING"/);

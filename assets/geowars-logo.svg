@@ -39,5 +39,5 @@
 
   <text x="72" y="40" fill="url(#word)" font-family="Arial Black, Arial, sans-serif" font-size="29" font-weight="900" letter-spacing="0">EARTHLING</text>
   <path d="M73 48h176" stroke="#48617E" stroke-width="1"/>
-  <text x="73" y="58" fill="#8FA4BF" font-family="Arial, sans-serif" font-size="7.5" font-weight="700" letter-spacing="2.25">WORLD SHAPE GAME</text>
+  <text x="73" y="58" fill="#8FA4BF" font-family="Arial, sans-serif" font-size="7.5" font-weight="700" letter-spacing="2.25">WORLD GEOGRAPHY GAME</text>
 </svg>
