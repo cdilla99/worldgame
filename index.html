@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#07111f" />
+  <meta name="theme-color" content="#e8e3d7" />
   <title>EARTHLING | World Geography Game</title>
   <meta name="description" content="EARTHLING is a browser geography game: explore an interactive globe, learn 197 countries, and test yourself with shape and country-hunt challenges." />
   <meta name="robots" content="index, follow" />
@@ -24,9 +24,10 @@
   <meta name="twitter:description" content="Explore an interactive globe, learn 197 countries, and test yourself with shape and country-hunt challenges." />
   <meta name="twitter:image" content="assets/geowars-logo.svg" />
 
-  <link rel="stylesheet" href="styles.css?v=20260802-game-choice2" />
+  <link rel="stylesheet" href="styles.css?v=20260905-learning2" />
   <link rel="stylesheet" href="ux-polish.css?v=20260821-globe-focus1" />
-  <link rel="stylesheet" href="globe-explorer.css?v=20260830-globe-fix1" />
+  <link rel="stylesheet" href="globe-explorer.css?v=20260905-shapes1" />
+  <link rel="stylesheet" href="atlas.css?v=20260905-uxfix1" />
 </head>
 <body class="is-explorer-active">
   <div class="app">
@@ -114,62 +115,26 @@
           </button>
         </div>
 
-        <section id="shape-challenge-panel" class="landing-game-panel landing-border-outline-setup hidden" aria-labelledby="btn-landing-shape-game" hidden>
-          <div class="landing-mode-heading">
-            <h3 id="setup-title">Choose a mode</h3>
-            <p>Race the clock or learn without a timer.</p>
-          </div>
-
-          <div class="mode-select" role="group" aria-labelledby="mode-title">
+        <section id="shape-challenge-panel" class="landing-game-panel landing-border-outline-setup hidden" aria-labelledby="btn-atlas-shape-challenge" hidden>
+          <!-- Compact per-session mode toggle. Sprint = 60s timer; Practice =
+               untimed. Difficulty & region now live in the Menu as one global
+               control (see #atlas-menu-setup-slot). -->
+          <div class="mode-select mode-select-compact" role="group" aria-labelledby="mode-title">
             <h3 id="mode-title" class="setup-subheading sr-only">Game modes</h3>
-            <button id="btn-sprint" class="mode-card mode-secondary active" type="button" aria-pressed="true" aria-describedby="sprint-description">
-              <svg class="mode-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <button id="btn-sprint" class="mode-chip active" type="button" aria-pressed="true" aria-describedby="sprint-description">
+              <svg class="mode-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <use href="assets/geowars-icons.svg#icon-mode-sprint"></use>
               </svg>
               <span class="mode-title">Sprint</span>
-              <span id="sprint-description" class="mode-desc">60 seconds. Name as many as you can.</span>
+              <span id="sprint-description" class="mode-desc">60 seconds</span>
             </button>
-            <button id="btn-showoff" class="mode-card mode-secondary" type="button" aria-pressed="false" aria-describedby="practice-description">
-              <svg class="mode-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <button id="btn-showoff" class="mode-chip" type="button" aria-pressed="false" aria-describedby="practice-description">
+              <svg class="mode-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <use href="assets/geowars-icons.svg#icon-mode-practice"></use>
               </svg>
               <span class="mode-title">Practice</span>
-              <span id="practice-description" class="mode-desc">No timer. Answer, reveal, repeat.</span>
+              <span id="practice-description" class="mode-desc">No timer</span>
             </button>
-          </div>
-
-          <div class="game-setup-wrap">
-            <details id="challenge-settings" class="game-setup">
-              <summary class="game-setup-summary">
-                <span class="game-setup-copy">
-                  <span class="game-setup-title">Select difficulty and region</span>
-                  <span id="filter-summary" class="filter-summary">Hard · Worldwide</span>
-                </span>
-                <span class="game-setup-chevron" aria-hidden="true"></span>
-              </summary>
-              <div class="game-setup-content">
-                <fieldset class="setup-group">
-                  <legend>Difficulty ladder</legend>
-                  <div class="option-grid difficulty-grid">
-                    <button type="button" class="diff-btn" data-level="cadet" aria-pressed="false">Easy <em>Cadet</em></button>
-                    <button type="button" class="diff-btn" data-level="explorer" aria-pressed="false">Medium <em>Explorer</em></button>
-                    <button type="button" class="diff-btn active" data-level="earthling" aria-pressed="true">Hard <em>Earthling</em></button>
-                    <button type="button" class="diff-btn" data-level="expert" aria-pressed="false">Expert <em>Verification</em></button>
-                  </div>
-                </fieldset>
-                <fieldset class="setup-group">
-                  <legend>Region</legend>
-                  <div id="continent-row" class="option-grid region-grid">
-                    <button type="button" class="diff-btn active" data-continent="all" aria-pressed="true">Worldwide</button>
-                    <button type="button" class="diff-btn" data-continent="Africa" aria-pressed="false">Africa</button>
-                    <button type="button" class="diff-btn" data-continent="Asia" aria-pressed="false">Asia</button>
-                    <button type="button" class="diff-btn" data-continent="Europe" aria-pressed="false">Europe</button>
-                    <button type="button" class="diff-btn" data-continent="North America" aria-pressed="false">Americas</button>
-                    <button type="button" class="diff-btn" data-continent="Oceania" aria-pressed="false">Oceania</button>
-                  </div>
-                </fieldset>
-              </div>
-            </details>
           </div>
 
           <div class="landing-selection-status" role="status" aria-live="polite">
@@ -180,6 +145,13 @@
               <span>Ready</span>
               <p id="mode-summary">Sprint · 60 seconds · Hard · Worldwide</p>
             </span>
+            <button id="btn-change-settings" class="landing-selection-settings" type="button" aria-label="Change difficulty and region">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+              <span>Settings</span>
+            </button>
           </div>
           <button id="btn-start-game" class="cta landing-start-action" type="button">
             <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -187,7 +159,6 @@
             </svg>
             <span id="start-game-label">Start sprint</span>
           </button>
-          <p class="landing-start-note">No account required. Your best scores stay on this device.</p>
 
         <details id="landing-shape-preview" class="landing-shape-preview" aria-label="Border Outline preview. Identify a country from its outline.">
           <summary class="landing-shape-preview-toggle">See a sample round</summary>
@@ -200,7 +171,7 @@
               </svg>
             </div>
             <div class="landing-shape-preview-answer">
-              <span class="landing-shape-preview-marker"><img id="landing-shape-preview-flag" src="https://flagcdn.com/w80/us.png" alt="United States flag"></span>
+              <span class="landing-shape-preview-marker"><span id="landing-shape-preview-flag" role="img" aria-label="United States flag">🇺🇸</span></span>
               <div class="landing-shape-preview-copy">
                 <span>Answer</span>
                 <strong id="landing-shape-preview-country">United States</strong>
@@ -209,6 +180,47 @@
           </div>
         </details>
         </section>
+      </section>
+
+      <section id="learning-progress-panel" class="learning-progress" aria-labelledby="learning-progress-title">
+        <header class="learning-progress-header">
+          <div>
+            <p class="learning-progress-eyebrow">Your progress</p>
+            <h2 id="learning-progress-title">Learn all 197 countries</h2>
+          </div>
+          <div class="learning-progress-meters">
+            <div class="learning-meter" aria-label="Countries learned">
+              <strong id="learning-learned-count">0</strong>
+              <span>of <span id="learning-total-count">197</span> learned</span>
+            </div>
+            <div class="learning-meter" aria-label="Due for review today">
+              <strong id="learning-due-count">0</strong>
+              <span>due today</span>
+            </div>
+            <div class="learning-meter" aria-label="Currently learning">
+              <strong id="learning-active-count">0</strong>
+              <span>in progress</span>
+            </div>
+          </div>
+        </header>
+        <div class="learning-progress-bar" role="img" aria-labelledby="learning-progress-barlabel">
+          <span id="learning-progress-fill" class="learning-progress-fill" style="width:0%"></span>
+        </div>
+        <p id="learning-progress-barlabel" class="learning-progress-caption">Play a round to start tracking what you have learned.</p>
+        <div class="learning-progress-actions">
+          <button id="btn-daily-review" class="cta learning-review-action" type="button">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 8a8 8 0 1 1-1 6M5 8V3m0 5h5"></path></svg>
+            <span id="daily-review-label">Start today's review</span>
+          </button>
+          <button id="btn-daily-challenge" class="ghost-sm learning-challenge-action" type="button">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3v18M5 8l7-5 7 5M5 16l7 5 7-5"></path></svg>
+            <span id="daily-challenge-label">Daily challenge</span>
+          </button>
+        </div>
+        <details class="learning-continents-disclosure">
+          <summary class="learning-continents-toggle"><span>Mastery by region</span></summary>
+          <dl id="learning-continents" class="learning-continents" aria-label="Mastery by region"></dl>
+        </details>
       </section>
 
       <aside class="landing-statistics" aria-labelledby="statistics-title">
@@ -246,26 +258,85 @@
       <p id="stats-reset-status" class="sr-only" role="status" aria-live="polite"></p>
     </section>
 
-    <!-- Globe Explorer -->
-    <section id="explorer" class="screen explorer-screen" aria-labelledby="explorer-stage-title">
-      <header class="explorer-utility">
+    <!-- Playable Atlas -->
+    <section id="explorer" class="screen explorer-screen atlas-shell" aria-label="Playable Atlas" data-atlas-view="globe">
+      <header class="explorer-utility atlas-header">
         <div class="explorer-brand">
-          <button id="btn-explorer-home" class="explorer-home-logo" type="button" data-explorer-home aria-label="Return to the EARTHLING home page">
-            <img src="assets/geowars-logo.svg" alt="EARTHLING">
+          <button id="btn-explorer-home" class="explorer-home-logo" type="button" data-explorer-home aria-label="Return to the EARTHLING atlas">
+            <img class="atlas-logo-globe" src="assets/geowars-logo.svg" alt="EARTHLING">
           </button>
         </div>
-        <div class="explorer-utility-actions">
-          <button id="btn-explorer-music" class="explorer-music-toggle" type="button" aria-label="Start music" aria-pressed="false">
-            <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-sound"></use></svg>
-            <span>Start music</span>
+        <nav class="atlas-primary-nav" aria-label="Atlas views">
+          <button id="btn-atlas-globe" class="is-active" type="button" aria-pressed="true" aria-controls="atlas-globe-workspace" aria-label="Globe">
+            <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-view-globe"></use></svg>
+            <span>Globe</span>
           </button>
-          <button id="btn-explorer-haptics" class="explorer-haptics-toggle hidden" type="button" aria-label="Turn haptics on" aria-pressed="false">
-            <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="8" y="4" width="8" height="16" rx="2"></rect><path d="M5.5 8.5a5 5 0 0 0 0 7M18.5 8.5a5 5 0 0 1 0 7M11 17h2"></path></svg>
-            <span>Haptics off</span>
+          <button id="btn-atlas-shapes" type="button" aria-pressed="false" aria-controls="atlas-shapes-workspace" aria-label="Shapes">
+            <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-view-shapes"></use></svg>
+            <span>Shapes</span>
           </button>
-        </div>
+        </nav>
+        <details id="atlas-utility-menu" class="atlas-utility-menu">
+          <summary aria-label="Open settings and player menu">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+            <span>Menu</span>
+          </summary>
+          <div id="atlas-utility-panel" class="atlas-utility-panel">
+            <div id="atlas-player-slot" class="atlas-player-slot"></div>
+            <div class="atlas-preference-controls" aria-label="Preferences">
+              <button id="btn-explorer-music" class="explorer-music-toggle" type="button" aria-label="Start music" aria-pressed="false">
+                <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-sound"></use></svg>
+                <span>Start music</span>
+              </button>
+              <button id="btn-explorer-haptics" class="explorer-haptics-toggle hidden" type="button" aria-label="Turn haptics on" aria-pressed="false">
+                <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="8" y="4" width="8" height="16" rx="2"></rect><path d="M5.5 8.5a5 5 0 0 0 0 7M18.5 8.5a5 5 0 0 1 0 7M11 17h2"></path></svg>
+                <span>Haptics off</span>
+              </button>
+            </div>
+            <div id="atlas-menu-setup-slot" class="atlas-menu-setup-slot">
+              <!-- Global difficulty + region. One control governs whatever you
+                   launch (Shape Quiz today; the globe Country Hunt later). It sets
+                   state.level / state.continent, read by startGame at launch. -->
+              <div class="game-setup-wrap">
+                <details id="challenge-settings" class="game-setup" open>
+                  <summary class="game-setup-summary">
+                    <span class="game-setup-copy">
+                      <span class="game-setup-title">Difficulty &amp; region</span>
+                      <span id="filter-summary" class="filter-summary">Hard · Worldwide</span>
+                    </span>
+                    <span class="game-setup-chevron" aria-hidden="true"></span>
+                  </summary>
+                  <div class="game-setup-content">
+                    <fieldset class="setup-group">
+                      <legend>Difficulty ladder</legend>
+                      <div class="option-grid difficulty-grid">
+                        <button type="button" class="diff-btn" data-level="cadet" aria-pressed="false">Easy <em>Cadet</em></button>
+                        <button type="button" class="diff-btn" data-level="explorer" aria-pressed="false">Medium <em>Explorer</em></button>
+                        <button type="button" class="diff-btn active" data-level="earthling" aria-pressed="true">Hard <em>Earthling</em></button>
+                        <button type="button" class="diff-btn" data-level="expert" aria-pressed="false">Expert <em>Verification</em></button>
+                      </div>
+                    </fieldset>
+                    <fieldset class="setup-group">
+                      <legend>Region</legend>
+                      <div id="continent-row" class="option-grid region-grid">
+                        <button type="button" class="diff-btn active" data-continent="all" aria-pressed="true">Worldwide</button>
+                        <button type="button" class="diff-btn" data-continent="Africa" aria-pressed="false">Africa</button>
+                        <button type="button" class="diff-btn" data-continent="Asia" aria-pressed="false">Asia</button>
+                        <button type="button" class="diff-btn" data-continent="Europe" aria-pressed="false">Europe</button>
+                        <button type="button" class="diff-btn" data-continent="North America" aria-pressed="false">Americas</button>
+                        <button type="button" class="diff-btn" data-continent="Oceania" aria-pressed="false">Oceania</button>
+                      </div>
+                    </fieldset>
+                  </div>
+                </details>
+              </div>
+            </div>
+            <div id="atlas-stats-slot" class="atlas-stats-slot"></div>
+          </div>
+        </details>
       </header>
 
+      <div id="atlas-globe-workspace" class="atlas-workspace atlas-globe-workspace">
       <div class="explorer-layout">
         <section class="explorer-stage" aria-labelledby="explorer-stage-title">
           <div class="explorer-mode-switch" role="group" aria-label="World Explorer mode">
@@ -450,7 +521,56 @@
           </article>
         </aside>
       </div>
-      <div id="explorer-secondary-content" class="explorer-secondary-content"></div>
+      </div>
+
+      <section id="atlas-shapes-workspace" class="atlas-workspace atlas-shapes-workspace hidden" aria-labelledby="atlas-shapes-title" aria-hidden="true" inert>
+        <h2 id="atlas-shapes-title" class="sr-only" tabindex="-1">Country shapes</h2>
+
+        <div class="atlas-shape-mode-switch" role="group" aria-label="Shapes mode">
+          <button id="btn-atlas-shape-explore" class="is-active" type="button" aria-pressed="true">
+            <span>Explore</span><small>Learn at your pace</small>
+          </button>
+          <button id="btn-atlas-shape-challenge" type="button" aria-pressed="false" aria-expanded="false" aria-controls="atlas-shape-setup-slot">
+            <span>Shape Quiz</span><small>Name it from the outline</small>
+          </button>
+        </div>
+
+        <!-- Shape Quiz setup lives here (not in the settings menu): choosing the
+             quiz reveals mode/difficulty/region + Start, right where you launch it. -->
+        <div id="atlas-shape-setup-slot" class="atlas-shape-setup-slot" hidden></div>
+
+        <div class="atlas-shape-study">
+          <figure class="atlas-shape-plate" aria-labelledby="explorer-country-name">
+            <figcaption class="atlas-plate-heading">
+              <span>Country shape</span>
+              <strong id="atlas-shape-index" aria-hidden="true">U</strong>
+            </figcaption>
+            <div id="atlas-shape-art" class="atlas-shape-art" aria-live="polite"></div>
+            <div class="atlas-shape-controls" role="group" aria-label="Browse country shapes">
+              <button id="btn-atlas-shape-previous" type="button" aria-label="Previous country"><span aria-hidden="true">←</span></button>
+              <label class="sr-only" for="atlas-shape-country">Country</label>
+              <select id="atlas-shape-country"></select>
+              <button id="btn-atlas-shape-next" type="button" aria-label="Next country"><span aria-hidden="true">→</span></button>
+            </div>
+            <div class="atlas-plate-axis" aria-hidden="true"><span>N</span><span>S</span></div>
+          </figure>
+
+          <!-- The rich country card (from the globe view) is relocated into this
+               slot while the Shapes view is active, so the facts, fun fact,
+               landmark, and economics are the SAME card, formatted once. -->
+          <div id="atlas-shape-info-slot" class="atlas-shape-info-slot" aria-label="Country facts">
+            <p id="atlas-shape-region" class="sr-only" aria-hidden="true"></p>
+            <h2 id="atlas-shape-name" class="sr-only" aria-hidden="true"></h2>
+            <dl class="sr-only" aria-hidden="true">
+              <dt>Capital</dt><dd id="atlas-shape-capital"></dd>
+              <dt>Land borders</dt><dd id="atlas-shape-borders"></dd>
+              <dt>Area</dt><dd id="atlas-shape-area"></dd>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <div id="explorer-secondary-content" class="explorer-secondary-content hidden" hidden></div>
       <p id="explorer-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
     </section>
     <!-- Game Screen -->
@@ -695,6 +815,8 @@
   <script src="data/territories.js?v=20260730-territories3"></script>
   <script src="difficulty-ladder.js?v=20260803-ladder1"></script>
   <script src="ladder-progress.js?v=20260803-ladder1"></script>
+  <script src="learning-progress.js?v=20260905-learning1"></script>
+  <script src="daily-challenge.js?v=20260905-daily1"></script>
   <script src="anthems.js"></script>
   <script src="supabase-client.js?v=20260802-device-stats1"></script>
   <script src="audio-engine.js"></script>
@@ -703,10 +825,12 @@
   <script src="celebration-text.js"></script>
   <script src="background-music.js?v=20260730-explorer2"></script>
   <script src="asset-fallbacks.js"></script>
-  <script src="app.js?v=20260821-homepage1"></script>
+  <script src="shape-geometry.js?v=20260904-atlas1"></script>
+  <script src="app.js?v=20260905-uxfix1"></script>
   <script src="assets/globe-data.js?v=20260729-natural-earth"></script>
   <script src="interactive-globe.js?v=20260729-editorial-layout3"></script>
   <script src="geography.js?v=20260730-guidance1"></script>
-  <script src="globe-explorer.js?v=20260831-cy-ps197"></script>
+  <script src="globe-explorer.js?v=20260905-shapescard1"></script>
+  <script src="atlas.js?v=20260905-uxfix1"></script>
 </body>
 </html>

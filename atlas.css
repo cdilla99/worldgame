@@ -1,0 +1,871 @@
+/* ============================================================
+   PLAYABLE ATLAS
+   Editorial shell layered over the existing Explorer surfaces.
+   ============================================================ */
+
+body.is-explorer-active,
+body.is-explorer-active .app {
+  background: #07111f;
+}
+
+/* The Shapes view is dark like the rest of the app (globe, game, results).
+   It shares the same deep-navy field, lifted by a soft top-left glow so the
+   view doesn't read as a flat black rectangle. */
+body.is-explorer-active[data-atlas-view='shapes'],
+body.is-explorer-active[data-atlas-view='shapes'] .app {
+  background:
+    radial-gradient(circle at 15% -10%, rgba(45, 119, 202, 0.16), transparent 34rem),
+    #07111f;
+}
+
+.atlas-shell {
+  --atlas-paper: #e8e3d7;
+  --atlas-paper-raised: #f5f1e8;
+  --atlas-ink: #14201d;
+  --atlas-muted: #59645e;
+  /* --atlas-line drives BOTH decorative plate-grid texture and structural
+     dividers. Two tokens (F6): --atlas-line is the light decorative grid,
+     bumped modestly (0.2 -> 0.34) so it reads a touch stronger without turning
+     the plate grid heavy/noisy (flattened ~2.0:1 on #f5f1e8 -- intentionally
+     below the 3:1 non-text threshold, which is exempt for purely decorative
+     grid texture per WCAG 1.4.11). --atlas-line-strong is used only by the
+     informational/structural separators (context-bar/header dividers, shape
+     facts list rows) and is tuned to clear 3:1 flattened on its paper
+     backgrounds: 3.58:1 on #f5f1e8, 3.23:1 on #e8e3d7. */
+  --atlas-line: rgba(20, 32, 29, 0.34);
+  --atlas-line-strong: rgba(20, 32, 29, 0.55);
+  --atlas-accent: #b6412f;
+  --atlas-accent-dark: #8f2f22;
+  gap: clamp(14px, 2vw, 24px);
+  color: var(--atlas-ink);
+}
+
+.atlas-shell[data-atlas-view='globe'],
+.atlas-shell[data-atlas-view='shapes'] {
+  --atlas-ink: #f2f7f5;
+  --atlas-muted: #91a59e;
+  /* Globe scope (F6): decorative grid bumped 0.24 -> 0.4 (flattened ~2.33:1 on
+     the #07111f body -- decorative, exempt). --atlas-line-strong tuned to clear
+     3:1 flattened for the structural dividers on the dark body: 3.17:1 on
+     #07111f. */
+  --atlas-line: rgba(155, 186, 175, 0.4);
+  --atlas-line-strong: rgba(155, 186, 175, 0.52);
+}
+
+/* The Shapes view is now fully dark. Repoint the paper surface tokens at the
+   Globe dark family (matching .game-stage / .silhouette-box in styles.css) so
+   the plate and notes column read as the same dark app, not a light outlier. */
+.atlas-shell[data-atlas-view='shapes'] {
+  --atlas-paper: rgba(17, 30, 49, 0.94);
+  --atlas-paper-raised: #07111f;
+  --atlas-accent: #63e4a9;
+  --atlas-accent-dark: #43dc9e;
+}
+
+.atlas-workspace.hidden,
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot):empty {
+  display: none;
+}
+
+.atlas-header {
+  display: grid;
+  grid-template-columns: minmax(170px, 1fr) auto minmax(170px, 1fr);
+  min-height: 68px;
+  padding: 8px 0 14px;
+  /* structural header divider (F6): use the 3:1-tuned strong line token */
+  border-color: var(--atlas-line-strong);
+}
+
+.atlas-header .explorer-brand { justify-self: start; }
+.atlas-header .explorer-home-logo { width: clamp(190px, 17vw, 248px); }
+
+
+
+.atlas-primary-nav {
+  display: inline-grid;
+  grid-auto-flow: column;
+  align-items: center;
+  align-self: center;
+  gap: 10px;
+}
+
+/* Globe and Shapes are the app's primary navigation, so they read as bold icon
+   pills rather than plain text tabs. The active/focus accent lives in the pill
+   fill + ring (see below) rather than an underline. */
+.atlas-primary-nav button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 96px;
+  padding: 9px 16px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: rgba(116, 145, 178, 0.1);
+  color: var(--atlas-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
+
+.atlas-primary-nav button .icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.atlas-primary-nav button:hover:not(:disabled) {
+  color: var(--atlas-ink);
+  background: rgba(116, 145, 178, 0.18);
+}
+
+.atlas-primary-nav button.is-active {
+  color: #07111f;
+  /* Active tab uses the app's green accent (not the terracotta --atlas-accent),
+     so it matches the Explore/mode toggles instead of reading like an alert. */
+  background: #43dc9e;
+  border-color: #43dc9e;
+}
+
+.atlas-primary-nav button:disabled { color: var(--atlas-muted); cursor: not-allowed; opacity: 0.48; }
+
+.atlas-utility-menu {
+  position: relative;
+  justify-self: end;
+  /* Establish a stacking context for the whole menu so its dropdown panel is
+     ordered as one unit above the workspace. Without this, later-in-DOM
+     workspace layers (.explorer-search z-index:50, .explorer-info-panel
+     z-index:10) can paint over the panel's edges. */
+  z-index: 90;
+  isolation: isolate;
+}
+
+.atlas-utility-menu > summary {
+  display: inline-flex;
+  min-height: 44px;
+  padding: 9px 13px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--atlas-line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+  color: var(--atlas-ink);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 800;
+  list-style: none;
+}
+
+.atlas-utility-menu > summary::-webkit-details-marker { display: none; }
+.atlas-utility-menu > summary svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.8;
+}
+
+/* F9: subtle hover feedback for the utility-menu summary, consistent with
+   other Atlas controls (border shifts toward --atlas-ink, background tints up).
+   Scoped to :not([open]) so it never conflicts with the inverted [open] style. */
+.atlas-utility-menu:not([open]) > summary:hover {
+  border-color: var(--atlas-ink);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.atlas-utility-menu[open] > summary { background: var(--atlas-ink); color: var(--atlas-paper-raised); }
+
+.atlas-utility-panel {
+  position: absolute;
+  /* Above all workspace layers. The menu itself already isolates into its own
+     stacking context (see .atlas-utility-menu), so this value is local to it. */
+  z-index: 90;
+  top: calc(100% + 10px);
+  right: 0;
+  display: grid;
+  width: min(94vw, 408px);
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: #12221e;
+  box-shadow: 0 24px 60px rgba(20, 32, 29, 0.28);
+  color: #eef4f1;
+}
+
+.atlas-player-slot .player-context {
+  width: 100%;
+  margin: 0;
+}
+
+.atlas-preference-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.atlas-preference-controls button { width: 100%; }
+
+.atlas-stats-slot .landing-statistics {
+  width: 100%;
+  margin: 0;
+}
+
+.atlas-context-bar {
+  display: flex;
+  min-height: 74px;
+  padding: 4px 0 18px;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  /* structural context-bar divider (F6): 3:1-tuned strong line token */
+  border-bottom: 1px solid var(--atlas-line-strong);
+}
+
+.atlas-context-bar p,
+.atlas-plate-heading span,
+.atlas-shape-notes > label {
+  color: var(--atlas-muted);
+  font-size: 0.61rem;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.atlas-context-bar h2 {
+  margin-top: 4px;
+  color: var(--atlas-ink);
+  font-family: var(--font-display, 'Inter', system-ui, sans-serif);
+  font-size: clamp(1.7rem, 3vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.atlas-context-bar > button {
+  display: inline-flex;
+  min-height: 44px;
+  padding: 10px 14px;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--atlas-ink);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--atlas-ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.atlas-context-bar > button:hover { background: var(--atlas-ink); color: var(--atlas-paper-raised); }
+
+/* Explore / Shape Quiz toggle — the Shapes-view mirror of the globe's
+   Explore / Country Hunt switch, styled to match .explorer-mode-switch. */
+.atlas-shape-mode-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 14px 0 18px;
+}
+
+.atlas-shape-mode-switch button {
+  display: grid;
+  gap: 2px;
+  min-height: 56px;
+  padding: 8px 14px;
+  border: 1px solid rgba(113, 130, 156, 0.5);
+  border-radius: 13px;
+  background: rgba(7, 17, 31, 0.5);
+  color: #cdd9e8;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.atlas-shape-mode-switch button span { font-size: 0.9rem; font-weight: 800; }
+.atlas-shape-mode-switch button small { color: #8fb6a7; font-size: 0.62rem; font-weight: 750; }
+.atlas-shape-mode-switch button:hover { border-color: rgba(99, 232, 176, 0.6); }
+.atlas-shape-mode-switch button.is-active {
+  border-color: #43dc9e;
+  background: rgba(99, 228, 169, 0.12);
+  color: #f2f7f5;
+  box-shadow: inset 0 0 0 1px rgba(99, 228, 169, 0.34);
+}
+
+/* The Shape Quiz setup lives here (revealed by the "Shape Quiz" toggle), not in
+   the settings menu. Hidden until chosen. */
+.atlas-shape-setup-slot { margin: 0 0 18px; }
+.atlas-shape-setup-slot[hidden] { display: none; }
+.atlas-shape-setup-slot .landing-game-panel { width: 100%; margin: 0; }
+.atlas-shape-setup-slot .landing-shape-preview { display: none; }
+
+/* Compact Sprint / Practice toggle inside the Shape Quiz panel. Difficulty &
+   region moved to the Menu, so this view only needs the per-session mode + Start. */
+.mode-select-compact {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+.mode-chip {
+  display: grid;
+  gap: 1px;
+  min-height: 52px;
+  padding: 8px 14px;
+  border: 1px solid rgba(113, 130, 156, 0.5);
+  border-radius: 13px;
+  background: rgba(7, 17, 31, 0.5);
+  color: #cdd9e8;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+.mode-chip .mode-icon { width: 18px; height: 18px; margin-bottom: 2px; color: currentColor; }
+.mode-chip .mode-title { font-size: 0.9rem; font-weight: 800; }
+.mode-chip .mode-desc { color: #8fb6a7; font-size: 0.62rem; font-weight: 750; opacity: 1; }
+.mode-chip:hover { border-color: rgba(99, 232, 176, 0.6); }
+.mode-chip.active,
+.mode-chip[aria-pressed="true"] {
+  border-color: #43dc9e;
+  background: rgba(99, 228, 169, 0.12);
+  color: #f2f7f5;
+  box-shadow: inset 0 0 0 1px rgba(99, 228, 169, 0.34);
+}
+.mode-chip:disabled { opacity: 0.45; cursor: not-allowed; }
+.mode-chip:focus-visible { outline: 2px solid #43dc9e; outline-offset: 2px; }
+
+.atlas-shape-study {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
+  align-items: stretch;
+  gap: clamp(16px, 2vw, 26px);
+  min-height: min(52vh, 460px);
+}
+
+/* In-plate browse controls (Prev · Country select · Next) sit at the bottom of
+   the shape stage so the outline stays the hero. */
+.atlas-shape-controls {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  align-self: end;
+}
+
+.atlas-shape-controls button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(113, 130, 156, 0.5);
+  border-radius: 11px;
+  background: rgba(7, 17, 31, 0.62);
+  color: #e2ebf5;
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.05rem;
+}
+
+.atlas-shape-controls button:hover { border-color: rgba(99, 232, 176, 0.6); background: rgba(99, 228, 169, 0.12); }
+
+.atlas-shape-controls select {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 34px 8px 12px;
+  border: 1px solid rgba(113, 130, 156, 0.5);
+  border-radius: 11px;
+  background: rgba(7, 17, 31, 0.62);
+  color: #f2f7f5;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+/* The relocated rich country card fills the info column; the globe styles from
+   globe-explorer.css already theme it. Just make it stretch and scroll if the
+   facts + landmark + economics run tall. */
+.atlas-shape-info-slot {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.atlas-shape-info-slot .explorer-info-panel {
+  flex: 1;
+  min-height: 0;
+}
+
+/* The globe's "Zoom to country" button is meaningless without a globe on
+   screen; hide it while the card lives in the Shapes view. */
+.atlas-shape-info-slot .explorer-focus-country { display: none; }
+
+@media (max-width: 900px) {
+  .atlas-shape-study { grid-template-columns: minmax(0, 1fr); }
+}
+
+.atlas-shape-plate {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 360px;
+  margin: 0;
+  padding: clamp(20px, 3.5vw, 40px);
+  overflow: hidden;
+  border: 1px solid rgba(113, 130, 156, 0.5);
+  border-radius: 18px;
+  background:
+    linear-gradient(var(--atlas-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--atlas-line) 1px, transparent 1px),
+    var(--atlas-paper-raised);
+  background-size: 56px 56px;
+}
+
+.atlas-plate-heading {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-self: start;
+  justify-content: space-between;
+}
+
+/* The per-country initial (#atlas-shape-index) read as a stray floating letter
+   in the plate's top-right rather than a legible index. Hidden: it's decorative
+   (aria-hidden) and the country name already appears in the notes column. JS may
+   still write to it harmlessly. */
+.atlas-plate-heading strong {
+  display: none;
+}
+
+.atlas-shape-art {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: min(40vh, 360px);
+  margin: auto;
+  padding: clamp(8px, 2vw, 28px);
+  place-items: center;
+  color: var(--atlas-ink);
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+/* The outline is the hero. The container is a large near-square region and the
+   SVG fills it entirely; the renderer's preserveAspectRatio="xMidYMid meet"
+   then scales the outline as large as it can while staying centered. The old
+   fixed-height + width:100% box letterboxed wide/short countries into a sliver;
+   a tall flexible region lets both wide (USA) and tall (Chile) shapes read big. */
+.atlas-shape-art svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Cap by min(width, height) so the outline aligns with the globe's height
+     rather than stretching to the full viewport height on tall screens. */
+  max-height: min(42vh, 42vw, 380px);
+  filter: drop-shadow(10px 14px 0 rgba(182, 65, 47, 0.14));
+}
+
+.atlas-plate-axis {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: var(--atlas-muted);
+  font: 800 0.58rem/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.atlas-plate-axis::before {
+  position: absolute;
+  top: 16px;
+  bottom: 16px;
+  left: 50%;
+  width: 1px;
+  background: var(--atlas-line);
+  content: '';
+}
+
+/* -----------------------------------------------------------------
+   Shapes study "stage" treatment.
+   The border plate now mirrors the polished dark game screen
+   (.silhouette-box in styles.css): a dark navy stage with a faint blue
+   grid + radial spotlight, an inset mint frame, a center crosshair, and a
+   glowing white outline. The notes column is the lighter dark surface, so the
+   two halves read as "stage + facts" within one consistently dark app.
+   ----------------------------------------------------------------- */
+.atlas-shapes-workspace .atlas-shape-plate {
+  isolation: isolate;
+  border-right-color: rgba(113, 130, 156, 0.42);
+  background:
+    linear-gradient(rgba(120, 184, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 184, 255, 0.06) 1px, transparent 1px),
+    radial-gradient(circle at 50% 46%, rgba(37, 91, 145, 0.42), transparent 52%),
+    #07111f;
+  background-size: 28px 28px, 28px 28px, auto, auto;
+}
+
+/* Inset mint framing rectangle. */
+.atlas-shapes-workspace .atlas-shape-plate::before {
+  position: absolute;
+  z-index: 0;
+  inset: 16px;
+  border: 1px solid rgba(99, 228, 169, 0.22);
+  border-radius: 12px;
+  content: '';
+  pointer-events: none;
+}
+
+/* Faint center crosshair. */
+.atlas-shapes-workspace .atlas-shape-plate::after {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: 50%;
+  width: 36px;
+  height: 36px;
+  background:
+    linear-gradient(#78b8ff, #78b8ff) 50% 0 / 1px 100% no-repeat,
+    linear-gradient(90deg, #78b8ff, #78b8ff) 0 50% / 100% 1px no-repeat;
+  content: '';
+  opacity: 0.18;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+/* Keep the caption and axis rulers above the stage layers. */
+.atlas-shapes-workspace .atlas-plate-heading,
+.atlas-shapes-workspace .atlas-plate-axis { z-index: 2; }
+
+/* On the dark stage the "Country shape" label and axis letters need the
+   light-scope tokens rather than the paper ink. */
+.atlas-shapes-workspace .atlas-plate-heading span { color: rgba(226, 235, 245, 0.72); }
+.atlas-shapes-workspace .atlas-plate-axis { color: rgba(226, 235, 245, 0.5); }
+.atlas-shapes-workspace .atlas-plate-axis::before { background: rgba(120, 184, 255, 0.28); }
+
+/* The outline becomes a glowing white silhouette, matching the game screen. */
+.atlas-shapes-workspace .atlas-shape-art { position: relative; z-index: 1; }
+.atlas-shapes-workspace .atlas-shape-art svg {
+  filter: brightness(0) invert(1) drop-shadow(0 14px 32px rgba(72, 164, 255, 0.22));
+}
+
+/* Revealed flag chip, echoing the game's flag-hint box but shown outright (this
+   is the learning view, not a quiz). Sits in the plate's upper-right corner. */
+.atlas-shape-flag {
+  position: absolute;
+  z-index: 2;
+  top: clamp(20px, 3.5vw, 44px);
+  right: clamp(20px, 3.5vw, 44px);
+  display: grid;
+  width: clamp(56px, 6vw, 76px);
+  height: clamp(40px, 4.3vw, 54px);
+  place-items: center;
+  border: 1px solid rgba(120, 184, 255, 0.5);
+  border-radius: 10px;
+  background: rgba(7, 17, 31, 0.72);
+  box-shadow: 0 10px 26px rgba(1, 7, 18, 0.34);
+  font-size: clamp(1.5rem, 2.6vw, 2rem);
+  line-height: 1;
+}
+
+.atlas-shape-flag:empty { display: none; }
+
+.atlas-shape-notes {
+  display: flex;
+  min-width: 0;
+  padding: clamp(24px, 4vw, 56px);
+  flex-direction: column;
+  justify-content: center;
+  background: var(--atlas-paper);
+}
+
+.atlas-shape-notes select {
+  width: 100%;
+  min-height: 48px;
+  margin: 9px 0 clamp(26px, 5vh, 52px);
+  padding: 10px 38px 10px 14px;
+  border: 1px solid rgba(155, 186, 175, 0.4);
+  border-radius: 12px;
+  background: rgba(7, 17, 31, 0.58);
+  color: var(--atlas-ink);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.atlas-shape-region {
+  margin-bottom: 8px;
+  color: var(--atlas-accent-dark);
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.atlas-shape-notes h2 {
+  color: var(--atlas-ink);
+  font-family: var(--font-display, 'Inter', system-ui, sans-serif);
+  font-size: clamp(2rem, 3.6vw, 3.25rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.atlas-shape-facts {
+  display: grid;
+  gap: 0;
+  margin: clamp(26px, 5vh, 48px) 0;
+  /* informational facts-list separators (F6): 3:1-tuned strong line token */
+  border-top: 1px solid var(--atlas-line-strong);
+}
+
+.atlas-shape-facts > div {
+  display: grid;
+  grid-template-columns: 105px minmax(0, 1fr);
+  gap: 14px;
+  padding: 12px 0;
+  /* informational facts-list row separators (F6): 3:1-tuned strong line token */
+  border-bottom: 1px solid var(--atlas-line-strong);
+}
+
+.atlas-shape-facts dt { color: var(--atlas-muted); font-size: 0.65rem; font-weight: 800; }
+.atlas-shape-facts dd { color: var(--atlas-ink); font-size: 0.75rem; font-weight: 750; line-height: 1.35; }
+
+.atlas-shape-pagination { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.atlas-shape-pagination button,
+.atlas-text-action {
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid rgba(155, 186, 175, 0.4);
+  border-radius: 12px;
+  background: rgba(7, 17, 31, 0.58);
+  color: var(--atlas-ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 850;
+}
+
+.atlas-shape-pagination button:hover { border-color: var(--atlas-accent); background: rgba(99, 228, 169, 0.14); color: var(--atlas-ink); }
+.atlas-text-action {
+  width: 100%;
+  margin-top: 10px;
+  border-color: var(--atlas-accent);
+  border-radius: 12px;
+  background: var(--atlas-accent);
+  color: #07111f;
+  font-weight: 850;
+}
+.atlas-text-action:hover { border-color: var(--atlas-accent-dark); background: var(--atlas-accent-dark); }
+
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) {
+  padding: clamp(20px, 4vw, 48px) 0;
+}
+
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) .landing-game-panel {
+  width: min(100%, 980px);
+  margin: 0 auto;
+}
+
+/* Inside the atlas Menu dropdown the setup panel is a compact form, not a wide
+   hero, so cap its width to the menu and tighten spacing. */
+.atlas-menu-setup-slot { margin-top: 12px; }
+.atlas-menu-setup-slot .landing-game-panel {
+  width: 100%;
+  padding: 16px;
+}
+.atlas-menu-setup-slot .landing-shape-preview { display: none; }
+
+/* The setup panel is authored as a 2-column hero (setup + preview) and the mode
+   cards sit in their own 2-column grid. Inside the ~360px menu dropdown those
+   columns collapse to slivers and every label wraps letter-by-letter. Force a
+   single, full-width column stack in the menu context so the cards and copy
+   read cleanly. */
+.atlas-menu-setup-slot .landing-border-outline-setup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  padding: 16px;
+}
+.atlas-menu-setup-slot .mode-select {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+.atlas-menu-setup-slot .landing .mode-card,
+.atlas-menu-setup-slot .mode-card {
+  min-height: 0;
+  padding: 12px;
+}
+.atlas-menu-setup-slot .landing-mode-heading h3 { font-size: 0.95rem; }
+.atlas-menu-setup-slot .landing-mode-heading p { font-size: 0.75rem; }
+
+/* Quiz setup panel: aligned to the Globe dark family rather than a third
+   independent palette (Req 2.7). The panel is nested inside the Shapes view,
+   where --atlas-ink/--atlas-muted resolve to the light paper values, so the
+   dark surface/text/muted are set as explicit Globe-family literals
+   (body #07111f family, ink #f2f7f5, muted #91a59e); the accent references
+   the shared --atlas-accent terracotta (identical in both view scopes) instead
+   of the previous independent green/blue. */
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) .landing-border-outline-setup {
+  border-color: rgba(155, 186, 175, 0.24);
+  background: #0c1622;
+  box-shadow: 0 22px 54px rgba(7, 17, 31, 0.4);
+  color: #f2f7f5;
+}
+
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) .mode-icon {
+  width: 28px;
+  height: 28px;
+  color: var(--atlas-accent);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) .mode-card {
+  color: #f2f7f5;
+}
+
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) .mode-card[aria-pressed='true'] {
+  border-color: var(--atlas-accent);
+  box-shadow: inset 0 0 0 1px rgba(182, 65, 47, 0.35);
+}
+
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) .landing-mode-heading p,
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) .mode-desc,
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) .landing-start-note {
+  color: #91a59e;
+}
+
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) #landing-shape-preview-flag {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+@media (max-width: 900px) {
+  .atlas-header { grid-template-columns: 1fr auto; }
+  .atlas-primary-nav { grid-row: 2; grid-column: 1 / -1; justify-self: center; }
+  .atlas-shape-study { grid-template-columns: minmax(0, 1fr); }
+  .atlas-shape-plate { min-height: 320px; border-right: 0; border-bottom: 1px solid var(--atlas-line); }
+  .atlas-shape-art svg { max-height: min(38vh, 42vw, 320px); }
+}
+
+@media (max-width: 600px) {
+  body.is-explorer-active .app { padding-right: 12px; padding-left: 12px; }
+  .atlas-header { gap: 10px; min-height: 58px; }
+  .atlas-header .explorer-home-logo { width: 152px; }
+
+  /* Mobile primary nav: drop the "GLOBE"/"SHAPES" wordmarks and let the icons
+     carry the choice. Two large, tappable tiles that read at a glance and
+     match the app's green-accent active state. Text stays in the DOM for
+     assistive tech (buttons also carry aria-label) but is visually removed. */
+  .atlas-primary-nav { width: 100%; gap: 12px; justify-content: center; }
+  .atlas-primary-nav button {
+    flex: 1;
+    min-width: 0;
+    min-height: 60px;
+    justify-content: center;
+    gap: 0;
+    padding: 12px;
+    border-radius: 20px;
+    background: rgba(116, 145, 178, 0.14);
+  }
+  .atlas-primary-nav button span {
+    /* Visually hidden, still announced by screen readers. */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .atlas-primary-nav button .icon { width: 30px; height: 30px; }
+  .atlas-primary-nav button.is-active .icon { color: #07111f; }
+
+  /* Menu recedes on mobile: icon-only, smaller, quieter than the nav tiles so
+     the two view icons stay the clear focal point. */
+  .atlas-utility-menu > summary span { display: none; }
+  .atlas-utility-menu > summary {
+    width: 38px;
+    height: 38px;
+    min-height: 0;
+    padding: 0;
+    justify-content: center;
+    border-color: transparent;
+    background: transparent;
+    opacity: 0.72;
+  }
+  .atlas-utility-menu > summary svg { width: 22px; height: 22px; }
+  .atlas-context-bar { align-items: flex-start; flex-direction: column; }
+  .atlas-context-bar > button { width: 100%; justify-content: space-between; }
+  .atlas-shape-study { min-height: 0; }
+  /* Match the Globe view's mobile footprint: the globe frame is a
+     min(88vw, 380px) square, so size the shape stage to the same box.
+     The plate holds heading + art + controls, so let the art be the square
+     and keep the plate's own min-height just above it for the chrome rows. */
+  .atlas-shape-plate {
+    min-height: 0;
+    max-width: min(88vw, 380px);
+    margin-inline: auto;
+    padding: 16px;
+    background-size: 36px 36px;
+  }
+  .atlas-shape-art {
+    min-height: 0;
+    /* The globe frame is a min(88vw, 380px) SQUARE, but its landmass only fills
+       the inscribed circle. Sizing the shape art to ~72% of that square makes a
+       filled country outline read at the same visual scale as the globe's
+       continents instead of towering over them. */
+    width: min(64vw, 274px);
+    aspect-ratio: 1 / 1;
+  }
+  .atlas-shape-art svg { max-width: 100%; max-height: min(64vw, 274px); }
+  .atlas-shape-notes { padding: 28px 18px 34px; }
+  .atlas-shape-notes select { margin-bottom: 30px; }
+  .atlas-shape-facts { margin: 28px 0; }
+  .atlas-shape-facts > div { grid-template-columns: 92px minmax(0, 1fr); }
+  :is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) { padding-top: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atlas-primary-nav button,
+  .atlas-context-bar > button,
+  .atlas-shape-pagination button,
+  .atlas-text-action { transition: none; }
+  .atlas-shape-art svg { filter: none; }
+}
+
+/* Atlas-scoped focus ring. The global :focus-visible ring (styles.css
+   --color-focus: #78b8ff) drops below the 3:1 UI-component threshold on the
+   paper Shapes background (#e8e3d7). Re-point the ring at --atlas-ink so it
+   themes per view: a dark ring on paper (#14201d vs #e8e3d7 = 12:1) and a
+   light ring on the Globe body (#f2f7f5 vs #07111f = 16.8:1). The global rule
+   remains the fallback; this only overrides the color where it under-contrasts. */
+.atlas-shell .atlas-primary-nav button:focus-visible,
+.atlas-shell .atlas-utility-menu > summary:focus-visible,
+.atlas-shell .atlas-context-bar > button:focus-visible,
+.atlas-shell .atlas-shape-mode-switch button:focus-visible,
+.atlas-shell .atlas-shape-controls button:focus-visible,
+.atlas-shell .atlas-shape-controls select:focus-visible {
+  outline: 3px solid var(--atlas-ink);
+  outline-offset: 2px;
+}
