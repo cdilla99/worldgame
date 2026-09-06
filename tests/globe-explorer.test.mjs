@@ -62,7 +62,7 @@ test('explorer markup exposes the homepage promise, search, globe controls, and 
   const gameScript = html.indexOf('app.js?v=');
 
   assert.match(html, /World Explorer[\s\S]*id="btn-open-explorer"[\s\S]*id="btn-open-explorer-hunt"/);
-  assert.match(html, /id="explorer" class="screen explorer-screen"/);
+  assert.match(html, /id="explorer" class="screen explorer-screen atlas-shell"/);
   assert.match(html, /id="explorer-stage-title"[\s\S]*Explore the world/);
   assert.match(html, /id="explorer-globe-canvas"[\s\S]*tabindex="0"/);
   assert.match(html, /id="explorer-country-search"[\s\S]*role="combobox"/);

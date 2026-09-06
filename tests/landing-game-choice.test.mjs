@@ -16,7 +16,7 @@ test('homepage leads with the live Explorer and progressively discloses challeng
 
   assert.doesNotMatch(html, /data-selected-game=/);
   assert.match(html, /id="landing"[\s\S]*class="screen landing hidden"/);
-  assert.match(html, /id="explorer" class="screen explorer-screen"/);
+  assert.match(html, /id="explorer" class="screen explorer-screen atlas-shell"/);
   assert.match(html, /id="explorer-stage-title"[\s\S]*Explore the world/);
   assert.match(html, /id="explorer-globe-canvas"[\s\S]*id="explorer-country-card"/);
   assert.match(html, /id="explorer-secondary-content"/);
@@ -29,7 +29,7 @@ test('homepage leads with the live Explorer and progressively discloses challeng
   assert.match(styles, /\.explorer-globe-frame\s*\{[\s\S]*width:\s*min\(100%, 540px\)/);
   assert.match(styles, /\.explorer-secondary-content \.landing-challenges\s*\{/);
   assert.match(app, /function composeExplorerHomepage\(\)/);
-  assert.match(app, /\$explorerSecondaryContent\.append\(element\)/);
+  assert.match(app, /\$explorerSecondaryContent\.append\(\$landingChallenges\)/);
   assert.match(app, /function setShapeChallengeExpanded\(expanded\)/);
   assert.match(app, /\$shapeChallengePanel\.hidden = !expanded/);
 });
