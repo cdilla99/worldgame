@@ -67,6 +67,21 @@
     if (!country || !Array.isArray(country.p) || !country.p.length) return null;
 
     var polygons = country.p;
+    if (options.compactBounds) {
+      // Place the seam in the largest empty longitude interval. This preserves
+      // island positions while avoiding a nearly world-wide date-line box.
+      var longitudes = Array.from(new Set(polygons.flat(2).map(function (p) { return (p[0] + 360) % 360; }))).sort(function (a, b) { return a - b; });
+      var start = longitudes[0];
+      var largestGap = -1;
+      longitudes.forEach(function (value, index) {
+        var next = index + 1 < longitudes.length ? longitudes[index + 1] : longitudes[0] + 360;
+        if (next - value > largestGap) { largestGap = next - value; start = next % 360; }
+      });
+      polygons = polygons.map(function (polygon) { return polygon.map(function (ring) { return ring.map(function (point) {
+        var longitude = (point[0] + 360) % 360;
+        return [longitude < start ? longitude + 360 : longitude, point[1]];
+      }); }); });
+    }
     var points = polygons.flat ? polygons.flat(2) : flattenDeep(polygons);
     if (!points.length) return null;
 
@@ -83,8 +98,9 @@
       if (lat > maxLatitude) maxLatitude = lat;
     }
 
-    var width = Math.max(1, maxLongitude - minLongitude);
-    var height = Math.max(1, maxLatitude - minLatitude);
+    var minimumSpan = options.compactBounds ? 0.0001 : 1;
+    var width = Math.max(minimumSpan, maxLongitude - minLongitude);
+    var height = Math.max(minimumSpan, maxLatitude - minLatitude);
     var paddingFraction = typeof options.padding === 'number' ? options.padding : 0.08;
     var padding = Math.max(width, height) * paddingFraction;
     var viewBoxWidth = width + padding * 2;
@@ -145,7 +161,7 @@
       }
 
       var label = card.name ? card.name + ' border outline' : 'Country border outline';
-      var svg = buildOutline(country, { padding: options.padding, label: label });
+      var svg = buildOutline(country, { padding: options.padding, label: label, compactBounds: options.compactBounds });
       if (!svg) {
         throw new Error('No geometry for country id ' + card.id);
       }

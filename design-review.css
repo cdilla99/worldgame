@@ -1,0 +1,132 @@
+/* Opt-in complete-journey review: ?design=atlas. Existing release stays intact. */
+body.design-review {
+  --review-paper: #f4f0e6;
+  --review-ink: #182c31;
+  --review-ocean: #123e52;
+  --review-accent: #b83b2c;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+body.design-review button, body.design-review select, body.design-review input { font-family: inherit; }
+body.design-review button:focus-visible, body.design-review select:focus-visible { outline: 3px solid #c56c35; outline-offset: 3px; }
+body.design-review .atlas-primary-nav button { box-shadow: none; border-radius: 8px; min-width: 110px; }
+body.design-review .atlas-primary-nav button .atlas-nav-copy strong { font-weight: 650; letter-spacing: .04em; }
+body.design-review .atlas-primary-nav button.is-active { background: #f4f0e6; color: #182c31; border-color: #f4f0e6; }
+body.design-review .atlas-primary-nav button.is-active:hover { background: #e7e2d6; color: #182c31; }
+body.design-review .atlas-primary-nav button.is-active small { color: #405b61; }
+body.design-review .atlas-header { min-height: 70px; }
+body.design-review .atlas-header .explorer-home-logo { width: 185px; }
+body.design-review .atlas-utility-menu > summary { background: transparent; border: 1px solid #627983; border-radius: 8px; }
+
+/* Warm atlas study; scope prevents changing the Globe's dark information card. */
+body.design-review.is-explorer-active[data-atlas-view='shapes'],
+body.design-review.is-explorer-active[data-atlas-view='shapes'] .app { background: var(--review-paper); color: var(--review-ink); }
+body.design-review .atlas-shell[data-atlas-view='shapes'] { --atlas-ink: #182c31; --atlas-muted: #53666b; --atlas-line: #c7c6b9; --atlas-line-strong: #a1aba7; }
+body.design-review[data-atlas-view='shapes'] .atlas-header .explorer-home-logo { filter: drop-shadow(0 1px 1px #123e52); }
+body.design-review[data-atlas-view='shapes'] .atlas-primary-nav button { color: #182c31; background: transparent; border-color: #9daaa9; }
+body.design-review[data-atlas-view='shapes'] .atlas-primary-nav button small { color: #53666b; }
+body.design-review[data-atlas-view='shapes'] .atlas-primary-nav button.is-active { color: #fff; background: #123e52; border-color: #123e52; }
+body.design-review[data-atlas-view='shapes'] .atlas-primary-nav button.is-active small { color: #d3e4e6; }
+body.design-review[data-atlas-view='shapes'] .atlas-utility-menu > summary { color: #182c31; }
+body.design-review[data-atlas-view='shapes'] .explorer-home-logo img { display: none; }
+body.design-review[data-atlas-view='shapes'] .explorer-home-logo::after { content: 'EARTHLING'; color: #123e52; font: 750 1.15rem/1 'Segoe UI', sans-serif; letter-spacing: .12em; }
+body.design-review .atlas-shape-mode-switch { display: flex; gap: 8px; margin: 0 0 18px; }
+body.design-review .atlas-shape-mode-switch button { min-height: 44px; width: auto; padding: 9px 18px; border: 1px solid #9daaa9; border-radius: 6px; background: transparent; color: #405b61; font-weight: 500; }
+body.design-review .atlas-shape-mode-switch button.is-active { background: #123e52; color: #fff; border-color: #123e52; box-shadow: none; }
+body.design-review .atlas-shape-mode-switch button small { display: none; }
+body.design-review .atlas-shape-mode-switch button:hover { background: #dfe5db; color: #182c31; }
+body.design-review .atlas-shape-toolbar { border: 0; border-bottom: 1px solid #b8bfb7; border-radius: 0; background: transparent; padding: 8px 0 22px; margin: 0; gap: 32px; grid-template-columns: minmax(0, 1fr) minmax(320px, .8fr); }
+body.design-review .atlas-shape-toolbar-eyebrow { display: none; }
+body.design-review .atlas-shape-toolbar h3 { font-family: Georgia, serif; font-size: clamp(2.4rem, 5vw, 4.8rem); line-height: 1.03; font-weight: 500; letter-spacing: -.045em; color: #182c31; overflow-wrap: break-word; }
+body.design-review .atlas-shape-status { color: #53666b; font-weight: 400; font-size: .85rem; margin-top: 12px; }
+body.design-review .atlas-shape-controls button, body.design-review .atlas-shape-controls select { background: transparent; color: #182c31; border-color: #8e9e9f; font-weight: 500; border-radius: 7px; min-height: 46px; }
+body.design-review .atlas-shape-controls button:hover { background: #e4e4d8; }
+body.design-review .atlas-shape-study { margin-top: 20px; gap: 32px; grid-template-columns: minmax(0, 1.45fr) minmax(300px, 1fr); min-height: 0; }
+body.design-review .atlas-shape-plate { height: clamp(360px, 56vh, 550px); min-height: 0; padding: 12px; display: flex; border: 0; border-radius: 0; background: transparent; }
+body.design-review .atlas-shape-plate::before, body.design-review .atlas-shape-plate::after,
+body.design-review .atlas-plate-heading, body.design-review .atlas-plate-axis { display: none; }
+body.design-review .atlas-shape-art { flex: 1; width: 100%; height: 100%; min-height: 0; color: #123e52; }
+body.design-review .atlas-shape-art svg { width: 100%; height: 100%; max-width: 100%; max-height: 100%; color: #123e52; filter: none; }
+body.design-review .atlas-shape-art svg path { stroke: currentColor; stroke-width: .8px; vector-effect: non-scaling-stroke; }
+body.design-review .atlas-shape-info-slot .explorer-info-panel,
+body.design-review .atlas-shape-info-slot #explorer-country-card { background: transparent; border: 0; border-radius: 0; box-shadow: none; color: #182c31; padding: 0; }
+body.design-review .atlas-shape-info-slot { padding-left: 24px; border-left: 1px solid #c0c5ba; }
+body.design-review .atlas-shape-info-slot #explorer-country-kicker,
+body.design-review .atlas-shape-info-slot #explorer-country-name { display: none; }
+body.design-review .atlas-shape-info-slot #explorer-country-region { color: #405c64; font-size: 1rem; }
+body.design-review .atlas-shape-info-slot #explorer-country-flag { flex: none; width: 58px; height: 40px; border-radius: 2px; box-shadow: none; }
+body.design-review .atlas-shape-info-slot #explorer-country-flag img { width: 100%; height: 100%; object-fit: contain; }
+body.design-review .atlas-shape-info-slot dl { background: transparent; border-color: #bbc3bb; border-radius: 0; }
+body.design-review .atlas-shape-info-slot dl > div { background: transparent; border-color: #d1d3c8; }
+body.design-review .atlas-shape-info-slot dt { color: #526a70; font-weight: 500; font-size: .72rem; }
+body.design-review .atlas-shape-info-slot dd { color: #182c31; font-weight: 500; font-size: .9rem; }
+body.design-review .atlas-shape-info-slot #explorer-country-fact { background: transparent; color: #182c31; border: 0; border-left: 3px solid #b83b2c; border-radius: 0; padding: 8px 14px; font: 500 1.15rem/1.45 Georgia, serif; }
+body.design-review .atlas-shape-info-slot summary { color: #405c64; font-size: .85rem; }
+body.design-review .atlas-shape-info-slot #explorer-economics-callout { background: #e7e8dc; color: #182c31; border: 0; border-radius: 8px; box-shadow: none; }
+body.design-review .atlas-shape-info-slot #explorer-economics-callout :is(strong, h3, dt, dd) { color: #182c31; }
+
+/* Same control language in setup, without reverting to a dark boxed form. */
+body.design-review #atlas-shape-setup-slot .landing-border-outline-setup { background: transparent; border: 0; padding: 0; }
+body.design-review .atlas-quiz-heading h3 { font-family: Georgia, serif; font-weight: 500; font-size: 2.5rem; color: #182c31; }
+body.design-review .atlas-quiz-heading p { color: #53666b; }
+body.design-review #atlas-shape-setup-slot .mode-chip { border-radius: 9px; color: #182c31; border: 1px solid #9aa9a7; background: transparent; box-shadow: none; }
+body.design-review #atlas-shape-setup-slot .mode-chip[aria-pressed='true'] { background: #123e52; color: #fff; border-color: #123e52; }
+body.design-review #atlas-shape-setup-slot .mode-desc { color: inherit; opacity: .8; }
+body.design-review #atlas-shape-setup-slot .mode-icon { color: inherit; }
+body.design-review #atlas-shape-setup-slot .mode-settings-icon { background: transparent; color: #182c31; border-color: #9aa9a7; }
+body.design-review #atlas-shape-setup-slot .landing-selection-status { background: #e3e7dc; color: #182c31; border-radius: 7px; }
+body.design-review #atlas-shape-setup-slot .landing-selection-copy :is(span, p) { color: #182c31; }
+body.design-review #atlas-shape-setup-slot .landing-start-action { background: #b83b2c; color: #fff; border-color: #b83b2c; border-radius: 8px; box-shadow: none; }
+
+/* Play: geography leads; answers and score support it. */
+body.design-review:has(#game:not(.hidden)), body.design-review:has(#game:not(.hidden)) .app { background: #102b36; }
+body.design-review #game { gap: 22px; }
+body.design-review .game-stage, body.design-review .answer-interaction-panel { background: transparent; border: 0; border-radius: 0; box-shadow: none; padding: 12px; }
+body.design-review .game-stage-title { font: 500 clamp(1.7rem, 3vw, 2.5rem)/1.15 Georgia, serif; color: #f4f0e6; }
+body.design-review .game-card-eyebrow, body.design-review .answer-card-heading { display: none; }
+body.design-review .game-card-instruction { font-size: .82rem; color: #b5c8cc; }
+body.design-review #silhouette-box { background: transparent; border: 0; border-radius: 0; height: clamp(300px, 53vh, 540px); padding: 12px; }
+body.design-review #silhouette-box::before, body.design-review #silhouette-box::after { display: none; }
+body.design-review #silhouette-box > :is(svg, img) { width: 100%; height: 100%; max-height: 100%; max-width: 100%; color: #f4f0e6; filter: none; object-fit: contain; }
+body.design-review #silhouette-box > svg path { stroke: currentColor; stroke-width: 1.2px; vector-effect: non-scaling-stroke; }
+body.design-review .flag-hint.flag-blurred { visibility: hidden; }
+body.design-review .answer-interaction-panel { align-self: center; min-height: 0; gap: 16px; }
+body.design-review .answer-path-btn.know-btn { background: #f4f0e6; color: #182c31; border-color: #f4f0e6; box-shadow: none; border-radius: 8px; min-height: 68px; }
+body.design-review .answer-path-btn.options-btn { background: transparent; color: #f4f0e6; border-color: #779097; border-radius: 8px; min-height: 68px; }
+body.design-review .answer-path-copy small { display: none; }
+body.design-review .answer-path-icon { background: transparent; }
+body.design-review .answer-path-reward { font-size: .8rem; opacity: .8; }
+body.design-review .hints-section { margin-top: 16px; }
+body.design-review .hint-tools { margin-top: 24px; }
+body.design-review #answer-interaction-panel { align-self: center; min-height: 0; height: auto; }
+body.design-review .choice-btn { background: #183c48; border-color: #779097; color: #f4f0e6; border-radius: 8px; }
+body.design-review .feedback-facts { background: transparent; border-top: 1px solid #536f78; border-radius: 0; }
+body.design-review .feedback-eyebrow { color: #b5c8cc; font-weight: 500; }
+body.design-review .feedback-outcome { font-weight: 600; }
+body.design-review .feedback { background: transparent; box-shadow: none; }
+body.design-review #feedback-country-name { font: 500 clamp(2rem, 4vw, 3.7rem)/1.08 Georgia, serif; color: #f4f0e6; }
+body.design-review .feedback-country-card { background: transparent; border: 0; border-radius: 0; }
+body.design-review .feedback-next-btn { background: #f4f0e6; color: #182c31; border-radius: 8px; }
+@media (max-width: 900px) {
+  body.design-review .atlas-shape-toolbar { grid-template-columns: 1fr; gap: 14px; padding-bottom: 16px; }
+  body.design-review .atlas-shape-study { grid-template-columns: 1fr; gap: 16px; margin-top: 8px; }
+  body.design-review .atlas-shape-plate { height: 300px; }
+  body.design-review .atlas-shape-info-slot { border-left: 0; border-top: 1px solid #bbc3bb; padding: 18px 0 0; }
+  body.design-review #silhouette-box { height: 300px; }
+  body.design-review .answer-interaction-panel { align-self: stretch; }
+}
+@media (max-width: 600px) {
+  body.design-review .atlas-header { grid-template-columns: 1fr auto; gap: 8px; }
+  body.design-review .atlas-header .explorer-home-logo { width: 148px; }
+  body.design-review .atlas-primary-nav { grid-column: 1 / -1; grid-row: 2; justify-self: stretch; gap: 8px; }
+  body.design-review .atlas-primary-nav button { min-height: 44px; padding: 7px 12px; }
+  body.design-review .atlas-nav-copy small { display: none; }
+  body.design-review .atlas-shape-status { margin-top: 7px; font-size: .78rem; }
+  body.design-review .atlas-shape-toolbar h3 { font-size: 2.4rem; }
+  body.design-review #game { gap: 8px; }
+  body.design-review .game-stage-title { font-size: 1.7rem; }
+  body.design-review #silhouette-box { height: 260px; }
+  body.design-review .game-stage, body.design-review .answer-interaction-panel { padding: 4px; }
+  body.design-review .game-card-instruction { display: none; }
+  body.design-review .answer-path-btn.know-btn, body.design-review .answer-path-btn.options-btn { min-height: 58px; }
+}
+@media (prefers-reduced-motion: reduce) { body.design-review * { transition-duration: 0s !important; animation-duration: 0s !important; } }

@@ -969,6 +969,7 @@
       const landmarkName = (Array.isArray(country?.landmarks) ? country.landmarks : [])
         .find(candidate => typeof candidate === 'string' && candidate.trim())?.trim();
       hideLandmarkMedia();
+      if (screen.dataset.atlasView === 'shapes') return;
       if (!landmarkName || !root.fetch || !landmarkMedia || !landmarkMediaImage) return;
 
       const requestId = landmarkMediaRequestId;
@@ -980,7 +981,7 @@
       const displayMedia = (media, isCurrentAttempt, onImageError) => {
         clearLandmarkMedia();
         landmarkMediaImage.onload = () => {
-          if (isCurrentAttempt()) landmarkMedia.classList.remove('hidden');
+          if (isCurrentAttempt() && screen.dataset.atlasView !== 'shapes') landmarkMedia.classList.remove('hidden');
         };
         landmarkMediaImage.onerror = () => {
           if (isCurrentAttempt()) onImageError();
@@ -1238,7 +1239,7 @@
       huntCelebration?.classList.add('hidden');
       huntCelebration?.classList.remove('is-active');
     }
-    function renderCountryCard(country) {
+    function renderCountryCard(country, options = {}) {
       if (!country) return;
       emptyCard.classList.add('hidden');
       countryCard.classList.remove('hidden');
@@ -1280,8 +1281,26 @@
       );
       setDetailValue(landmark, country.landmarks?.[0]);
       setDetailValue(fact, country.fun_facts?.[0] || country.built_in_clue);
-      loadLandmarkMedia(country);
+      if (options.landmarkMedia === false) hideLandmarkMedia();
+      else loadLandmarkMedia(country);
       details.open = !huntActive;
+      if (document.body?.classList?.contains('design-review') && screen.dataset.atlasView === 'shapes') details.open = false;
+    }
+
+    function dispatchCountryEvent(country, source) {
+      root.dispatchEvent(new CustomEvent('geowars:explorer-country', {
+        detail: { countryId: country.id, placeId: country.id, kind: country.kind || 'country', source }
+      }));
+    }
+
+    // Render the shared facts card without changing Explorer selection state.
+    // The country event is retained for economics rendering, but this path does
+    // not touch the camera, search, sound, or live-region selection feedback.
+    function renderCountry(countryId, options = {}) {
+      const country = cardsById.get(Number(countryId));
+      if (!country) return;
+      renderCountryCard(country, { landmarkMedia: options.source !== 'atlas-shapes' });
+      dispatchCountryEvent(country, options.source || 'render');
     }
 
     function selectCountry(countryId, options = {}) {
@@ -1302,9 +1321,7 @@
       if (options.animate === true) animateToCountry(country);
       else draw();
       syncFocusControl();
-      root.dispatchEvent(new CustomEvent('geowars:explorer-country', {
-        detail: { countryId: country.id, placeId: country.id, kind: country.kind || 'country', source: options.source || 'globe' }
-      }));
+      dispatchCountryEvent(country, options.source || 'globe');
     }
 
     // Explicit "center + auto-zoom on the selected country" action. Kept
@@ -2026,6 +2043,7 @@
     root.GeoWars.explorer = {
       open: openExplorer,
       close: returnHome,
+      renderCountry,
       selectCountry,
       focusSelectedCountry,
       startHunt,

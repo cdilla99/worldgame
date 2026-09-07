@@ -270,6 +270,8 @@ function createFixture(cards) {
       regionButton, showoff: elements['btn-showoff'], start: elements['btn-start-game']
     },
     select(id) { root.GeoWars.explorer.selectCountry(id, { animate: false, source: 'test' }); },
+    study(id) { root.GeoWars.explorer.renderCountry(id, { source: 'atlas-shapes' }); },
+    setView(view) { elements.explorer.dataset.atlasView = view; },
     state() { return root.GeoWars.explorer.getState(); }
   };
 }
@@ -594,3 +596,39 @@ assert.deepEqual(mediaSnapshot(staleFallbackFixture), currentSnapshot, 'late fal
 assert.equal(currentSnapshot.src, 'https://images.example.test/current-second.jpg');
 assert.equal(currentSnapshot.alt, `${staleFallbackSecond.landmarks[0]} in ${staleFallbackSecond.name}`);
 console.log('Late fallback response/image ownership fixture passed.');
+
+// Shapes must neither fetch a photo nor reveal a pending Globe photo later.
+const studyCountry = country({ id: 701, name: 'Study country', landmark: 'Study landmark', salt: 701 });
+const studyFixture = createFixture([studyCountry]);
+studyFixture.study(studyCountry.id);
+assert.equal(studyFixture.requests.length, 0, 'Shapes does not request landmark media');
+studyFixture.select(studyCountry.id);
+assert.equal(studyFixture.requests.length, 1, 'Globe still requests landmark media');
+studyFixture.study(studyCountry.id);
+resolveRequest(studyFixture.requests[0], {
+  ok: true,
+  json: async () => page({ title: 'Study landmark', imageUrl: 'https://images.example.test/stale.jpg', sourceUrl: 'https://source.test/stale' })
+});
+await settle();
+assert.equal(studyFixture.elements.media.classList.contains('hidden'), true);
+assert.equal(studyFixture.elements.image.getAttribute('src'), null);
+assert.equal(studyFixture.requests.length, 1, 'late Globe response cannot initiate more Shapes media');
+console.log('Shapes landmark suppression and pending response fixture passed.');
+
+const latePhotoFixture = createFixture([studyCountry]);
+latePhotoFixture.select(studyCountry.id);
+resolveRequest(latePhotoFixture.requests[0], {
+  ok: true,
+  json: async () => page({ title: 'Study landmark', imageUrl: 'https://images.example.test/late.jpg', sourceUrl: 'https://source.test/late' })
+});
+await settle();
+const latePhotoLoad = latePhotoFixture.elements.image.onload;
+assert.equal(typeof latePhotoLoad, 'function');
+latePhotoFixture.setView('shapes');
+latePhotoLoad();
+assert.equal(latePhotoFixture.elements.media.classList.contains('hidden'), true, 'photo onload cannot reveal media in Shapes');
+latePhotoFixture.select(studyCountry.id);
+assert.equal(latePhotoFixture.requests.length, 1, 'even Globe selection API cannot request photos while Shapes owns the panel');
+latePhotoFixture.setView('globe');
+latePhotoFixture.select(studyCountry.id);
+assert.equal(latePhotoFixture.requests.length, 2, 'Globe photos resume outside Shapes');

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Field Atlas — Shapes Concept A</title>
+  <link rel="stylesheet" href="field-atlas.css">
+</head>
+<body class="field-atlas">
+  <a class="skip-link" href="#study">Skip to country study</a>
+  <header class="site-header">
+    <a class="wordmark" href="index.html" aria-label="Shapes concept comparison">EARTHLING <span>world geography game</span></a>
+    <nav class="primary-nav" aria-label="Atlas views">
+      <a class="prototype-control" href="index.html" aria-disabled="true"><strong>Globe</strong><small>Explore</small></a>
+      <a class="is-current" href="field-atlas.html" aria-current="page"><strong>Shapes</strong><small>Learn outlines</small></a>
+    </nav>
+  </header>
+
+  <main id="study" class="field-main">
+    <section class="intro" aria-labelledby="country-heading">
+      <div class="intro-copy">
+        <span class="flag" data-country-flag role="img" aria-label="Japan flag"></span>
+        <h1 id="country-heading" class="country-title" data-country-name>Japan</h1>
+        <p class="region-line" data-country-region>Asia · Eastern Asia</p>
+      </div>
+      <div class="explore-controls">
+        <div class="browse-controls" role="group" aria-label="Browse countries">
+          <button type="button" data-action="previous" aria-label="Previous country">Previous</button>
+          <label><span class="sr-only">Choose a country</span><select id="country-select" aria-label="Choose a country"></select></label>
+          <button type="button" data-action="next" aria-label="Next country">Next</button>
+        </div>
+        <div class="browse-tools" role="group" aria-label="Study actions">
+          <button class="preview-control" type="button" data-action="preview" aria-pressed="false">Play preview</button>
+          <button class="quiz-route" type="button" data-action="quiz">Shape Quiz <span aria-hidden="true">→</span></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="study-grid">
+      <figure class="map-field" aria-labelledby="outline-caption">
+        <figcaption id="outline-caption" class="sr-only">Country outline</figcaption>
+        <div id="shape-outline" class="shape-outline" role="img" aria-label="Japan border outline"></div>
+        <div class="artwork-notes">
+          <p class="capital-note"><span class="note-label">Capital</span><strong data-country-capital>Tokyo</strong></p>
+          <p class="country-fact" data-country-fact></p>
+        </div>
+      </figure>
+
+      <aside class="facts-column" aria-label="Country facts">
+        <dl class="facts-list">
+          <div><dt>Population</dt><dd data-country-population></dd></div>
+          <div><dt>Languages</dt><dd data-country-languages></dd></div>
+          <div><dt>Currency</dt><dd data-country-currency></dd></div>
+          <div><dt>Area</dt><dd data-country-area></dd></div>
+          <div><dt>Neighbors</dt><dd data-country-neighbors></dd></div>
+        </dl>
+      </aside>
+    </section>
+    <p id="concept-status" class="concept-status">Preview paused. Browse the library at your pace.</p>
+    <p id="concept-live" class="sr-only" aria-live="polite"></p>
+  </main>
+
+  <script src="../../data/countries.js"></script>
+  <script src="../../assets/globe-countries.js"></script>
+  <script src="../../asset-fallbacks.js"></script>
+  <script src="../../shape-geometry.js"></script>
+  <script src="concept.js"></script>
+</body>
+</html>

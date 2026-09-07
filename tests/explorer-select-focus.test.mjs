@@ -121,6 +121,8 @@ function createHarness() {
   };
   class ResizeObserver { observe() {} disconnect() {} }
   class CustomEvent { constructor(type, options = {}) { this.type = type; this.detail = options.detail; } }
+  const events = [];
+  const audioCalls = [];
   const root = {
     document,
     performance: { now: () => 0 },
@@ -134,7 +136,12 @@ function createHarness() {
     addEventListener() {},
     dispatchEvent() {},
     fetch() { return Promise.reject(new Error('network access is not used by this fixture')); },
+    AudioEngine: {
+      init() {},
+      playSubmitClick() { audioCalls.push('playSubmitClick'); }
+    },
     BackgroundMusic: { stop() {} },
+    dispatchEvent(event) { events.push(event); },
     GeoWars: { navigate: { showHome() {}, showExplorer() {} } }
   };
   const sandbox = { window: root, document, countryCards: [country], ResizeObserver, CustomEvent, console };
@@ -142,6 +149,12 @@ function createHarness() {
   return {
     explorer: root.GeoWars.explorer,
     country,
+    events,
+    audioCalls,
+    searchInput: getElement('explorer-country-search'),
+    live: getElement('explorer-live'),
+    countryName: getElement('explorer-country-name'),
+    countryCapital: getElement('explorer-country-capital'),
     focusButton: getElement('btn-explorer-focus-country'),
     countryCard: getElement('explorer-country-card')
   };
@@ -174,6 +187,51 @@ test('activating the already-selected country focuses it instead of re-selecting
     explorerSource,
     /if \(Number\(countryId\) === selectedCountryId\) \{\s*focusSelectedCountry\(\);\s*\} else \{\s*selectCountry\(countryId, options\);\s*\}/
   );
+});
+
+test('renderCountry updates facts and economics without selection side effects', () => {
+  const harness = createHarness();
+  const { explorer, country, events, audioCalls, searchInput, live, countryCard, countryName, countryCapital } = harness;
+
+  explorer.open();
+  const before = explorer.getState();
+  const beforeLive = live.textContent;
+  const beforeEvents = events.length;
+
+  explorer.renderCountry(country.id, { source: 'atlas-shapes' });
+
+  const after = explorer.getState();
+  assert.equal(after.selectedCountryId, before.selectedCountryId);
+  assert.equal(after.hoveredCountryId, before.hoveredCountryId);
+  assert.equal(after.longitude, before.longitude);
+  assert.equal(after.latitude, before.latitude);
+  assert.equal(after.zoom, before.zoom);
+  assert.equal(searchInput.value, '');
+  assert.equal(live.textContent, beforeLive);
+  assert.deepEqual(audioCalls, []);
+  assert.equal(countryCard.classList.contains('hidden'), false);
+  assert.equal(countryName.textContent, country.name);
+  assert.equal(countryCapital.textContent, '—');
+  assert.equal(events.length, beforeEvents + 1);
+  assert.equal(events.at(-1).type, 'geowars:explorer-country');
+  assert.equal(events.at(-1).detail.countryId, country.id);
+  assert.equal(events.at(-1).detail.source, 'atlas-shapes');
+});
+
+test('selectCountry retains selection feedback and sound behavior', () => {
+  const harness = createHarness();
+  const { explorer, country, events, audioCalls, searchInput, live } = harness;
+
+  explorer.open();
+  const beforeEvents = events.length;
+  explorer.selectCountry(country.id, { animate: false, source: 'globe' });
+
+  assert.equal(explorer.getState().selectedCountryId, country.id);
+  assert.equal(searchInput.value, country.name);
+  assert.match(live.textContent, /Fixture Country selected/);
+  assert.deepEqual(audioCalls, ['playSubmitClick']);
+  assert.equal(events.length, beforeEvents + 1);
+  assert.equal(events.at(-1).detail.source, 'globe');
 });
 
 test('the Zoom to country button is disabled until a country is selected', () => {

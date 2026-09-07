@@ -35,6 +35,23 @@ function loadModule() {
   return context;
 }
 
+test('review outline wraps date-line islands without dropping polygons or mutating data', () => {
+  const api = loadModule().window.GeoWarsShapeGeometry;
+  const geometry = { p: [[[[179, 0], [179.5, 0], [179.5, 1], [179, 0]]], [[[-179, 0], [-178.5, 0], [-178.5, 1], [-179, 0]]]] };
+  const before = JSON.stringify(geometry);
+  const svg = api.buildOutline(geometry, { compactBounds: true, padding: 0 });
+  assert.equal(Number(svg.attrs.viewBox.split(' ')[2]), 2.5);
+  assert.equal((svg.children[0].attrs.d.match(/M/g) || []).length, 2);
+  assert.equal(JSON.stringify(geometry), before);
+});
+
+test('review outline fits microstates instead of forcing a one-degree frame', () => {
+  const api = loadModule().window.GeoWarsShapeGeometry;
+  const geometry = { p: [[[[7, 43], [7.02, 43], [7.02, 43.01], [7, 43]]]] };
+  const svg = api.buildOutline(geometry, { compactBounds: true, padding: 0 });
+  assert.ok(Number(svg.attrs.viewBox.split(' ')[2]) < 0.03);
+});
+
 test('shape-geometry exposes the render/buildOutline contract atlas.js depends on', () => {
   const context = loadModule();
   const api = context.window.GeoWarsShapeGeometry;

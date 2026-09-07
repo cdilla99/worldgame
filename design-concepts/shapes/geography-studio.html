@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Geography Studio — Shapes Concept B</title>
+  <link rel="stylesheet" href="geography-studio.css">
+</head>
+<body class="geography-studio">
+  <a class="skip-link" href="#studio-stage">Skip to country study</a>
+  <header class="studio-header">
+    <a class="studio-wordmark" href="index.html" aria-label="Shapes concept comparison">EARTHLING<span>world geography game</span></a>
+    <nav class="studio-nav" aria-label="Atlas views">
+      <a class="prototype-control" href="index.html" aria-disabled="true"><strong>Globe</strong><small>Explore</small></a>
+      <a class="is-current" href="geography-studio.html" aria-current="page"><strong>Shapes</strong><small>Learn outlines</small></a>
+    </nav>
+    <p class="studio-label">Concept B / Geography Studio</p>
+  </header>
+
+  <main id="studio-stage" class="studio-shell">
+    <section class="studio-rail" aria-labelledby="studio-country-heading">
+      <div class="rail-topline"><span>01</span><span>Shape library</span></div>
+      <p class="studio-kicker">Identify the form</p>
+      <h1 id="studio-country-heading" data-country-name>Japan</h1>
+      <p class="studio-region" data-country-region>Asia · Eastern Asia</p>
+      <div class="studio-browse" role="group" aria-label="Browse countries">
+        <button type="button" data-action="previous" aria-label="Previous country">← <span>Previous</span></button>
+        <label><span>Country chooser</span><select id="country-select" aria-label="Choose a country"></select></label>
+        <button type="button" data-action="next" aria-label="Next country"><span>Next</span> →</button>
+      </div>
+      <a class="studio-quiz prototype-control" href="#concept-status" aria-disabled="true"><span>Next activity</span><strong>Shape Quiz</strong><small>Prototype route · name it from the outline</small></a>
+    </section>
+
+    <section class="studio-stage" aria-label="Geography Studio country artwork and facts">
+      <div class="studio-art-header"><span class="art-index">JPN</span><span>Asia / Eastern Asia</span><button type="button" data-action="preview" aria-pressed="false">Play preview</button></div>
+      <figure class="studio-map" aria-labelledby="studio-outline-caption">
+        <figcaption id="studio-outline-caption"><span>Japan</span><span>Accurate country geometry</span></figcaption>
+        <div id="shape-outline" class="shape-outline" role="img" aria-label="Japan border outline"></div>
+        <span class="yellow-pin pin-north" aria-hidden="true">N</span><span class="yellow-pin pin-south" aria-hidden="true">S</span>
+      </figure>
+      <section class="studio-facts" aria-labelledby="studio-facts-heading">
+        <div class="studio-facts-heading"><span class="art-index">FACTS</span><h2 id="studio-facts-heading" data-country-name>Japan</h2><span data-country-flag aria-hidden="true">🇯🇵</span></div>
+        <dl class="fact-grid">
+          <div><dt>Capital</dt><dd data-country-capital>Tokyo</dd></div>
+          <div><dt>Region</dt><dd data-country-region>Asia · Eastern Asia</dd></div>
+          <div><dt>Population</dt><dd data-country-population></dd></div>
+          <div><dt>Languages</dt><dd data-country-languages></dd></div>
+          <div><dt>Currency</dt><dd data-country-currency></dd></div>
+          <div><dt>Area</dt><dd data-country-area></dd></div>
+        </dl>
+        <p class="studio-fact-callout" data-country-fact></p>
+        <p class="studio-neighbors"><strong>Neighbors</strong><span data-country-neighbors></span></p>
+      </section>
+    </section>
+    <p id="concept-status" class="concept-status">Preview paused. Browse the library at your pace.</p>
+    <p id="concept-live" class="sr-only" aria-live="polite"></p>
+  </main>
+
+  <script src="../../data/countries.js"></script>
+  <script src="../../assets/globe-countries.js"></script>
+  <script src="../../shape-geometry.js"></script>
+  <script src="concept.js"></script>
+</body>
+</html>
