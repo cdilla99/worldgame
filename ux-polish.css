@@ -2018,6 +2018,32 @@ img.is-nonrect-flag {
   object-fit: cover;
 }
 
+/* Preview flag slots now hold an <img> (see renderPreviewFlag) instead of an
+   emoji glyph. Make the flag element fill its slot so the image is sized by the
+   container rather than its intrinsic 160px width. */
+#landing-shape-preview-flag {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+#landing-shape-preview-flag img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Flags aren't square; contain shows the whole flag without cropping edges. */
+  object-fit: contain;
+}
+.landing-country-example-flag img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Match the container radius so corners clip cleanly (container also has
+     overflow: hidden below). Contain avoids cropping non-square flags. */
+  border-radius: inherit;
+  object-fit: contain;
+}
+
 .landing-shape-preview-art.is-changing svg {
   animation: landing-shape-swap 460ms ease both;
 }
@@ -3025,6 +3051,7 @@ button.brand-lockup {
   height: 58px;
   flex: 0 0 58px;
   place-items: center;
+  overflow: hidden;
   border: 1px solid rgba(120, 184, 255, 0.22);
   border-radius: 16px;
   background: rgba(4, 15, 28, 0.72);

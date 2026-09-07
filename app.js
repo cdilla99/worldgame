@@ -218,6 +218,11 @@ function polygonArea(polygon) {
 function createLocalSilhouette(card, geometry, elementId = 'silhouette-img', options = {}) {
   const country = geometry.find(entry => entry.i === card.id);
   if (!country?.p?.length) return null;
+  if (document.body?.classList?.contains('design-review') && window.GeoWarsShapeGeometry?.buildOutline && !options.largestLandmass) {
+    const outline = window.GeoWarsShapeGeometry.buildOutline(country, { padding: 0.08, compactBounds: true, label: 'Guess this country' });
+    if (outline && elementId) outline.id = elementId;
+    return outline;
+  }
 
   const polygons = options.largestLandmass
     ? [country.p.reduce((largest, polygon) => polygonArea(polygon) > polygonArea(largest) ? polygon : largest)]
@@ -319,6 +324,11 @@ function restoreRecoveredRound(card) {
 }
 
 function renderSilhouetteAsset(card) {
+  if (document.body?.classList?.contains('design-review')) {
+    $silhouetteBox?.querySelector('#silhouette-img, [data-asset-fallback="silhouette"]')?.remove();
+    renderLocalSilhouette(card).catch(() => handleSilhouetteAssetFailure(card));
+    return;
+  }
   const previousAsset = $silhouetteBox && $silhouetteBox.querySelector('#silhouette-img, [data-asset-fallback="silhouette"]');
   if (previousAsset) previousAsset.remove();
   if (!$silhouetteBox || !assetFallbacks) {
@@ -552,6 +562,30 @@ function syncLandingShapePreviewDisclosure() {
   $landingShapePreview.open = true;
 }
 
+// Render a country flag into a preview slot as an IMAGE (via the shared asset
+// pipeline), not raw emoji text. Regional-indicator emoji have no glyphs on
+// Windows and most Linux builds, so they show as bare letters ("NP") or a
+// clipped shape — Nepal's pennant looked cut off. Images render everywhere and
+// degrade to an ISO code chip if the network flag hosts are unreachable.
+function renderPreviewFlag(element, card) {
+  if (!element || !card) return;
+  element.setAttribute('aria-label', card.name + ' flag');
+  if (!assetFallbacks || !assetFallbacks.prepareImage) {
+    // No pipeline available: keep the emoji as a last resort.
+    element.textContent = card.flag || '🌍';
+    return;
+  }
+  element.replaceChildren();
+  const image = document.createElement('img');
+  image.alt = '';
+  // Nepal is the only non-rectangular national flag; contain it so the pennant
+  // is never cropped by the slot's object-fit: cover.
+  const code = assetFallbacks.getCountryCode(card);
+  if (code === 'NP') image.classList.add('is-nonrect-flag');
+  element.appendChild(image);
+  assetFallbacks.prepareImage(image, 'flag', card, { countryName: card.name, alt: '' });
+}
+
 function renderLandingShapePreview(cards, geometry) {
   const card = cards[landingShapePreviewIndex];
   if (!card || !$landingShapePreviewArt) return;
@@ -561,8 +595,7 @@ function renderLandingShapePreview(cards, geometry) {
   $landingShapePreviewArt.classList.remove('is-changing');
   $landingShapePreviewArt.replaceChildren(silhouette);
   if ($landingShapePreviewFlag) {
-    $landingShapePreviewFlag.textContent = card.flag || '🌍';
-    $landingShapePreviewFlag.setAttribute('aria-label', card.name + ' flag');
+    renderPreviewFlag($landingShapePreviewFlag, card);
   }
   if ($landingShapePreviewCountry) $landingShapePreviewCountry.textContent = card.name;
   if ($landingShapePreview) {
@@ -592,7 +625,7 @@ function initializeLandingShapePreview() {
 function renderLandingCountryPreview(card) {
   const chosen = card || countryCards.find(country => country.id === 2);
   if (!chosen) return;
-  if ($landingPreviewFlag) $landingPreviewFlag.textContent = chosen.flag;
+  if ($landingPreviewFlag) renderPreviewFlag($landingPreviewFlag, chosen);
   if ($landingPreviewCountry) $landingPreviewCountry.textContent = chosen.name;
   if ($landingPreviewRegion) $landingPreviewRegion.textContent = chosen.continent;
   if ($landingPreviewCapital) $landingPreviewCapital.textContent = chosen.capital;
@@ -807,7 +840,21 @@ if ($landingShapeGameButton) {
 function setShapeQuizSetupOpen(open) {
   const exploreButton = document.getElementById('btn-atlas-shape-explore');
   const setupSlot = document.getElementById('atlas-shape-setup-slot');
+  const shapeToolbar = document.getElementById('atlas-shape-toolbar');
+  const shapesWorkspace = document.getElementById('atlas-shapes-workspace');
+  const shapeStudy = shapesWorkspace?.querySelector('.atlas-shape-study');
+  if (shapesWorkspace) shapesWorkspace.dataset.quizSetup = String(open);
+  if (shapeStudy) {
+    shapeStudy.hidden = open;
+    shapeStudy.inert = open;
+  }
   if (setupSlot) setupSlot.hidden = !open;
+  // The Shape Library browser (country dropdown + prev/next) belongs to Explore.
+  // Hide it while the Shape Quiz setup is showing so the quiz launcher stands alone.
+  if (shapeToolbar) {
+    shapeToolbar.hidden = open;
+    shapeToolbar.classList.toggle('hidden', open);
+  }
   if ($shapeChallengePanel) {
     $shapeChallengePanel.hidden = !open;
     $shapeChallengePanel.classList.toggle('hidden', !open);
@@ -2075,6 +2122,15 @@ function endGame() {
 
 if ($gameHomeLogo) {
   $gameHomeLogo.addEventListener('click', () => {
+    // Leaving a game in progress ends the run, so confirm first (same guard the
+    // Quit button uses). Applies to any mode with rounds played; a finished or
+    // not-yet-started game leaves immediately.
+    if (state.total > 0 && !state.gameOver) {
+      clearInterval(state.timer);
+      document.getElementById('quit-confirm').classList.remove('hidden');
+      openQuitDialog();
+      return;
+    }
     clearTimeout(state.feedbackTimeout);
     state.feedbackTimeout = null;
     clearInterval(state.timer);
@@ -2090,7 +2146,9 @@ if ($landingHomeLogo) {
 }
 
 $btnQuit.addEventListener('click', () => {
-  if (state.mode === 'sprint' && state.total > 0 && !state.gameOver) {
+  // Confirm before abandoning any game mode that has rounds in progress (Sprint
+  // or Practice). A not-yet-started or finished game quits immediately.
+  if (state.total > 0 && !state.gameOver) {
     clearInterval(state.timer);
     document.getElementById('quit-confirm').classList.remove('hidden');
   } else {

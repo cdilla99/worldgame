@@ -27,9 +27,11 @@
   <link rel="stylesheet" href="styles.css?v=20260905-learning2" />
   <link rel="stylesheet" href="ux-polish.css?v=20260821-globe-focus1" />
   <link rel="stylesheet" href="globe-explorer.css?v=20260905-shapes1" />
-  <link rel="stylesheet" href="atlas.css?v=20260905-uxfix1" />
+  <link rel="stylesheet" href="atlas.css?v=20260906-quiz-layout2" />
+  <link rel="stylesheet" href="design-review.css?v=20260906-atlas2" />
 </head>
 <body class="is-explorer-active">
+  <script>if (new URLSearchParams(location.search).get('design') === 'atlas') document.body.classList.add('design-review');</script>
   <div class="app">
 
     <!-- Explorer-first landing -->
@@ -135,6 +137,13 @@
               <span class="mode-title">Practice</span>
               <span id="practice-description" class="mode-desc">No timer</span>
             </button>
+            <button id="btn-change-settings" class="mode-settings-icon" type="button" aria-label="Change difficulty and region">
+              <span>Difficulty &amp; region</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+            </button>
           </div>
 
           <div class="landing-selection-status" role="status" aria-live="polite">
@@ -145,13 +154,6 @@
               <span>Ready</span>
               <p id="mode-summary">Sprint · 60 seconds · Hard · Worldwide</p>
             </span>
-            <button id="btn-change-settings" class="landing-selection-settings" type="button" aria-label="Change difficulty and region">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                <circle cx="12" cy="12" r="3"></circle>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-              </svg>
-              <span>Settings</span>
-            </button>
           </div>
           <button id="btn-start-game" class="cta landing-start-action" type="button">
             <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -270,13 +272,13 @@
           </button>
         </div>
         <nav class="atlas-primary-nav" aria-label="Atlas views">
-          <button id="btn-atlas-globe" class="is-active" type="button" aria-pressed="true" aria-controls="atlas-globe-workspace" aria-label="Globe">
+          <button id="btn-atlas-globe" class="is-active" type="button" aria-pressed="true" aria-controls="atlas-globe-workspace" aria-label="Globe, Explore">
             <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-view-globe"></use></svg>
-            <span>Globe</span>
+            <span class="atlas-nav-copy"><strong>Globe</strong><small>Explore</small></span>
           </button>
-          <button id="btn-atlas-shapes" type="button" aria-pressed="false" aria-controls="atlas-shapes-workspace" aria-label="Shapes">
+          <button id="btn-atlas-shapes" type="button" aria-pressed="false" aria-controls="atlas-shapes-workspace" aria-label="Shapes, Learn outlines">
             <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-view-shapes"></use></svg>
-            <span>Shapes</span>
+            <span class="atlas-nav-copy"><strong>Shapes</strong><small>Learn outlines</small></span>
           </button>
         </nav>
         <details id="atlas-utility-menu" class="atlas-utility-menu">
@@ -507,7 +509,7 @@
                 <button id="explorer-landmark-media-toggle" class="explorer-landmark-media-toggle" type="button" aria-expanded="false">
                   <img id="explorer-landmark-media-image" alt="">
                 </button>
-                <figcaption><a id="explorer-landmark-learn-more" target="_blank" rel="noopener noreferrer">Learn about this landmark</a> · Image from <a id="explorer-landmark-media-source" target="_blank" rel="noopener noreferrer">Wikipedia</a></figcaption>
+                <figcaption><a id="explorer-landmark-learn-more" target="_blank" rel="noopener noreferrer">Learn about this landmark</a><a id="explorer-landmark-media-source" hidden target="_blank" rel="noopener noreferrer">Wikipedia</a></figcaption>
               </figure>
               <section id="explorer-economics-callout" class="explorer-economics-callout hidden" aria-labelledby="explorer-economics-title">
                 <header class="explorer-economics-heading">
@@ -538,9 +540,25 @@
           </button>
         </div>
 
+        <div id="atlas-shape-toolbar" class="atlas-shape-toolbar" aria-labelledby="atlas-shape-toolbar-title">
+          <div class="atlas-shape-toolbar-copy">
+            <p class="atlas-shape-toolbar-eyebrow">Shape library</p>
+            <h3 id="atlas-shape-toolbar-title">Explore a country outline</h3>
+            <p id="atlas-shape-status" class="atlas-shape-status" role="status" aria-live="polite" aria-atomic="true">Preview mode is on - click to take over.</p>
+          </div>
+          <div class="atlas-shape-controls" role="group" aria-label="Browse country shapes">
+            <button id="btn-atlas-shape-previous" type="button" aria-label="Previous country"><span aria-hidden="true">←</span><span class="atlas-control-label">Previous</span></button>
+            <label class="sr-only" for="atlas-shape-country">Country</label>
+            <select id="atlas-shape-country" aria-label="Choose a country outline"></select>
+            <button id="btn-atlas-shape-next" type="button" aria-label="Next country"><span class="atlas-control-label">Next</span><span aria-hidden="true">→</span></button>
+          </div>
+        </div>
+
         <!-- Shape Quiz setup lives here (not in the settings menu): choosing the
              quiz reveals mode/difficulty/region + Start, right where you launch it. -->
-        <div id="atlas-shape-setup-slot" class="atlas-shape-setup-slot" hidden></div>
+        <div id="atlas-shape-setup-slot" class="atlas-shape-setup-slot" hidden>
+          <header class="atlas-quiz-heading"><h3>Know the outline?</h3><p>Race the clock or take your time. Choose your mode and start.</p></header>
+        </div>
 
         <div class="atlas-shape-study">
           <figure class="atlas-shape-plate" aria-labelledby="explorer-country-name">
@@ -548,13 +566,7 @@
               <span>Country shape</span>
               <strong id="atlas-shape-index" aria-hidden="true">U</strong>
             </figcaption>
-            <div id="atlas-shape-art" class="atlas-shape-art" aria-live="polite"></div>
-            <div class="atlas-shape-controls" role="group" aria-label="Browse country shapes">
-              <button id="btn-atlas-shape-previous" type="button" aria-label="Previous country"><span aria-hidden="true">←</span></button>
-              <label class="sr-only" for="atlas-shape-country">Country</label>
-              <select id="atlas-shape-country"></select>
-              <button id="btn-atlas-shape-next" type="button" aria-label="Next country"><span aria-hidden="true">→</span></button>
-            </div>
+            <div id="atlas-shape-art" class="atlas-shape-art" aria-live="off"></div>
             <div class="atlas-plate-axis" aria-hidden="true"><span>N</span><span>S</span></div>
           </figure>
 
@@ -575,6 +587,20 @@
 
       <div id="explorer-secondary-content" class="explorer-secondary-content hidden" hidden></div>
       <p id="explorer-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+
+      <!-- Confirmation shown when the player switches views (e.g. taps Shapes)
+           while a Country Hunt is running, so the switch that ends the game is
+           deliberate. Mirrors the game screen's #quit-confirm pattern. -->
+      <div id="hunt-switch-confirm" class="quit-confirm hidden" role="dialog" aria-modal="true" aria-labelledby="hunt-switch-title" aria-describedby="hunt-switch-message">
+        <div class="quit-confirm-card">
+          <h2 id="hunt-switch-title" tabindex="-1">End Country Hunt?</h2>
+          <p id="hunt-switch-message">Switching views will end your current Country Hunt.</p>
+          <div class="quit-confirm-btns">
+            <button id="btn-hunt-switch-yes" class="cta" type="button">End hunt</button>
+            <button id="btn-hunt-switch-no" class="ghost-sm" type="button">Keep playing</button>
+          </div>
+        </div>
+      </div>
     </section>
     <!-- Game Screen -->
     <section id="game" class="screen hidden game-layout-region" aria-labelledby="game-title" aria-describedby="game-stage-title" data-layout="desktop-mobile">
@@ -829,11 +855,11 @@
   <script src="background-music.js?v=20260730-explorer2"></script>
   <script src="asset-fallbacks.js"></script>
   <script src="shape-geometry.js?v=20260904-atlas1"></script>
-  <script src="app.js?v=20260905-uxfix1"></script>
+  <script src="app.js?v=20260906-quiz-layout2"></script>
   <script src="assets/globe-data.js?v=20260729-natural-earth"></script>
   <script src="interactive-globe.js?v=20260729-editorial-layout3"></script>
   <script src="geography.js?v=20260730-guidance1"></script>
-  <script src="globe-explorer.js?v=20260905-shapescard1"></script>
-  <script src="atlas.js?v=20260905-uxfix1"></script>
+  <script src="globe-explorer.js?v=20260906-stable-shapes"></script>
+  <script src="atlas.js?v=20260906-stable-shapes"></script>
 </body>
 </html>

@@ -14,6 +14,7 @@
     var nextButton = document.getElementById('btn-atlas-shape-next');
     var shapeArt = document.getElementById('atlas-shape-art');
     var shapeIndex = document.getElementById('atlas-shape-index');
+    var shapeStatus = document.getElementById('atlas-shape-status');
     // Legacy hidden stubs kept so existing writes/tests stay valid; the visible
     // facts now come from the shared, relocated country card.
     var shapeRegion = document.getElementById('atlas-shape-region');
@@ -45,6 +46,8 @@
     var currentIndex = defaultIndex >= 0 ? defaultIndex : 0;
     var renderSequence = 0;
     var shapeRendered = false;
+    var demoTimer = null;
+    var demoActive = false;
 
     function setWorkspaceAvailable(workspace, available) {
       workspace.hidden = !available;
@@ -61,6 +64,50 @@
 
     function announce(message) {
       if (live) live.textContent = message;
+    }
+
+    function setShapeStatus(message) {
+      if (shapeStatus) shapeStatus.textContent = message;
+    }
+
+    function stopDemoMode() {
+      var wasActive = demoActive || demoTimer !== null;
+      demoActive = false;
+      if (demoTimer !== null) {
+        root.clearInterval?.(demoTimer);
+        demoTimer = null;
+      }
+      if (wasActive) setShapeStatus('Preview paused - use the controls to browse.');
+    }
+
+    function selectRandomCountry() {
+      if (cards.length < 2) return;
+      var nextIndex = Math.floor(Math.random() * cards.length);
+      if (nextIndex === currentIndex) nextIndex = (nextIndex + 1) % cards.length;
+      selectIndex(nextIndex, { announce: false });
+    }
+
+    function startDemoMode() {
+      stopDemoMode();
+      if (cards.length < 2 || typeof root.setInterval !== 'function') {
+        syncCountry({ render: true });
+        setShapeStatus('Use the controls to browse.');
+        return;
+      }
+      demoActive = true;
+      setShapeStatus('Preview mode is on - click to take over.');
+      selectRandomCountry();
+      demoTimer = root.setInterval(function () {
+        if (!demoActive || screen.dataset.atlasView !== 'shapes') {
+          stopDemoMode();
+          return;
+        }
+        selectRandomCountry();
+      }, 5000);
+    }
+
+    function stopDemoOnInteraction() {
+      stopDemoMode();
     }
 
     // Move the one rich country card into the Shapes view (single source of
@@ -96,7 +143,7 @@
         shapeArt.textContent = 'Border outline unavailable.';
         return Promise.resolve(null);
       }
-      return renderer.render(shapeArt, card, { padding: 0.1 })
+      return renderer.render(shapeArt, card, { padding: 0.08, compactBounds: document.body?.classList?.contains('design-review') })
         .then(function (element) {
           if (sequence !== renderSequence) return null;
           shapeArt.removeAttribute('aria-busy');
@@ -117,6 +164,10 @@
       var card = cards[currentIndex];
       if (!card) return;
       if (shapeSelect) shapeSelect.value = String(card.id);
+      if (document.body?.classList?.contains('design-review')) {
+        var countryHeading = document.getElementById('atlas-shape-toolbar-title');
+        if (countryHeading) countryHeading.textContent = card.name;
+      }
       if (shapeIndex) {
         // Editorial position marker rather than a zero-padded id: the letter the
         // current country sorts under, so browsing feels alphabetical, not numeric.
@@ -150,11 +201,66 @@
       return Boolean(root.GeoWars?.explorer?.getState?.().huntActive);
     }
 
+    // Confirmation shown when the player taps Shapes mid-hunt. Ending the hunt
+    // when switching views should be a deliberate choice, not a silent surprise.
+    var huntSwitchDialog = document.getElementById('hunt-switch-confirm');
+    var huntSwitchTitle = document.getElementById('hunt-switch-title');
+    var huntSwitchYes = document.getElementById('btn-hunt-switch-yes');
+    var huntSwitchNo = document.getElementById('btn-hunt-switch-no');
+    var huntSwitchReturnFocus = null;
+
+    function isHuntSwitchOpen() {
+      return Boolean(huntSwitchDialog) && !huntSwitchDialog.classList.contains('hidden');
+    }
+
+    function requestShapesDuringHunt() {
+      // No dialog available (e.g. stripped markup): fall back to an announcement
+      // rather than trapping the player in the hunt with no path out.
+      if (!huntSwitchDialog) {
+        announce('End Country Hunt before opening country shapes.');
+        return;
+      }
+      huntSwitchReturnFocus = document.activeElement;
+      huntSwitchDialog.classList.remove('hidden');
+      huntSwitchDialog.hidden = false;
+      (huntSwitchTitle || huntSwitchYes)?.focus?.({ preventScroll: true });
+    }
+
+    function closeHuntSwitchDialog(restoreFocus) {
+      if (!huntSwitchDialog) return;
+      huntSwitchDialog.classList.add('hidden');
+      huntSwitchDialog.hidden = true;
+      if (restoreFocus && huntSwitchReturnFocus && typeof huntSwitchReturnFocus.focus === 'function') {
+        huntSwitchReturnFocus.focus({ preventScroll: true });
+      }
+      huntSwitchReturnFocus = null;
+    }
+
+    function confirmEndHuntAndShowShapes() {
+      closeHuntSwitchDialog(false);
+      // End the hunt first, then switch with the confirmed flag so setView's
+      // guard lets it through.
+      root.GeoWars?.explorer?.endHunt?.(false);
+      setView('shapes', { focus: true, confirmedEndHunt: true });
+    }
+
+    if (huntSwitchYes) huntSwitchYes.addEventListener('click', confirmEndHuntAndShowShapes);
+    if (huntSwitchNo) huntSwitchNo.addEventListener('click', function () { closeHuntSwitchDialog(true); });
+    if (huntSwitchDialog) {
+      huntSwitchDialog.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeHuntSwitchDialog(true);
+        }
+      });
+    }
+
     function syncHuntAvailability(active) {
       var huntActive = typeof active === 'boolean' ? active : isHuntActive();
-      shapesButton.disabled = huntActive;
-      if (huntActive) shapesButton.setAttribute('aria-disabled', 'true');
-      else shapesButton.removeAttribute('aria-disabled');
+      // The Shapes button stays enabled during a hunt: clicking it now prompts a
+      // confirmation (see requestView) instead of being silently blocked.
+      shapesButton.disabled = false;
+      shapesButton.removeAttribute('aria-disabled');
       if (huntActive && screen.dataset.atlasView === 'shapes') {
         setView('globe', { announce: false });
       }
@@ -163,10 +269,14 @@
     function setView(view, options) {
       options = options || {};
       var showShapes = view === 'shapes';
-      if (showShapes && isHuntActive()) {
-        announce('End Country Hunt before opening country shapes.');
+      var wasShapes = screen.dataset.atlasView === 'shapes';
+      if (showShapes && isHuntActive() && !options.confirmedEndHunt) {
+        // A hunt is in progress. Don't switch silently; ask first (unless the
+        // caller already confirmed and ended the hunt on the player's behalf).
+        requestShapesDuringHunt();
         return false;
       }
+      if (!showShapes) stopDemoMode();
       screen.dataset.atlasView = showShapes ? 'shapes' : 'globe';
       if (document.body?.dataset) document.body.dataset.atlasView = showShapes ? 'shapes' : 'globe';
       // Switching views always lands on that view's calm Explore sub-mode, never
@@ -186,7 +296,10 @@
       shapesButton.classList.toggle('is-active', showShapes);
       globeButton.setAttribute('aria-pressed', String(!showShapes));
       shapesButton.setAttribute('aria-pressed', String(showShapes));
-      if (showShapes) syncCountry({ render: !shapeRendered });
+      if (showShapes) {
+        if (!wasShapes) startDemoMode();
+        else syncCountry({ render: true });
+      }
       if (options.focus) {
         var focusTarget = showShapes ? shapeTitle : document.getElementById('explorer-stage-title');
         focusTarget?.focus({ preventScroll: true });
@@ -203,28 +316,41 @@
         shapeSelect.appendChild(option);
       });
       shapeSelect.addEventListener('change', function () {
+        stopDemoOnInteraction();
         var index = cards.findIndex(function (card) { return card.id === Number(shapeSelect.value); });
         if (index >= 0) selectIndex(index, { announce: true });
       });
     }
+
+    shapesWorkspace.addEventListener('pointerdown', stopDemoOnInteraction);
+    shapesWorkspace.addEventListener('click', stopDemoOnInteraction);
+    shapesWorkspace.addEventListener('keydown', stopDemoOnInteraction);
 
     globeButton.addEventListener('click', function () { setView('globe', { focus: true }); });
     shapesButton.addEventListener('click', function () { setView('shapes', { focus: true }); });
     root.addEventListener?.('geowars:explorer-mode', function (event) {
       syncHuntAvailability(event.detail?.mode === 'hunt');
     });
-    previousButton?.addEventListener('click', function () { selectIndex(currentIndex - 1, { announce: true }); });
-    nextButton?.addEventListener('click', function () { selectIndex(currentIndex + 1, { announce: true }); });
+    previousButton?.addEventListener('click', function () {
+      stopDemoOnInteraction();
+      selectIndex(currentIndex - 1, { announce: true });
+    });
+    nextButton?.addEventListener('click', function () {
+      stopDemoOnInteraction();
+      selectIndex(currentIndex + 1, { announce: true });
+    });
 
     // Explore is the calm browse mode (default). It's the mirror of the globe's
     // Explore tab; the Shape Quiz button (wired in app.js) launches the game.
     shapeExploreButton?.addEventListener('click', function () {
+      stopDemoOnInteraction();
       shapeExploreButton.classList.add('is-active');
       shapeExploreButton.setAttribute('aria-pressed', 'true');
       shapeChallengeButton?.classList.remove('is-active');
       shapeChallengeButton?.setAttribute('aria-pressed', 'false');
       announce('Explore mode. Browse country shapes at your pace.');
     });
+    shapeChallengeButton?.addEventListener('click', stopDemoOnInteraction);
 
     syncCountry({ render: false });
     setView(screen.dataset.atlasView === 'shapes' ? 'shapes' : 'globe', { announce: false });
@@ -242,7 +368,8 @@
         return {
           view: screen.dataset.atlasView,
           countryId: cards[currentIndex]?.id || null,
-          countryCount: cards.length
+          countryCount: cards.length,
+          demoActive: demoActive
         };
       }
     });
