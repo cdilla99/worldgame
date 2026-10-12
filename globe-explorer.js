@@ -2063,14 +2063,6 @@
       close: returnHome,
       renderCountry,
       selectCountry,
-      renderCountry: (countryId) => {
-        const country = cardsById.get(Number(countryId));
-        if (!country) return false;
-        selectedCountryId = country.id;
-        hoveredCountryId = country.id;
-        renderCountryCard(country);
-        return true;
-      },
       focusSelectedCountry,
       startHunt,
       endHunt,
