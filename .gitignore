@@ -20,6 +20,9 @@ tests/manual/visual-qa-artifacts/
 # Put throwaway prompts, audits, and investigation notes under .scratch/.
 .scratch/
 
+# Agent task artifacts: plans, verification evidence, and review reports.
+.agents/
+
 # Transient task artifacts left in-tree during data/UX work.
 # These are working inputs, not shipped project files.
 data/KIRO_PROMPT.txt
