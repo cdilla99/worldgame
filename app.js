@@ -533,16 +533,31 @@ const $btnIKnow = document.getElementById('btn-i-know');
 const $btnShowOptions = document.getElementById('btn-show-options');
 const $btnBail = document.getElementById('btn-bail');
 
+const $worldleScreen = document.getElementById('worldle-screen');
+const $btnOpenWorldle = document.getElementById('btn-open-worldle');
+
 // ============================================================
 // SCREENS
 // ============================================================
 
 function showScreen(screen) {
-  [$landing, $explorer, $game, $results].forEach(s => s.classList.add('hidden'));
+  [$landing, $explorer, $game, $results, $worldleScreen].filter(Boolean).forEach(s => s.classList.add('hidden'));
   screen.classList.remove('hidden');
+  if (screen !== $landing) {
+    stopLandingShowcase();
+    stopLandingShapePreview();
+  }
   document.body.classList.toggle('is-explorer-active', screen === $explorer);
   const themeColor = screen === $explorer && $explorer?.dataset.atlasView === 'shapes' ? '#e8e3d7' : '#07111f';
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
+}
+
+if ($btnOpenWorldle) {
+  $btnOpenWorldle.addEventListener('click', () => {
+    if (window.GeoWars?.worldle?.open) {
+      window.GeoWars.worldle.open();
+    }
+  });
 }
 
 // ============================================================
@@ -620,6 +635,13 @@ function initializeLandingShapePreview() {
       renderLandingShapePreview(cards, geometry);
     }, 3600);
   }).catch(() => {});
+}
+
+function stopLandingShapePreview() {
+  if (landingShapePreviewTimer) {
+    window.clearInterval(landingShapePreviewTimer);
+    landingShapePreviewTimer = null;
+  }
 }
 
 function renderLandingCountryPreview(card) {
@@ -906,6 +928,7 @@ if ($changeSettingsButton) {
 // Expose the Shapes sub-mode reset so the atlas view switcher can default the
 // Shapes view back to Explore (collapsed quiz setup) whenever it is opened.
 window.GeoWars = window.GeoWars || {};
+window.GeoWars.showScreen = showScreen;
 window.GeoWars.shapes = Object.freeze({
   setQuizSetupOpen: setShapeQuizSetupOpen
 });

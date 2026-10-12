@@ -1587,7 +1587,8 @@
     function chooseSearchResult(index) {
       const country = searchMatches[index];
       if (!country) return;
-      selectCountry(country.id, { source: 'search' });
+      selectCountry(country.id, { source: 'search', animate: false });
+      animateToCountry(country, 0);
       searchInput.focus({ preventScroll: true });
     }
 
@@ -2062,6 +2063,14 @@
       close: returnHome,
       renderCountry,
       selectCountry,
+      renderCountry: (countryId) => {
+        const country = cardsById.get(Number(countryId));
+        if (!country) return false;
+        selectedCountryId = country.id;
+        hoveredCountryId = country.id;
+        renderCountryCard(country);
+        return true;
+      },
       focusSelectedCountry,
       startHunt,
       endHunt,

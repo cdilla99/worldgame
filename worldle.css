@@ -1,0 +1,592 @@
+/* ============================================================
+   WORLDLE DAILY CHALLENGE — Premium Worldle-Style Experience
+   ============================================================ */
+
+.worldle-screen {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  width: 100%;
+  max-width: 680px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: clamp(12px, 2.5vw, 24px) clamp(16px, 3.5vw, 32px);
+  gap: clamp(14px, 2vh, 24px);
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.worldle-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(113, 130, 156, 0.42);
+}
+
+.worldle-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.worldle-home-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(113, 130, 156, 0.46);
+  border-radius: 12px;
+  background: rgba(17, 30, 49, 0.7);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.worldle-home-btn img {
+  width: 28px;
+  height: 28px;
+}
+
+.worldle-home-btn:hover {
+  border-color: var(--color-focus);
+  background: rgba(31, 70, 108, 0.6);
+}
+
+.worldle-title-block {
+  display: grid;
+  gap: 2px;
+}
+
+.worldle-badge {
+  color: var(--color-warning);
+  font-size: 0.6875rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.worldle-title {
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 850;
+  line-height: 1.1;
+}
+
+.worldle-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.worldle-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 6px 12px;
+  border: 1px solid rgba(113, 130, 156, 0.46);
+  border-radius: 10px;
+  background: rgba(17, 30, 49, 0.75);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 750;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.worldle-icon-btn:hover {
+  border-color: var(--color-focus);
+  background: var(--color-surface-raised);
+}
+
+.worldle-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Mystery Silhouette Hero Box */
+.worldle-silhouette-card {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: clamp(200px, 32vh, 320px);
+  padding: clamp(16px, 3vw, 28px);
+  overflow: hidden;
+  border: 1px solid rgba(113, 130, 156, 0.5);
+  border-radius: 20px;
+  background:
+    linear-gradient(rgba(120, 184, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 184, 255, 0.055) 1px, transparent 1px),
+    radial-gradient(circle at 50% 50%, rgba(37, 91, 145, 0.45), transparent 60%),
+    #07111f;
+  background-size: 28px 28px, 28px 28px, auto, auto;
+  box-shadow: 0 20px 50px rgba(1, 7, 18, 0.35);
+}
+
+.worldle-silhouette-card::before {
+  position: absolute;
+  inset: 12px;
+  border: 1px solid rgba(99, 228, 169, 0.24);
+  border-radius: 12px;
+  content: '';
+  pointer-events: none;
+}
+
+.worldle-silhouette-art {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+}
+
+.worldle-silhouette-art svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: min(28vh, 260px);
+  filter: brightness(0) invert(1) drop-shadow(0 12px 30px rgba(72, 164, 255, 0.28));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.worldle-round-counter {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid rgba(113, 130, 156, 0.4);
+  border-radius: 999px;
+  background: rgba(7, 17, 31, 0.85);
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.worldle-round-counter strong {
+  color: var(--color-text);
+}
+
+/* Guesses Stack */
+.worldle-guesses-container {
+  display: grid;
+  gap: 8px;
+}
+
+.worldle-guess-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 8px 14px;
+  border: 1px solid rgba(113, 130, 156, 0.38);
+  border-radius: 12px;
+  background: rgba(17, 30, 49, 0.8);
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-weight: 750;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideInRow 0.25s ease-out;
+}
+
+@keyframes slideInRow {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.worldle-guess-row.is-empty {
+  border: 1px dashed rgba(113, 130, 156, 0.25);
+  background: rgba(7, 17, 31, 0.3);
+  color: transparent;
+  pointer-events: none;
+}
+
+.worldle-guess-row.is-correct {
+  border-color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 18%, #111e31);
+  box-shadow: 0 0 20px rgba(99, 228, 169, 0.2);
+}
+
+.worldle-guess-country {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.worldle-guess-flag {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.worldle-guess-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.worldle-guess-distance {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.worldle-guess-direction {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(120, 184, 255, 0.12);
+  color: var(--color-focus);
+  font-size: 1.05rem;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.worldle-guess-row.is-correct .worldle-guess-direction {
+  background: rgba(99, 228, 169, 0.25);
+  color: var(--color-success);
+}
+
+.worldle-proximity-meter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 80px;
+}
+
+.worldle-meter-track {
+  position: relative;
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(7, 17, 31, 0.7);
+  overflow: hidden;
+}
+
+.worldle-meter-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffd071, #63e4a9);
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.worldle-proximity-label {
+  min-width: 32px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  font-weight: 850;
+  color: var(--color-text);
+}
+
+/* Guess Input Area */
+.worldle-input-section {
+  position: relative;
+  display: grid;
+  gap: 10px;
+}
+
+.worldle-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.worldle-input {
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 16px;
+  border: 1px solid rgba(113, 130, 156, 0.55);
+  border-radius: 14px;
+  background: rgba(17, 30, 49, 0.92);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 1.05rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  transition: all 0.15s ease;
+}
+
+.worldle-input:focus {
+  border-color: var(--color-focus);
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  background: var(--color-surface-raised);
+}
+
+.worldle-submit-btn {
+  position: absolute;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 8px 18px;
+  border: 1px solid var(--color-primary);
+  border-radius: 10px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 850;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.worldle-submit-btn:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+.worldle-submit-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Autocomplete suggestions */
+.worldle-autocomplete-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: grid;
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid rgba(113, 130, 156, 0.6);
+  border-radius: 14px;
+  background: rgba(17, 30, 49, 0.98);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+
+.worldle-autocomplete-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.95rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.worldle-autocomplete-item:hover,
+.worldle-autocomplete-item[aria-selected="true"] {
+  border-color: var(--color-focus);
+  background: rgba(120, 184, 255, 0.14);
+}
+
+.worldle-autocomplete-flag {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+/* Outcome Modal & Share Panel */
+.worldle-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(7, 10, 17, 0.82);
+  backdrop-filter: blur(10px);
+  animation: modalBackdropFade 0.2s ease-out;
+}
+
+@keyframes modalBackdropFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.worldle-modal-card {
+  position: relative;
+  display: grid;
+  gap: 20px;
+  width: min(100%, 480px);
+  padding: clamp(24px, 4vw, 36px);
+  border: 1px solid rgba(120, 184, 255, 0.55);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 50% 0, rgba(67, 220, 158, 0.12), transparent 22rem),
+    rgba(17, 30, 49, 0.97);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  animation: modalScaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalScaleUp {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.worldle-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(113, 130, 156, 0.4);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.worldle-modal-close:hover {
+  color: var(--color-text);
+  border-color: var(--color-text);
+}
+
+.worldle-modal-header {
+  text-align: center;
+  display: grid;
+  gap: 4px;
+}
+
+.worldle-modal-kicker {
+  color: var(--color-warning);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.worldle-modal-title {
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 850;
+}
+
+.worldle-revealed-country {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(113, 130, 156, 0.4);
+  border-radius: 14px;
+  background: rgba(7, 17, 31, 0.6);
+}
+
+.worldle-revealed-flag {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.worldle-revealed-info {
+  display: grid;
+  text-align: left;
+}
+
+.worldle-revealed-info strong {
+  color: var(--color-text);
+  font-size: 1.25rem;
+}
+
+.worldle-revealed-info span {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+}
+
+.worldle-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  text-align: center;
+}
+
+.worldle-stat-box {
+  padding: 12px 8px;
+  border: 1px solid rgba(113, 130, 156, 0.35);
+  border-radius: 12px;
+  background: rgba(7, 17, 31, 0.5);
+}
+
+.worldle-stat-box strong {
+  display: block;
+  color: var(--color-success);
+  font-size: 1.4rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.worldle-stat-box span {
+  color: var(--color-muted);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Share & Action Buttons */
+.worldle-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.worldle-share-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 50px;
+  border: 1px solid var(--color-primary);
+  border-radius: 12px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 850;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(67, 220, 158, 0.25);
+  transition: all 0.15s ease;
+}
+
+.worldle-share-btn:hover {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+.worldle-copied-toast {
+  color: var(--color-success);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-align: center;
+  min-height: 20px;
+}

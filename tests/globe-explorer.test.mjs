@@ -118,6 +118,7 @@ test('free exploration opens selected-country details by default', () => {
 
   assert.match(script, /details\.open = !huntActive;/);
   assert.match(script, /function showFreeExplorer\(\)[\s\S]*renderCountryCard\(cardsById\.get\(selectedCountryId\)\)/);
+  assert.match(script, /renderCountry:\s*\(countryId\)\s*=>[\s\S]*renderCountryCard\(country\)/);
 });
 
 test('Explorer loads an optional expandable landmark image with information and source links', () => {

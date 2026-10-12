@@ -29,6 +29,7 @@
   <link rel="stylesheet" href="globe-explorer.css?v=20260905-shapes1" />
   <link rel="stylesheet" href="atlas.css?v=20260906-quiz-layout2" />
   <link rel="stylesheet" href="design-review.css?v=20260906-atlas2" />
+  <link rel="stylesheet" href="worldle.css?v=20260906-worldle1" />
 </head>
 <body class="is-explorer-active">
   <script>if (new URLSearchParams(location.search).get('design') === 'atlas') document.body.classList.add('design-review');</script>
@@ -110,6 +111,10 @@
           <button id="btn-open-explorer-hunt" class="landing-challenge-card landing-challenge-card-primary" type="button">
             <span><strong>Country Hunt</strong><small>We name a country, you find it on the globe. 60 seconds.</small></span>
             <span class="landing-challenge-action">Start</span>
+          </button>
+          <button id="btn-open-worldle" class="landing-challenge-card landing-challenge-card-worldle" type="button">
+            <span><strong>Daily Worldle</strong><small>Mystery country silhouette. 6 tries with distance &amp; compass bearings.</small></span>
+            <span class="landing-challenge-action">Daily</span>
           </button>
           <button id="btn-landing-shape-game" class="landing-challenge-card" type="button" aria-expanded="false" aria-controls="shape-challenge-panel">
             <span><strong>Border Outline <em>Advanced</em></strong><small>Just the outline, no coastline context. Name it.</small></span>
@@ -838,6 +843,78 @@
         </form>
       </div>
     </div>
+
+    <!-- Daily Worldle Screen -->
+    <section id="worldle-screen" class="screen hidden worldle-screen" aria-labelledby="worldle-title">
+      <header class="worldle-header">
+        <div class="worldle-header-left">
+          <button id="btn-worldle-home" class="worldle-home-btn" type="button" aria-label="Return home">
+            <img src="assets/geowars-logo.svg" alt="EARTHLING">
+          </button>
+          <div class="worldle-title-block">
+            <span class="worldle-badge">Daily Puzzle</span>
+            <h1 id="worldle-title" class="worldle-title">Daily Worldle</h1>
+          </div>
+        </div>
+        <div class="worldle-header-actions">
+          <button id="btn-worldle-stats" class="worldle-icon-btn" type="button" aria-label="View daily statistics">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="12" width="4" height="9"></rect><rect x="10" y="7" width="4" height="14"></rect><rect x="17" y="3" width="4" height="18"></rect></svg>
+            <span>Stats</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="worldle-stage">
+        <figure class="worldle-silhouette-card" aria-label="Mystery country outline">
+          <span id="worldle-round-counter" class="worldle-round-counter">Attempt <strong>1/6</strong></span>
+          <div id="worldle-shape-art" class="worldle-silhouette-art" aria-live="polite"></div>
+        </figure>
+
+        <div id="worldle-guesses-container" class="worldle-guesses-container" aria-label="Your guesses" role="region"></div>
+
+        <div class="worldle-input-section">
+          <div class="worldle-input-wrapper">
+            <input id="worldle-guess-input" class="worldle-input" type="text" placeholder="Search country or territory..." autocomplete="off" aria-label="Country guess" role="combobox" aria-autocomplete="list" aria-controls="worldle-suggestions" aria-expanded="false" />
+            <button id="worldle-guess-submit" class="worldle-submit-btn" type="button">Guess</button>
+          </div>
+          <div id="worldle-suggestions" class="worldle-autocomplete-list hidden" role="listbox" aria-label="Country matches"></div>
+          <p id="worldle-toast" class="worldle-copied-toast" role="status" aria-live="polite"></p>
+        </div>
+      </main>
+
+      <!-- Outcome / Statistics Modal -->
+      <div id="worldle-modal" class="worldle-modal hidden" role="dialog" aria-modal="true" aria-labelledby="worldle-modal-title">
+        <div class="worldle-modal-card">
+          <button id="btn-worldle-modal-close" class="worldle-modal-close" type="button" aria-label="Close summary">×</button>
+          <div class="worldle-modal-header">
+            <p id="worldle-modal-kicker" class="worldle-modal-kicker">Summary</p>
+            <h2 id="worldle-modal-title" class="worldle-modal-title">Daily Worldle</h2>
+          </div>
+
+          <div class="worldle-revealed-country">
+            <span id="worldle-revealed-flag" class="worldle-revealed-flag">🌍</span>
+            <div class="worldle-revealed-info">
+              <strong id="worldle-revealed-name">—</strong>
+              <span id="worldle-revealed-region">—</span>
+            </div>
+          </div>
+
+          <div class="worldle-stats-grid">
+            <div class="worldle-stat-box"><strong id="worldle-stat-played">0</strong><span>Played</span></div>
+            <div class="worldle-stat-box"><strong id="worldle-stat-win-pct">0%</strong><span>Win %</span></div>
+            <div class="worldle-stat-box"><strong id="worldle-stat-streak">0</strong><span>Current</span></div>
+            <div class="worldle-stat-box"><strong id="worldle-stat-max-streak">0</strong><span>Max Streak</span></div>
+          </div>
+
+          <div class="worldle-actions">
+            <button id="btn-worldle-share" class="worldle-share-btn" type="button">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+              <span>Share Results</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 
   <script src="data/countries.js?v=20260831-cy-ps197"></script>
@@ -846,6 +923,7 @@
   <script src="ladder-progress.js?v=20260803-ladder1"></script>
   <script src="learning-progress.js?v=20260905-learning1"></script>
   <script src="daily-challenge.js?v=20260905-daily1"></script>
+  <script src="daily-worldle.js?v=20260906-worldle1"></script>
   <script src="anthems.js"></script>
   <script src="supabase-client.js?v=20260802-device-stats1"></script>
   <script src="audio-engine.js"></script>
@@ -861,5 +939,6 @@
   <script src="geography.js?v=20260730-guidance1"></script>
   <script src="globe-explorer.js?v=20260906-stable-shapes"></script>
   <script src="atlas.js?v=20260906-stable-shapes"></script>
+  <script src="worldle.js?v=20260906-worldle1"></script>
 </body>
 </html>

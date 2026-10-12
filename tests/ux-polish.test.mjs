@@ -87,6 +87,13 @@ test('the sample-round shape preview is a standalone always-on card', () => {
   assert.match(styles, /@media \(max-width: 767px\)[\s\S]*\.landing-shape-preview-kicker-desktop\s*\{[\s\S]*display: block;/);
 });
 
+test('landing preview timers stop when navigating away from the landing screen', () => {
+  const app = read('app.js');
+
+  assert.match(app, /function showScreen\(screen\)[\s\S]*if \(screen !== \$landing\) \{[\s\S]*stopLandingShowcase\(\);[\s\S]*stopLandingShapePreview\(\);/);
+  assert.match(app, /function stopLandingShapePreview\(\)[\s\S]*window\.clearInterval\(landingShapePreviewTimer\)/);
+});
+
 test('desktop homepage gives Explorer a dominant split and stacks on smaller screens', () => {
   const styles = read('globe-explorer.css');
 
