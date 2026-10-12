@@ -163,6 +163,8 @@
     let zoom = DEFAULT_VIEW.zoom;
     let hoveredCountryId = null;
     let selectedCountryId = null;
+    // Guards the one-time default country selection (Canada) applied on first open.
+    let defaultSelectionApplied = false;
     let centeredCountryId = null;
     let dragging = false;
     let primaryPointerId = null;
@@ -1773,10 +1775,25 @@
       try { root.AudioEngine?.init?.(); } catch (audioError) {}
       renderMusicControl(false);
       navigation?.showExplorer?.();
+      // Default the globe to Canada on the first open (mirrors the Shapes view's
+      // default outline) so the experience leads with a real country card rather
+      // than the empty placeholder. Only applies once and never during a hunt;
+      // returning home still clears back to the unselected state.
+      if (!defaultSelectionApplied && !huntActive && selectedCountryId === null) {
+        defaultSelectionApplied = true;
+        const defaultCountry = cardsById.get(2); // Canada
+        if (defaultCountry) {
+          selectedCountryId = defaultCountry.id;
+          hoveredCountryId = defaultCountry.id;
+          renderCountryCard(defaultCountry);
+        }
+      }
       // Establish the focus button's disabled state on open: with no country
       // selected (and no hunt running) "Zoom to country" has nothing to act on.
       syncFocusControl();
-      setStatus('Drag to explore. Select a country or territory to learn more.');
+      setStatus(selectedCountryId
+        ? `${getCountryName(selectedCountryId)} selected. Use Zoom to country to center and magnify it.`
+        : 'Drag to explore. Select a country or territory to learn more.');
       loadGeometry().then(() => root.requestAnimationFrame(() => {
         resize();
         if (selectedCountryId) animateToCountry(cardsById.get(selectedCountryId));

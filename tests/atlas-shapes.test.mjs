@@ -188,11 +188,12 @@ test('Globe and Shapes navigation keeps accessible labels, controls, and pressed
 
 test('opening Shapes selects a random country and starts one five-second demo timer', () => {
   const harness = createHarness([0]);
-  assert.equal(harness.atlas.getState().countryId, 1, 'fixture starts on the default country');
+  assert.equal(harness.atlas.getState().countryId, 2, 'fixture starts on the default country (Canada, id 2)');
   harness.showShapes();
   assert.equal(harness.atlas.getState().view, 'shapes');
   assert.equal(harness.atlas.getState().demoActive, true);
-  assert.equal(harness.atlas.getState().countryId, 2, 'demo avoids repeating the current country');
+  // Demo opens ON the default country (Canada) and only rotates on each tick.
+  assert.equal(harness.atlas.getState().countryId, 2, 'demo opens on the default country before rotating');
   assert.equal(harness.timers.size, 1);
   assert.equal([...harness.timers.values()][0].milliseconds, 5000);
   assert.equal(harness.shapeStatus.textContent, 'Preview mode is on - click to take over.');

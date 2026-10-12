@@ -39,10 +39,9 @@
     var cards = typeof countryCards !== 'undefined' && Array.isArray(countryCards)
       ? countryCards.slice().sort(function (a, b) { return a.name.localeCompare(b.name); })
       : [];
-    // Open on the United States (id 1) — the outline used in the production demo
-    // preview — rather than the alphabetical-first card (Afghanistan). Fall back
-    // to the first card if the US is missing from the dataset.
-    var defaultIndex = cards.findIndex(function (card) { return card.id === 1; });
+    // Open on Canada (id 2) rather than the alphabetical-first card
+    // (Afghanistan). Fall back to the first card if Canada is missing.
+    var defaultIndex = cards.findIndex(function (card) { return card.id === 2; });
     var currentIndex = defaultIndex >= 0 ? defaultIndex : 0;
     var renderSequence = 0;
     var shapeRendered = false;
@@ -96,7 +95,9 @@
       }
       demoActive = true;
       setShapeStatus('Preview mode is on - click to take over.');
-      selectRandomCountry();
+      // Open on the default country (Canada) so it is the visible default, then
+      // begin rotating through random countries on each timer tick.
+      syncCountry({ render: true });
       demoTimer = root.setInterval(function () {
         if (!demoActive || screen.dataset.atlasView !== 'shapes') {
           stopDemoMode();
