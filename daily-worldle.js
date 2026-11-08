@@ -1,8 +1,8 @@
 (function (root, factory) {
-  const api = factory();
+  const api = factory(root);
   if (typeof module === 'object' && module.exports) module.exports = api;
   root.GeoWarsDailyWorldle = api;
-}(typeof globalThis !== 'undefined' ? globalThis : window, function () {
+}(typeof globalThis !== 'undefined' ? globalThis : window, function (root) {
   'use strict';
 
   const STORAGE_KEY = 'geowars-daily-worldle';
@@ -124,18 +124,19 @@
       hint = geo.hintBetween(guessedCard, targetCard);
     }
 
-    const dist = hint ? hint.distanceKm : 0;
+    if (!hint || !Number.isFinite(hint.distanceKm)) return null;
+    const dist = hint.distanceKm;
     const proximity = calculateProximityPercent(dist);
 
     return {
       card: guessedCard,
       correct: false,
       distanceKm: dist,
-      displayDistance: hint ? hint.displayDistance : `${Math.round(dist)} km`,
-      bearingDegrees: hint ? hint.bearingDegrees : 0,
-      direction: hint ? hint.direction : 'N',
-      directionLabel: hint ? hint.directionLabel : '',
-      arrow: hint ? hint.arrow : '↑',
+      displayDistance: hint.displayDistance,
+      bearingDegrees: hint.bearingDegrees,
+      direction: hint.direction,
+      directionLabel: hint.directionLabel,
+      arrow: hint.arrow,
       proximityPercent: proximity
     };
   }
@@ -183,6 +184,7 @@
     }
 
     const evalResult = evaluateGuess(guessedCard, target, geographyApi);
+    if (!evalResult) return { error: 'Geographic guidance is unavailable. Please try again.' };
     dayHistory.guesses.push(evalResult);
 
     if (evalResult.correct) {
@@ -226,7 +228,9 @@
     }
 
     state.days[today] = dayHistory;
-    writeState(state);
+    if (!writeState(state)) {
+      return { error: 'Could not save your guess. Check your browser storage settings and try again.' };
+    }
 
     return {
       game: getDailyGame(cards),

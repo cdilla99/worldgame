@@ -217,14 +217,19 @@ test('preservation: selection, disclosure, hunt, keyboard, focus, roles, and nam
   await canvas.press('+');
   await expect(canvas).toBeFocused();
 
-  // Country Hunt is entered from the always-visible Explore/Hunt mode toggle.
+  // Country Hunt is entered via the Challenge panel.
+  const challengeMode = page.locator('#btn-mode-challenge');
   const huntMode = page.locator('#btn-explorer-hunt');
-  await huntMode.click();
-  await expect(huntMode).toHaveAttribute('aria-pressed', 'true');
+  await challengeMode.click();
+  await expect(challengeMode).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('#btn-challenge-hunt').click();
+  await expect(challengeMode).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByRole('timer', { name: 'Country Hunt time remaining' })).toBeVisible();
-  await expect(canvas).toBeFocused();
+  await expect(huntMode).toHaveAttribute('aria-pressed', 'true');
   const endHunt = page.locator('#btn-explorer-hunt-exit');
   await endHunt.click();
+  await expect(page.locator('#explorer-hunt-summary')).toBeVisible();
+  await expect(challengeMode).toHaveAttribute('aria-pressed', 'true');
   await expect(huntMode).toHaveAttribute('aria-pressed', 'false');
   expect(await page.evaluate(() => document.activeElement === document.body)).toBe(true);
 });

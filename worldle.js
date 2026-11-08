@@ -9,7 +9,6 @@
     const suggestionsList = document.getElementById('worldle-suggestions');
     const guessesContainer = document.getElementById('worldle-guesses-container');
     const roundCounter = document.getElementById('worldle-round-counter');
-    const homeBtn = document.getElementById('btn-worldle-home');
     const statsBtn = document.getElementById('btn-worldle-stats');
     const modal = document.getElementById('worldle-modal');
     const modalClose = document.getElementById('btn-worldle-modal-close');
@@ -26,6 +25,81 @@
 
     let activeSuggestionIdx = -1;
     let filteredCards = [];
+    let geometryById = null;
+    let submitting = false;
+    let active = false;
+    let outcomeTimer = null;
+    let openSequence = 0;
+
+    function scheduleOutcome(game, delay) {
+      clearTimeout(outcomeTimer);
+      outcomeTimer = setTimeout(() => {
+        outcomeTimer = null;
+        if (active) showOutcomeModal(game);
+      }, delay);
+    }
+
+    function renderFlag(container, card) {
+      if (!container) return;
+      container.replaceChildren();
+      container.setAttribute('aria-hidden', 'true');
+      const assets = root.AssetFallbacks;
+      if (!card) {
+        container.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg>';
+        return;
+      }
+      const source = assets?.getFlagSource(card);
+      if (!source?.url) {
+        container.textContent = assets?.getCountryCode(card) || '—';
+        return;
+      }
+      const image = document.createElement('img');
+      image.alt = '';
+      if (source.code === 'NP') image.classList.add('is-nonrect-flag');
+      container.appendChild(image);
+      const urls = [...source.urls].reverse();
+      assets.bindImageFallback(image, 'flag', {
+        sources: urls.slice(1), code: source.code, countryName: card.name, variant: 'compact'
+      });
+      image.src = urls[0];
+    }
+
+    function directionIcon(guess) {
+      if (guess.correct) {
+        return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>';
+      }
+      const angles = { N: 0, NE: 45, E: 90, SE: 135, S: 180, SW: 225, W: 270, NW: 315 };
+      const angle = angles[guess.direction] ?? 0;
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: rotate(${angle}deg)"><path d="M12 19V5m-6 6 6-6 6 6"/></svg>`;
+    }
+
+    function showMessage(message) {
+      if (toast) toast.textContent = message;
+    }
+
+    async function loadGuidance() {
+      if (geometryById) return;
+      if (!shapeApi || typeof shapeApi.loadGeometry !== 'function' || !geoApi) {
+        throw new Error('Geographic guidance is unavailable.');
+      }
+      const geometry = await shapeApi.loadGeometry();
+      geometryById = new Map(geometry.map(country => [country.i, country]));
+    }
+
+    const guidance = {
+      hintBetween(from, to) {
+        return geoApi.hintBetween(geometryById.get(from.id), geometryById.get(to.id));
+      }
+    };
+
+    function withCorrectedGuesses(game) {
+      if (!geometryById || !game.target) return game;
+      return {
+        ...game,
+        guesses: game.guesses.map(guess =>
+          worldleApi.evaluateGuess(guess.card, game.target, guidance) || guess)
+      };
+    }
 
     function updateGuessesView(game) {
       if (!guessesContainer) return;
@@ -34,35 +108,26 @@
       const max = game.maxGuesses || 6;
       const guesses = game.guesses || [];
 
-      for (let i = 0; i < max; i++) {
+      for (let i = 0; i < guesses.length; i++) {
         const guess = guesses[i];
         const row = document.createElement('div');
         row.className = 'worldle-guess-row';
 
-        if (guess) {
           if (guess.correct) row.classList.add('is-correct');
           const pct = guess.proximityPercent || 0;
           row.innerHTML = `
             <div class="worldle-guess-country">
-              <span class="worldle-guess-flag">${guess.card.flag || '🌍'}</span>
+              <span class="worldle-guess-flag"></span>
               <span class="worldle-guess-name">${guess.card.name}</span>
             </div>
             <span class="worldle-guess-distance">${guess.displayDistance}</span>
-            <div class="worldle-guess-direction" title="${guess.directionLabel || ''}">${guess.arrow}</div>
+            <div class="worldle-guess-direction" role="img" aria-label="${guess.directionLabel || ''}" title="${guess.directionLabel || ''}">${directionIcon(guess)}</div>
             <div class="worldle-proximity-meter">
               <div class="worldle-meter-track"><div class="worldle-meter-fill" style="width: ${pct}%"></div></div>
               <span class="worldle-proximity-label">${pct}%</span>
             </div>
           `;
-        } else {
-          row.classList.add('is-empty');
-          row.innerHTML = `
-            <div class="worldle-guess-country"><span class="worldle-guess-name">—</span></div>
-            <span class="worldle-guess-distance">—</span>
-            <div class="worldle-guess-direction">—</div>
-            <div class="worldle-proximity-meter"><div class="worldle-meter-track"></div><span class="worldle-proximity-label">—</span></div>
-          `;
-        }
+          renderFlag(row.querySelector('.worldle-guess-flag'), guess.card);
 
         guessesContainer.appendChild(row);
       }
@@ -70,6 +135,11 @@
       if (roundCounter) {
         roundCounter.innerHTML = `Attempt <strong>${Math.min(max, guesses.length + 1)}/${max}</strong>`;
       }
+      const remaining = document.getElementById('worldle-guesses-remaining');
+      if (remaining) remaining.textContent = game.completed ? (game.won ? 'Solved' : 'Complete') : `${max - guesses.length} guesses left`;
+      const emptyHint = document.getElementById('worldle-empty-hint');
+      if (emptyHint) emptyHint.hidden = guesses.length > 0;
+      updateGuidance(game);
 
       if (game.completed) {
         input.disabled = true;
@@ -78,15 +148,69 @@
       } else {
         input.disabled = false;
         submitBtn.disabled = false;
-        input.placeholder = 'Search country or territory...';
+        input.placeholder = 'Country name…';
       }
+    }
+
+    function updateGuidance(game) {
+      const guesses = game.guesses || [];
+      const latest = guesses.at(-1);
+      const panel = document.getElementById('worldle-guidance');
+      const title = document.getElementById('worldle-guidance-title');
+      const kicker = document.getElementById('worldle-guidance-kicker');
+      const copy = document.getElementById('worldle-guidance-copy');
+      const needle = document.getElementById('worldle-compass-needle');
+      const closest = document.getElementById('worldle-closest');
+      const history = document.getElementById('worldle-history-heading');
+      const hint = document.getElementById('worldle-direction-hint');
+      const dayLabel = document.getElementById('worldle-day-label');
+      if (dayLabel) dayLabel.textContent = `Daily discovery #${game.dayNumber} · A new country every day`;
+      if (history) history.hidden = guesses.length === 0;
+      if (hint) hint.hidden = guesses.length === 0;
+      if (copy) copy.hidden = !latest;
+      if (closest) closest.hidden = !latest;
+      if (!panel || !title || !kicker || !copy) return;
+
+      if (!latest) {
+        panel.dataset.state = 'ready';
+        kicker.textContent = 'Trust your first instinct';
+        title.textContent = 'Your adventure starts here.';
+        if (needle) needle.style.transform = 'rotate(-35deg)';
+        return;
+      }
+
+      const best = guesses.reduce((nearest, guess) => guess.distanceKm < nearest.distanceKm ? guess : nearest, latest);
+      const previous = guesses.slice(0, -1);
+      const previousBest = previous.length ? Math.min(...previous.map(guess => guess.distanceKm)) : null;
+      panel.dataset.state = game.won ? 'solved' : game.completed ? 'complete' : 'searching';
+      if (game.won) {
+        kicker.textContent = 'Destination discovered';
+        title.textContent = `You found ${game.target.name}!`;
+        copy.textContent = `Solved in ${guesses.length} of ${game.maxGuesses || 6} guesses. Come back tomorrow for a new adventure.`;
+      } else if (game.completed) {
+        kicker.textContent = 'The journey continues tomorrow';
+        title.textContent = `Today's destination: ${game.target.name}`;
+        copy.textContent = 'One more corner of the world to remember. Explore it, then try a new shape tomorrow.';
+      } else {
+        const warmer = previousBest !== null && latest.distanceKm < previousBest;
+        const colder = previousBest !== null && latest.distanceKm > previous.at(-1).distanceKm;
+        kicker.textContent = warmer ? 'Getting warmer' : colder ? 'A different direction' : 'Your next bearing';
+        title.textContent = warmer ? "You're closing in." : previous.length ? 'Follow the compass.' : 'You have your first clue.';
+        const direction = String(latest.directionLabel || latest.direction || '').toLowerCase();
+        copy.textContent = `${latest.displayDistance} ${direction} of ${latest.card.name}. Where could that take you?`;
+      }
+      if (needle) needle.style.transform = `rotate(${Number(latest.bearingDegrees) || 0}deg)`;
+      const bestLabel = document.getElementById('worldle-closest-label');
+      if (bestLabel) bestLabel.textContent = `${best.displayDistance} away`;
+      const bestFill = document.getElementById('worldle-closest-fill');
+      if (bestFill) bestFill.style.width = `${Math.max(0, Math.min(100, best.proximityPercent || 0))}%`;
     }
 
     function renderTargetSilhouette(target) {
       if (!shapeArt || !target) return;
       if (shapeApi && typeof shapeApi.render === 'function') {
         shapeArt.textContent = 'Loading outline...';
-        shapeApi.render(shapeArt, target, { padding: 0.1 }).catch(() => {
+        shapeApi.render(shapeArt, target, { padding: 0.1, compactBounds: true, label: 'Mystery country outline' }).catch(() => {
           shapeArt.textContent = 'Outline unavailable.';
         });
       }
@@ -107,14 +231,23 @@
       const streakEl = document.getElementById('worldle-stat-streak');
       const maxStreakEl = document.getElementById('worldle-stat-max-streak');
 
-      if (kicker) kicker.textContent = game.won ? 'VICTORY' : 'NICE TRY';
-      if (title) title.textContent = game.won ? 'Target Identified!' : 'Better Luck Tomorrow!';
+      if (kicker) kicker.textContent = !game.completed ? 'STATISTICS' : game.won ? 'VICTORY' : 'NICE TRY';
+      if (title) title.textContent = !game.completed ? 'Daily Statistics' : game.won ? 'Target Identified!' : 'Better Luck Tomorrow!';
 
-      if (target) {
-        if (flagEl) flagEl.textContent = target.flag || '🌍';
+      if (target && game.completed) {
+        renderFlag(flagEl, target);
         if (nameEl) nameEl.textContent = target.name;
         if (regionEl) regionEl.textContent = `${target.continent || ''} · ${target.subregion || ''}`;
+      } else {
+        renderFlag(flagEl, null);
+        if (nameEl) nameEl.textContent = 'Mystery country';
+        if (regionEl) regionEl.textContent = 'Finish the puzzle to reveal the answer.';
       }
+      if (shareBtn) shareBtn.classList.toggle('hidden', !game.completed);
+      const exploreAnswer = document.getElementById('btn-worldle-explore-answer');
+      if (exploreAnswer) exploreAnswer.classList.toggle('hidden', !game.completed);
+      const revealedFact = document.getElementById('worldle-revealed-fact');
+      if (revealedFact) revealedFact.textContent = game.completed ? (target?.fun_facts?.[0] || '') : '';
 
       if (playedEl) playedEl.textContent = stats.played || 0;
       const winPct = stats.played ? Math.round(((stats.won || 0) / stats.played) * 100) : 0;
@@ -125,13 +258,21 @@
       modal.classList.remove('hidden');
     }
 
-    function refresh() {
+    async function refresh() {
       if (!worldleApi) return;
+      const sequence = openSequence;
       const game = worldleApi.getDailyGame(cards);
       renderTargetSilhouette(game.target);
       updateGuessesView(game);
-      if (game.completed) {
-        setTimeout(() => showOutcomeModal(game), 600);
+      try {
+        await loadGuidance();
+        updateGuessesView(withCorrectedGuesses(worldleApi.getDailyGame(cards)));
+      } catch (error) {
+        console.error('Daily Puzzle guidance failed to load:', error);
+        showMessage('Could not load geographic guidance. Try submitting your guess again.');
+      }
+      if (active && sequence === openSequence && game.completed) {
+        scheduleOutcome(game, 600);
       }
     }
 
@@ -141,6 +282,7 @@
         suggestionsList.classList.add('hidden');
       }
       activeSuggestionIdx = -1;
+      input.setAttribute('aria-expanded', 'false');
     }
 
     function handleInput() {
@@ -166,9 +308,10 @@
         item.className = 'worldle-autocomplete-item';
         item.setAttribute('role', 'option');
         item.innerHTML = `
-          <span class="worldle-autocomplete-flag">${c.flag || '🌍'}</span>
+          <span class="worldle-autocomplete-flag"></span>
           <span>${c.name}</span>
         `;
+        renderFlag(item.querySelector('.worldle-autocomplete-flag'), c);
         item.addEventListener('click', () => {
           input.value = c.name;
           dismissSuggestions();
@@ -178,31 +321,45 @@
       });
 
       suggestionsList.classList.remove('hidden');
+      input.setAttribute('aria-expanded', 'true');
     }
 
-    function submitCurrentGuess() {
+    async function submitCurrentGuess() {
       const name = input.value.trim().toLowerCase();
-      if (!name || !worldleApi) return;
+      if (!name || !worldleApi || submitting) return;
 
       const guessedCard = cards.find(c => c.name.toLowerCase() === name);
       if (!guessedCard) {
-        if (toast) {
-          toast.textContent = 'Unknown country name';
-          setTimeout(() => { toast.textContent = ''; }, 2000);
-        }
+        showMessage('Unknown country name');
         return;
       }
 
-      const res = worldleApi.submitGuess(guessedCard, cards, geoApi);
+      submitting = true;
+      const sequence = openSequence;
+      submitBtn.disabled = true;
+      try {
+        await loadGuidance();
+      } catch (error) {
+        console.error('Daily Puzzle guidance failed to load:', error);
+        showMessage('Could not load geographic guidance. Please try again.');
+        submitting = false;
+        submitBtn.disabled = false;
+        return;
+      }
+      const res = worldleApi.submitGuess(guessedCard, cards, guidance);
+      submitting = false;
+      submitBtn.disabled = false;
+      if (res.error) {
+        showMessage(res.error);
+        return;
+      }
       if (res.duplicate) {
-        if (toast) {
-          toast.textContent = 'Already guessed!';
-          setTimeout(() => { toast.textContent = ''; }, 2000);
-        }
+        showMessage('Already guessed!');
         return;
       }
 
       input.value = '';
+      showMessage('');
       dismissSuggestions();
 
       if (res.evalResult) {
@@ -213,10 +370,11 @@
         }
       }
 
-      updateGuessesView(res.game);
+      updateGuessesView(withCorrectedGuesses(res.game));
+      if (root.matchMedia?.('(max-width: 767px)').matches) input.blur();
 
-      if (res.justCompleted) {
-        setTimeout(() => showOutcomeModal(res.game), 800);
+      if (res.justCompleted && active && sequence === openSequence) {
+        scheduleOutcome(res.game, 800);
       }
     }
 
@@ -253,21 +411,10 @@
 
     submitBtn.addEventListener('click', submitCurrentGuess);
 
-    if (homeBtn) {
-      homeBtn.addEventListener('click', () => {
-        const landing = document.getElementById('landing');
-        if (root.GeoWars?.showScreen && landing) {
-          root.GeoWars.showScreen(landing);
-        } else if (typeof root.showScreen === 'function' && landing) {
-          root.showScreen(landing);
-        }
-      });
-    }
-
     if (statsBtn) {
       statsBtn.addEventListener('click', () => {
         if (worldleApi) {
-          const game = worldleApi.getDailyGame(cards);
+          const game = withCorrectedGuesses(worldleApi.getDailyGame(cards));
           showOutcomeModal(game);
         }
       });
@@ -278,6 +425,12 @@
         if (modal) modal.classList.add('hidden');
       });
     }
+    document.getElementById('btn-worldle-explore-answer')?.addEventListener('click', () => {
+      const game = worldleApi?.getDailyGame(cards);
+      if (!game?.completed || !game.target) return;
+      root.GeoWars?.atlas?.showGlobe?.();
+      root.GeoWars?.explorer?.selectCountry?.(game.target.id, { animate: true, source: 'daily-answer' });
+    });
 
     if (shareBtn) {
       shareBtn.addEventListener('click', () => {
@@ -287,7 +440,7 @@
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(text).then(() => {
             if (toast) {
-              toast.textContent = 'Results copied to clipboard! 📋';
+              toast.textContent = 'Results copied to clipboard!';
               setTimeout(() => { toast.textContent = ''; }, 3000);
             }
           });
@@ -297,17 +450,26 @@
 
     root.GeoWars = root.GeoWars || {};
     root.GeoWars.worldle = Object.freeze({
-      open: function () {
-        const screens = [
-          document.getElementById('landing'),
-          document.getElementById('explorer'),
-          document.getElementById('game'),
-          document.getElementById('results'),
-          screen
-        ];
-        screens.filter(Boolean).forEach(s => s.classList.add('hidden'));
-        screen.classList.remove('hidden');
+      open: function (options) {
+        if (!options?.embedded) {
+          if (root.GeoWars?.atlas?.openDailyPuzzle) {
+            return root.GeoWars.atlas.openDailyPuzzle();
+          }
+          console.error('Daily Puzzle cannot open: Atlas navigation is unavailable.');
+          return false;
+        }
+        active = true;
+        openSequence += 1;
         refresh();
+        return true;
+      },
+      close: function () {
+        active = false;
+        openSequence += 1;
+        clearTimeout(outcomeTimer);
+        outcomeTimer = null;
+        modal?.classList.add('hidden');
+        dismissSuggestions();
       },
       refresh: refresh
     });

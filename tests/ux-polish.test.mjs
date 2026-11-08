@@ -14,9 +14,9 @@ test('EARTHLING uses the dedicated SVG lockup on landing and as an in-game home 
   const app = read('app.js');
   const explorer = read('globe-explorer.js');
 
-  assert.match(logo, /<svg[\s\S]*viewBox="0 0 276 64"/);
+  assert.match(logo, /<svg[\s\S]*viewBox="0 0 287 56"/);
   assert.match(logo, /<title id="title">EARTHLING<\/title>/);
-  assert.match(logo, /WORLD GEOGRAPHY GAME/);
+  assert.doesNotMatch(logo, /<text\b/, 'the wordmark is outlined so it renders without any font');
   assert.match(html, /id="btn-landing-home" class="brand-lockup" type="button" aria-label="Return to the EARTHLING home page"/);
   assert.match(html, /class="brand-logo" src="assets\/geowars-logo\.svg" alt="EARTHLING"/);
   assert.match(html, /class="explorer-home-logo"[\s\S]*src="assets\/geowars-logo\.svg" alt="EARTHLING"/);
@@ -40,7 +40,8 @@ test('Explorer preview stays lightweight while shape settings retain region stat
   assert.match(html, /id="globe-selection-card"/);
   assert.match(html, /id="globe-selection-label">Worldwide</);
   assert.match(app, /\$globeSelectionLabel\.textContent = continentLabel/);
-  assert.match(app, /Sprint · 60 seconds · \$\{diffLabel\} · \$\{continentLabel\}/);
+  assert.doesNotMatch(html, /id="mode-summary"/);
+  assert.match(html, /id="btn-change-settings"/);
   assert.match(globe, /selected\./);
   assert.match(globe, /confirmSelection\(\)/);
   assert.match(globe, /regionModeButton\.setAttribute\('aria-pressed'/);
@@ -63,7 +64,8 @@ test('homepage copy leads with educational Explorer value and labels the shape g
   assert.doesNotMatch(html, /Country silhouette challenge/);
   assert.doesNotMatch(html, /Recognize country shapes in a 60-second sprint/);
   assert.doesNotMatch(html, /Pick a pace, then jump straight into the world/);
-  assert.match(app, /Sprint · 60 seconds · \$\{diffLabel\} · \$\{continentLabel\}/);
+  assert.doesNotMatch(html, /class="atlas-stage-summary"/);
+  assert.match(app, /isSprint \? 'Start sprint' : 'Start practice'/);
   assert.match(fallbacks, /title: 'Shape unavailable'/);
 });
 

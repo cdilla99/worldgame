@@ -1,8 +1,12 @@
 # EARTHLING visual assets
 
 - `geowars-icons.svg` is the local EARTHLING interface icon sprite.
-- `geowars-logo.svg` is the responsive EARTHLING globe-orbit lockup used on the
-  landing page and as the in-game home control.
+- `geowars-logo.svg` is the responsive EARTHLING lockup (indigo globe, mint
+  continents, orbiting satellite, outlined Sora wordmark) used on the landing
+  page and as the in-game home control.
+- `earthling-icon.svg` is the square globe tile used for the favicon, touch icon
+  and web app manifest.
+- `fonts/` bundles Sora and Inter (SIL Open Font License; licences alongside).
 - `landing-globe.svg` is the static fallback shown when the interactive canvas
   cannot initialize.
 - `globe-data.js` contains simplified continent geometry derived from Natural

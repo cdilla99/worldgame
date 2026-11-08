@@ -7,6 +7,12 @@ EARTHLING is a browser-based world geography game with two connected experiences
 
 The app uses Vite with a vanilla JavaScript/TypeScript runtime. Existing gameplay remains in ordered classic scripts while typed data accessors are bundled as modules.
 
+On phones (below 768px), the app opens on Play with bottom navigation for Play, Explore, and Daily. New players start with Easy Practice: five countries, immediate answer choices, and no timer. Explicit quiz settings are remembered on the device. Country facts appear in an expandable sheet beside the globe; drag or tap its handle to expand it, or press Escape to collapse it. Daily Puzzle shows submitted guesses and offers a country fact and an Explore action after completion.
+
+Practice displays progress above the shape, counts revealed answers as exploration, and ends on a discovery summary. Country framing uses the bundled geometry across the Atlas, Daily Puzzle and quiz, with regression checks covering all 197 countries. See [RELEASE.md](RELEASE.md) for deployment preparation and the remaining physical-phone checks.
+
+The responsive behavior lives in `mobile.css` and `mobile-experience.js`, sharing the existing game controls and country card with desktop. Browser tests cover short phones, touch interaction, five-round completion, saved settings, and switching between phone and desktop layouts. Physical iOS and Android keyboard checks remain a manual QA step.
+
 ## Current gameplay
 
 ### 1) Shape Challenge

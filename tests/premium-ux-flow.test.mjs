@@ -24,7 +24,7 @@ test('Explorer-first landing uses canonical content and discloses the shape chal
   assert.ok(html.includes('id="explorer-globe-canvas"'));
   assert.ok(html.includes('id="explorer-country-card"'));
   assert.ok(html.includes('id="explorer-secondary-content"'));
-  assert.ok(html.includes('id="mode-title" class="setup-subheading sr-only">Game modes'));
+  assert.ok(html.includes('id="mode-title" class="menu-setting-heading">Game mode'));
   assert.ok(html.includes('id="landing-preview-country"'));
   assert.ok(html.includes('id="shape-challenge-panel" class="landing-game-panel landing-border-outline-setup hidden"'));
   assert.equal(html.includes('Test your country knowledge'), false);
@@ -35,10 +35,10 @@ test('Explorer-first landing uses canonical content and discloses the shape chal
   assert.ok(disclosureFlow.includes('$shapeChallengePanel.hidden = !expanded'));
   assert.ok(disclosureFlow.includes("setAttribute('aria-expanded', String(expanded))"));
   assert.ok(app.includes('function composeExplorerHomepage()'));
-  // The quiz setup now relocates into the atlas Menu slot (falling back to the
-  // legacy menu slot) so the quiz setup sits with its launcher in the Shapes
-  // view, not buried in the settings menu.
-  assert.ok(app.includes('const shapeSetupHome = $atlasShapeSetupSlot || $atlasMenuSetupSlot'));
+  // The quiz setup now relocates into the challenge-quiz slot (falling back to
+  // the dedicated shape slot or the legacy menu slot) so the quiz setup sits
+  // with its launcher in the Shapes view, not buried in the settings menu.
+  assert.ok(app.includes('const shapeSetupHome = $atlasChallengeQuizSlot || $atlasShapeSetupSlot || $atlasMenuSetupSlot'));
   assert.ok(app.includes('shapeSetupHome.append($shapeChallengePanel)'));
   assert.ok(html.includes('id="atlas-shape-setup-slot"'));
   assert.ok(app.includes('$atlasStatsSlot.append(element)'));

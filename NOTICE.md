@@ -96,6 +96,12 @@ support due-diligence review.
 ## Original EARTHLING assets
 
 The following are original project assets and are owned by the project:
-`assets/geowars-icons.svg`, `assets/geowars-logo.svg`, `assets/landing-globe.svg`,
+`assets/geowars-icons.svg`, `assets/geowars-logo.svg`, `assets/earthling-icon.svg`,
+`assets/landing-globe.svg`,
 and all first-party source code. The "EARTHLING" name is not a registered
 trademark unless separately secured.
+
+The wordmark in `assets/geowars-logo.svg` is outlined from Sora (SIL Open Font
+License 1.1), and `assets/fonts/` bundles Sora and Inter under the same licence.
+Phosphor Icons (MIT) are embedded in the navigation; see
+`assets/phosphor-icons-LICENSE.txt`.

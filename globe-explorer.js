@@ -1289,6 +1289,15 @@
       if (document.body?.classList?.contains('design-review') && screen.dataset.atlasView === 'shapes') details.open = false;
     }
 
+    // Hunt lifecycle signal for the Atlas mode controller. Guarded so harnesses
+    // without event support keep working.
+    function emitModeChange(mode, summary) {
+      if (typeof root.dispatchEvent !== 'function' || typeof CustomEvent !== 'function') return;
+      root.dispatchEvent(new CustomEvent('geowars:explorer-mode', {
+        detail: { mode, summary: Boolean(summary) }
+      }));
+    }
+
     function dispatchCountryEvent(country, source) {
       root.dispatchEvent(new CustomEvent('geowars:explorer-country', {
         detail: { countryId: country.id, placeId: country.id, kind: country.kind || 'country', source }
@@ -1473,6 +1482,7 @@
         huntInterval = root.setInterval(updateHuntClock, 250);
         canvas.focus({ preventScroll: true });
       });
+      emitModeChange('hunt', false);
     }
 
     function endHunt(showSummary = true) {
@@ -1505,13 +1515,24 @@
         playExplorerSound('playGameEnd');
       }
       draw();
+      emitModeChange('free', showSummary);
     }
 
     function showFreeExplorer() {
       endHunt(false);
+      dismissHuntSummary();
+      setStatus(geometryState === 'partial'
+        ? 'Country globe ready. Territory outlines are temporarily unavailable.'
+        : 'Drag to explore. Select a country or territory to learn more.');
+      canvas.focus({ preventScroll: true });
+    }
+
+    // Hide the Country Hunt summary and restore the free-explore card without
+    // changing status text, focus, or camera. No-op while a hunt is running.
+    function dismissHuntSummary() {
+      if (huntActive) return false;
       huntSummary?.classList.add('hidden');
       huntCompare?.classList.add('hidden');
-      syncFocusControl();
       if (selectedCountryId) {
         renderCountryCard(cardsById.get(selectedCountryId));
       } else {
@@ -1521,10 +1542,8 @@
         emptyCard.classList.remove('hidden');
         countryCard.classList.add('hidden');
       }
-      setStatus(geometryState === 'partial'
-        ? 'Country globe ready. Territory outlines are temporarily unavailable.'
-        : 'Drag to explore. Select a country or territory to learn more.');
-      canvas.focus({ preventScroll: true });
+      syncFocusControl();
+      return true;
     }
 
     function handleCountryActivation(countryId, options = {}) {
@@ -2066,6 +2085,7 @@
       focusSelectedCountry,
       startHunt,
       endHunt,
+      dismissHuntSummary,
       submitCountry: handleCountryActivation,
       getState: () => ({
         opened,

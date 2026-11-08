@@ -5,6 +5,7 @@ test('opt-in atlas journey browses, launches practice and reveals feedback', asy
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/?design=atlas');
   await expect(page.locator('body')).toHaveClass(/design-review/);
+  await page.locator('#btn-mode-explore').click();
   await page.locator('#btn-atlas-shapes').click();
   for (const label of ['Japan', 'Indonesia', 'Fiji', 'Monaco', 'Democratic Republic of the Congo']) {
     await page.locator('#atlas-shape-country').selectOption({ label });
@@ -13,13 +14,13 @@ test('opt-in atlas journey browses, launches practice and reveals feedback', asy
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await expect(page.locator('#explorer-landmark-media')).toBeHidden();
   }
-  await page.locator('#btn-atlas-shape-challenge').click();
+  await page.locator('#btn-mode-challenge').click();
   await page.locator('#btn-showoff').click();
   await page.locator('#btn-start-game').click();
   await expect(page.locator('#game')).toBeVisible();
   await expect(page.locator('svg#silhouette-img')).toBeVisible();
   await expect(page.locator('#flag-hint')).toBeHidden();
-  await page.locator('#btn-show-options').click();
+  await expect(page.locator('#choices')).toBeVisible();
   await page.locator('#choices button').first().click();
   await expect(page.locator('#feedback')).toBeVisible();
   await expect(page.locator('#feedback-country-name')).not.toHaveText('');

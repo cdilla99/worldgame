@@ -1056,7 +1056,7 @@
 }
 .explorer-country-kicker {
   margin-bottom: 5px;
-  color: #55e4a8;
+  color: #b4e1e9;
   font-size: 0.62rem;
   font-weight: 850;
   letter-spacing: 0.13em;
@@ -1082,10 +1082,10 @@
   max-width: 100%;
   margin-top: 9px;
   padding: 6px 9px;
-  border: 1px solid rgba(84, 221, 161, 0.32);
+  border: 1px solid rgba(130, 192, 207, 0.4);
   border-radius: 8px;
-  background: rgba(84, 221, 161, 0.08);
-  color: #bfe8d7;
+  background: rgba(81, 158, 178, 0.12);
+  color: #d3ebef;
   font-size: 0.68rem;
   font-weight: 700;
   line-height: 1.35;
@@ -1095,9 +1095,9 @@
   position: relative;
   margin: 11px 0 0;
   padding: 11px 16px 11px 18px;
-  border: 1px solid rgba(84, 220, 160, 0.28);
+  border: 1px solid rgba(130, 192, 207, 0.3);
   border-radius: 13px;
-  background: rgba(46, 183, 127, 0.08);
+  background: rgba(81, 158, 178, 0.1);
   color: #ddecf8;
   font-size: 0.86rem;
   font-weight: 680;
@@ -1111,7 +1111,7 @@
   left: 0;
   width: 3px;
   border-radius: 999px;
-  background: #54dda1;
+  background: #8bcbd9;
   content: '';
 }
 

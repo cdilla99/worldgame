@@ -1,43 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 276 64" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 287 56" role="img" aria-labelledby="title desc">
   <title id="title">EARTHLING</title>
-  <desc id="desc">A globe in an orbit beside the EARTHLING wordmark.</desc>
+  <desc id="desc">A glowing indigo globe with mint continents and an orbiting satellite beside the EARTHLING wordmark.</desc>
   <defs>
-    <linearGradient id="ocean" x1="8" y1="5" x2="50" y2="55" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#78B8FF"/>
-      <stop offset=".48" stop-color="#2C72CE"/>
-      <stop offset="1" stop-color="#0B2D61"/>
-    </linearGradient>
+    <radialGradient id="ocean" cx=".34" cy=".26" r=".95">
+      <stop stop-color="#B49BFF"/>
+      <stop offset=".42" stop-color="#6C3BFF"/>
+      <stop offset="1" stop-color="#1E0A66"/>
+    </radialGradient>
     <linearGradient id="land" x1="15" y1="12" x2="46" y2="50" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#D8FFE8"/>
-      <stop offset=".42" stop-color="#63E4A9"/>
-      <stop offset="1" stop-color="#25A677"/>
+      <stop stop-color="#B8FFE6"/>
+      <stop offset=".45" stop-color="#3DF2B5"/>
+      <stop offset="1" stop-color="#14B886"/>
     </linearGradient>
-    <linearGradient id="word" x1="71" y1="10" x2="251" y2="49" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FFFFFF"/>
-      <stop offset=".52" stop-color="#EDF5FF"/>
-      <stop offset=".53" stop-color="#8FF2C5"/>
-      <stop offset="1" stop-color="#43DC9E"/>
+    <radialGradient id="shade" cx=".5" cy=".5" r=".5">
+      <stop offset=".6" stop-color="#0A0A10" stop-opacity="0"/>
+      <stop offset="1" stop-color="#0A0A10" stop-opacity=".45"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="-2" y1="30" x2="62" y2="30" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C4B5FF"/>
+      <stop offset="1" stop-color="#3DF2B5"/>
     </linearGradient>
-    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="2.2" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+    <linearGradient id="mint" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#7DFFD6"/>
+      <stop offset="1" stop-color="#2EE6A6"/>
+    </linearGradient>
+    <filter id="glow" x="-120%" y="-120%" width="340%" height="340%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
-
-  <g transform="translate(2 2)">
-    <circle cx="30" cy="30" r="23.5" fill="url(#ocean)" stroke="#A9D2FF" stroke-width="1.5"/>
-    <path d="M8.5 30h43M30 6.5c-8.1 7.1-12.2 15-12.2 23.5S21.9 46.4 30 53.5M30 6.5C38.1 13.6 42.2 21.5 42.2 30S38.1 46.4 30 53.5" fill="none" stroke="#C9E4FF" stroke-opacity=".36" stroke-width="1"/>
+  <g transform="translate(28 28) scale(.851) translate(-30 -30)">
+    <path d="M-1.5 30A31.5 12.2 0 0 1 61.5 30" transform="rotate(-18 30 30)" fill="none" stroke="url(#ring)" stroke-opacity=".5" stroke-width="2"/>
+    <circle cx="30" cy="30" r="23.5" fill="url(#ocean)"/>
+    <path d="M8.5 30h43M30 6.5c-8.1 7.1-12.2 15-12.2 23.5S21.9 46.4 30 53.5M30 6.5C38.1 13.6 42.2 21.5 42.2 30S38.1 46.4 30 53.5" fill="none" stroke="#FFFFFF" stroke-opacity=".22" stroke-width="1"/>
     <path d="M14.8 18.7l5.7-5.2 7.1 1.5 2.7 4.2-3.3 3.2-4.9.7-1.5 4.5-5.6.6-3.1-4.3 2.9-5.2Zm18.5 9 4.7-4 7.4 1.2 3.1 5.2-3.4 4.3-1.1 7.2-5.7 4.5-4.1-2.2 1.4-5.7-3.8-4.4 1.5-6.1ZM19.5 34.1l5.2.9 3.2 4.5-1.2 8.1-4.9 2.4-3.6-5.3-2.1-6.2 3.4-4.4Z" fill="url(#land)"/>
-    <ellipse cx="30" cy="30" rx="31.5" ry="12.2" fill="none" stroke="#78B8FF" stroke-width="1.25" transform="rotate(-18 30 30)" opacity=".72"/>
-    <path d="M50.6 13.5l1.4 5.9 5.8-1.6" fill="none" stroke="#FF6458" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
-    <circle cx="54.2" cy="16.8" r="2.6" fill="#FF6458"/>
+    <circle cx="30" cy="30" r="23.5" fill="url(#shade)"/>
+    <circle cx="30" cy="30" r="23" fill="none" stroke="#C4B5FF" stroke-opacity=".55" stroke-width="1"/>
+    <path d="M-1.5 30A31.5 12.2 0 0 0 61.5 30" transform="rotate(-18 30 30)" fill="none" stroke="url(#ring)" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="54.1" cy="15.8" r="3" fill="#3DF2B5" filter="url(#glow)"/>
   </g>
-
-  <text x="72" y="40" fill="url(#word)" font-family="Arial Black, Arial, sans-serif" font-size="29" font-weight="900" letter-spacing="0">EARTHLING</text>
-  <path d="M73 48h176" stroke="#48617E" stroke-width="1"/>
-  <text x="73" y="58" fill="#8FA4BF" font-family="Arial, sans-serif" font-size="7.5" font-weight="700" letter-spacing="2.25">WORLD GEOGRAPHY GAME</text>
+  <path d="M66.53 40.5V15.5H72.7V40.5ZM72.01 40.5V35.29H82.56V40.5ZM72.01 30.4V25.19H81.84V30.4ZM72.01 20.71V15.5H82.36V20.71Z M85.75 40.5 93.76 15.5H103.97L112.25 40.5H105.68L99.24 19.95L101.05 20.64H96.53L98.38 19.95L92.12 40.5ZM92.29 34.71 94.21 29.51H103.69L105.61 34.71Z M116.26 40.5V15.29H122.63V40.5ZM131.33 40.5 124.31 29.88H131.23L138.66 40.5ZM121.02 32.83V27.93H127.01Q128.14 27.93 128.97 27.49Q129.79 27.04 130.25 26.22Q130.71 25.4 130.71 24.3Q130.71 23.17 130.25 22.35Q129.79 21.53 128.97 21.08Q128.14 20.64 127.01 20.64H121.02V15.29H126.64Q129.89 15.29 132.25 16.27Q134.62 17.25 135.88 19.15Q137.15 21.05 137.15 23.86V24.4Q137.15 27.21 135.87 29.08Q134.58 30.95 132.24 31.89Q129.89 32.83 126.64 32.83Z M147.8 40.5V20.36H154.17V40.5ZM140.95 21.05V15.5H161.02V21.05Z M181.33 40.5V15.5H187.7V40.5ZM165.44 40.5V15.5H171.81V40.5ZM170.71 30.67V25.12H182.42V30.67Z" fill="#F4F4FA"/>
+  <path d="M193.97 40.5V15.5H200.34V40.5ZM199.65 40.5V34.95H209.79V40.5Z M214.48 40.5V15.5H220.85V40.5Z M227.18 40.5V15.5H237.63L245.95 35.43H247.15L246.47 36.05V15.5H252.42V40.5H241.91L233.59 20.57H232.39L233.08 19.95V40.5Z M270.78 41.18Q267.25 41.18 264.72 40Q262.18 38.82 260.58 36.9Q258.97 34.99 258.21 32.73Q257.46 30.47 257.46 28.31V27.55Q257.46 25.23 258.25 22.95Q259.03 20.67 260.63 18.82Q262.22 16.97 264.62 15.86Q267.01 14.75 270.23 14.75Q273.69 14.75 276.35 16.01Q279 17.28 280.61 19.52Q282.22 21.77 282.49 24.71H276.12Q275.92 23.58 275.13 22.67Q274.34 21.77 273.09 21.24Q271.84 20.71 270.23 20.71Q268.69 20.71 267.51 21.24Q266.33 21.77 265.52 22.74Q264.72 23.72 264.31 25.05Q263.9 26.39 263.9 27.97Q263.9 29.54 264.34 30.89Q264.79 32.25 265.64 33.26Q266.5 34.27 267.8 34.82Q269.1 35.36 270.78 35.36Q272.9 35.36 274.45 34.47Q275.99 33.58 276.6 32.11L276.12 35.88V30.43H281.95V35.57Q280.37 38.27 277.48 39.73Q274.58 41.18 270.78 41.18ZM270.1 31.66V27.21H284V31.66Z" fill="url(#mint)"/>
 </svg>

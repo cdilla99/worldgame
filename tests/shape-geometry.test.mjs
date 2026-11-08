@@ -52,6 +52,54 @@ test('review outline fits microstates instead of forcing a one-degree frame', ()
   assert.ok(Number(svg.attrs.viewBox.split(' ')[2]) < 0.03);
 });
 
+test('all 197 compact outlines fit the smallest longitude arc without dropping vertices or changing source geometry', () => {
+  const context = loadModule();
+  const geometry = context.window.GeoWarsGlobeCountries;
+  const api = context.window.GeoWarsShapeGeometry;
+  const before = JSON.stringify(geometry);
+  assert.equal(geometry.length, 197);
+  for (const country of geometry) {
+    const points = country.p.flat(2);
+    const angles = [...new Set(points.map(point => (point[0] + 360) % 360))].sort((a, b) => a - b);
+    const gaps = angles.map((angle, index) => (angles[(index + 1) % angles.length] + (index === angles.length - 1 ? 360 : 0)) - angle);
+    const latitudes = points.map(point => point[1]);
+    const scale = Math.max(0.25, Math.round(Math.cos((Math.min(...latitudes) + Math.max(...latitudes)) / 2 * Math.PI / 180) * 1000) / 1000);
+    const expectedWidth = Math.max(0.0001, (360 - Math.max(...gaps)) * scale);
+    const svg = api.buildOutline(country, { compactBounds: true, padding: 0 });
+    const [, , width, height] = svg.attrs.viewBox.split(' ').map(Number);
+    assert.ok(Math.abs(width - expectedWidth) < 0.00001, `country ${country.i} must not stretch across the longitude seam`);
+    assert.ok(Number.isFinite(height) && height > 0, `country ${country.i} has a usable height`);
+    const d = svg.children[0].attrs.d;
+    assert.equal((d.match(/[ML]/g) || []).length, points.length, `country ${country.i} preserves every vertex`);
+    assert.doesNotMatch(d, /NaN|Infinity/);
+  }
+  assert.equal(JSON.stringify(geometry), before, 'framing must not mutate globe or country data');
+});
+
+test('outline longitude is scaled by latitude so northern countries are not stretched', () => {
+  const api = loadModule().window.GeoWarsShapeGeometry;
+  const ring = (west, south, east, north) => [[[[west, south], [east, south], [east, north], [west, north], [west, south]]]];
+  const viewBox = svg => svg.attrs.viewBox.split(' ').map(Number);
+
+  const northern = viewBox(api.buildOutline({ p: ring(-140, 40, -50, 80) }, { padding: 0 }));
+  assert.ok(Math.abs(northern[2] / northern[3] - 90 * 0.5 / 40) < 0.02, 'a 90 by 40 degree box at 60N is about 1.1:1');
+
+  const equatorial = viewBox(api.buildOutline({ p: ring(10, -20, 40, 20) }, { padding: 0 }));
+  assert.ok(Math.abs(equatorial[2] / equatorial[3] - 30 / 40) < 0.02, 'equatorial shapes keep their degree proportions');
+});
+
+test('tiny countries stay centred inside the minimum outline frame', () => {
+  const api = loadModule().window.GeoWarsShapeGeometry;
+  const island = { p: [[[[10, 10], [10.2, 10], [10.2, 10.1], [10, 10.1], [10, 10]]]] };
+  const svg = api.buildOutline(island, { padding: 0 });
+  const [, , frameWidth, frameHeight] = svg.attrs.viewBox.split(' ').map(Number);
+  const numbers = svg.children[0].attrs.d.match(/-?\d+(\.\d+)?/g).map(Number);
+  const xs = numbers.filter((_, index) => index % 2 === 0);
+  const ys = numbers.filter((_, index) => index % 2 === 1);
+  assert.ok(Math.abs((Math.min(...xs) + Math.max(...xs)) / 2 - frameWidth / 2) < 0.01);
+  assert.ok(Math.abs((Math.min(...ys) + Math.max(...ys)) / 2 - frameHeight / 2) < 0.01);
+});
+
 test('shape-geometry exposes the render/buildOutline contract atlas.js depends on', () => {
   const context = loadModule();
   const api = context.window.GeoWarsShapeGeometry;

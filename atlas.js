@@ -34,7 +34,31 @@
     var shapeExploreButton = document.getElementById('btn-atlas-shape-explore');
     var shapeChallengeButton = document.getElementById('btn-atlas-shape-challenge');
 
+    // Mode-first navigation (Explore / Challenge / Daily Puzzle). Every lookup
+    // is optional so stripped markup and vm harnesses keep working.
+    var exploreModeButton = document.getElementById('btn-mode-explore');
+    var challengeModeButton = document.getElementById('btn-mode-challenge');
+    var dailyModeButton = document.getElementById('btn-open-worldle');
+    var dailyWorkspace = document.getElementById('worldle-screen');
+    var dailyTitle = document.getElementById('worldle-title');
+    var exploreSwitch = document.getElementById('atlas-explore-switch');
+    var challengePanel = document.getElementById('atlas-challenge-panel');
+    var challengeTitle = document.getElementById('atlas-challenge-title');
+    var globeTitle = document.getElementById('atlas-globe-title');
+    var challengeHuntButton = document.getElementById('btn-challenge-hunt');
+
     if (!screen || !globeWorkspace || !shapesWorkspace || !globeButton || !shapesButton) return;
+    if (dailyWorkspace && dailyWorkspace.parentNode !== screen) screen.appendChild(dailyWorkspace);
+
+    // Single owner of the Atlas mode state. In memory only, so every page load
+    // starts on Explore / Globe.
+    var modeState = {
+      mode: 'explore',            // 'explore' | 'challenge' | 'daily'
+      exploreView: 'globe',       // last Explore view this page session
+      challengeStage: 'panel',    // 'panel' | 'hunt' | 'summary' (challenge only)
+      dailyReturn: null,          // { mode, exploreView } while Worldle is open
+      pendingSwitch: null         // { target, opener } while the hunt dialog is open
+    };
 
     var cards = typeof countryCards !== 'undefined' && Array.isArray(countryCards)
       ? countryCards.slice().sort(function (a, b) { return a.name.localeCompare(b.name); })
@@ -48,17 +72,28 @@
     var demoTimer = null;
     var demoActive = false;
 
-    function setWorkspaceAvailable(workspace, available) {
-      workspace.hidden = !available;
-      workspace.classList.toggle('hidden', !available);
-      workspace.inert = !available;
+    // Available: visible, in the accessibility tree, and interactive.
+    // Unavailable: hidden, .hidden, inert, and aria-hidden, all four together.
+    function setRegionAvailable(region, available) {
+      if (!region) return;
+      region.hidden = !available;
+      region.classList.toggle('hidden', !available);
+      region.inert = !available;
       if (available) {
-        workspace.removeAttribute('aria-hidden');
-        workspace.removeAttribute('inert');
+        region.removeAttribute('aria-hidden');
+        region.removeAttribute('inert');
       } else {
-        workspace.setAttribute('aria-hidden', 'true');
-        workspace.setAttribute('inert', '');
+        region.setAttribute('aria-hidden', 'true');
+        region.setAttribute('inert', '');
       }
+    }
+    // Compatibility alias for the original name.
+    var setWorkspaceAvailable = setRegionAvailable;
+
+    function setPressed(button, pressed) {
+      if (!button) return;
+      button.classList.toggle('is-active', pressed);
+      button.setAttribute('aria-pressed', String(pressed));
     }
 
     function announce(message) {
@@ -144,7 +179,7 @@
         shapeArt.textContent = 'Border outline unavailable.';
         return Promise.resolve(null);
       }
-      return renderer.render(shapeArt, card, { padding: 0.08, compactBounds: document.body?.classList?.contains('design-review') })
+      return renderer.render(shapeArt, card, { padding: 0.08, compactBounds: true })
         .then(function (element) {
           if (sequence !== renderSequence) return null;
           shapeArt.removeAttribute('aria-busy');
@@ -202,111 +237,354 @@
       return Boolean(root.GeoWars?.explorer?.getState?.().huntActive);
     }
 
-    // Confirmation shown when the player taps Shapes mid-hunt. Ending the hunt
-    // when switching views should be a deliberate choice, not a silent surprise.
+    // Set while atlas itself ends a hunt, so the resulting
+    // geowars:explorer-mode event does not re-enter the mode controller.
+    var suppressHuntEvents = false;
+
+    // Every hunt end that atlas starts goes through here: no Hunt_Summary, and
+    // the lifecycle event it emits is ignored.
+    function endHuntQuietly() {
+      suppressHuntEvents = true;
+      try {
+        root.GeoWars?.explorer?.endHunt?.(false);
+      } catch (e) {
+        /* explorer not ready: nothing to end */
+      } finally {
+        suppressHuntEvents = false;
+      }
+    }
+
+    // Confirmation shown when the player switches views mid-hunt. Ending the hunt
+    // when switching should be a deliberate choice, not a silent surprise.
+    // Generalized for Explore, Shapes, and Daily Puzzle targets.
     var huntSwitchDialog = document.getElementById('hunt-switch-confirm');
     var huntSwitchTitle = document.getElementById('hunt-switch-title');
+    var huntSwitchMessage = document.getElementById('hunt-switch-message');
     var huntSwitchYes = document.getElementById('btn-hunt-switch-yes');
     var huntSwitchNo = document.getElementById('btn-hunt-switch-no');
-    var huntSwitchReturnFocus = null;
 
     function isHuntSwitchOpen() {
       return Boolean(huntSwitchDialog) && !huntSwitchDialog.classList.contains('hidden');
     }
 
-    function requestShapesDuringHunt() {
-      // No dialog available (e.g. stripped markup): fall back to an announcement
-      // rather than trapping the player in the hunt with no path out.
+    // Dialog message templates per target (design "Hunt_Switch_Dialog texts").
+    var HUNT_SWITCH_MESSAGES = {
+      explore: 'Switching to Explore will end your current Country Hunt.',
+      shapes: 'Switching to Shapes will end your current Country Hunt.',
+      daily: 'Opening the Daily Puzzle will end your current Country Hunt.'
+    };
+
+    // Request a hunt switch for a specific target. Stores the pending switch and
+    // opens the confirmation dialog with the appropriate message.
+    function requestHuntSwitch(target, opener) {
       if (!huntSwitchDialog) {
-        announce('End Country Hunt before opening country shapes.');
+        // No dialog available (e.g. stripped markup): fall back to an announcement
+        // rather than trapping the player in the hunt with no path out.
+        announce('End Country Hunt before switching views.');
         return;
       }
-      huntSwitchReturnFocus = document.activeElement;
+      var normalizedTarget = target === 'explore' || target === 'shapes' || target === 'daily'
+        ? target
+        : 'explore';
+      modeState.pendingSwitch = {
+        target: normalizedTarget,
+        opener: opener || document.activeElement
+      };
+      if (huntSwitchMessage && HUNT_SWITCH_MESSAGES[normalizedTarget]) {
+        huntSwitchMessage.textContent = HUNT_SWITCH_MESSAGES[normalizedTarget];
+      }
       huntSwitchDialog.classList.remove('hidden');
       huntSwitchDialog.hidden = false;
       (huntSwitchTitle || huntSwitchYes)?.focus?.({ preventScroll: true });
     }
 
-    function closeHuntSwitchDialog(restoreFocus) {
+    function cancelHuntSwitch() {
       if (!huntSwitchDialog) return;
+      var opener = modeState.pendingSwitch?.opener;
       huntSwitchDialog.classList.add('hidden');
       huntSwitchDialog.hidden = true;
-      if (restoreFocus && huntSwitchReturnFocus && typeof huntSwitchReturnFocus.focus === 'function') {
-        huntSwitchReturnFocus.focus({ preventScroll: true });
+      modeState.pendingSwitch = null;
+      if (opener && typeof opener.focus === 'function') {
+        opener.focus({ preventScroll: true });
       }
-      huntSwitchReturnFocus = null;
     }
 
-    function confirmEndHuntAndShowShapes() {
-      closeHuntSwitchDialog(false);
-      // End the hunt first, then switch with the confirmed flag so setView's
-      // guard lets it through.
-      root.GeoWars?.explorer?.endHunt?.(false);
-      setView('shapes', { focus: true, confirmedEndHunt: true });
+    function confirmHuntSwitch() {
+      if (!huntSwitchDialog) return;
+      var pending = modeState.pendingSwitch;
+      huntSwitchDialog.classList.add('hidden');
+      huntSwitchDialog.hidden = true;
+      modeState.pendingSwitch = null;
+      if (!pending) return;
+      endHuntQuietly();
+      var target = pending.target;
+      if (target === 'daily') {
+        openDailyPuzzle({ opener: pending.opener, confirmedEndHunt: true });
+      } else if (target === 'shapes') {
+        setView('shapes', { focus: true, confirmedEndHunt: true });
+      } else {
+        // target === 'explore': return to Explore with the remembered view.
+        setMode('explore', { focus: true, confirmedEndHunt: true });
+      }
     }
 
-    if (huntSwitchYes) huntSwitchYes.addEventListener('click', confirmEndHuntAndShowShapes);
-    if (huntSwitchNo) huntSwitchNo.addEventListener('click', function () { closeHuntSwitchDialog(true); });
+    if (huntSwitchYes) huntSwitchYes.addEventListener('click', confirmHuntSwitch);
+    if (huntSwitchNo) huntSwitchNo.addEventListener('click', cancelHuntSwitch);
     if (huntSwitchDialog) {
       huntSwitchDialog.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
           event.preventDefault();
-          closeHuntSwitchDialog(true);
+          cancelHuntSwitch();
         }
       });
     }
 
-    function syncHuntAvailability(active) {
-      var huntActive = typeof active === 'boolean' ? active : isHuntActive();
-      // The Shapes button stays enabled during a hunt: clicking it now prompts a
-      // confirmation (see requestView) instead of being silently blocked.
-      shapesButton.disabled = false;
-      shapesButton.removeAttribute('aria-disabled');
-      if (huntActive && screen.dataset.atlasView === 'shapes') {
-        setView('globe', { announce: false });
-      }
-    }
-
-    function setView(view, options) {
-      options = options || {};
-      var showShapes = view === 'shapes';
+    // Pure projection from modeState to the DOM (design "Data Models" table).
+    // Idempotent: calling it twice leaves the same DOM.
+    function applyLayout() {
+      var explore = modeState.mode === 'explore';
+      var challenge = modeState.mode === 'challenge';
+      var daily = modeState.mode === 'daily';
+      var showShapes = explore && modeState.exploreView === 'shapes';
+      var showGlobe = (explore && modeState.exploreView === 'globe') ||
+        (challenge && modeState.challengeStage !== 'panel');
+      var showPanel = challenge && modeState.challengeStage === 'panel';
       var wasShapes = screen.dataset.atlasView === 'shapes';
-      if (showShapes && isHuntActive() && !options.confirmedEndHunt) {
-        // A hunt is in progress. Don't switch silently; ask first (unless the
-        // caller already confirmed and ended the hunt on the player's behalf).
-        requestShapesDuringHunt();
-        return false;
-      }
+      var view = showShapes ? 'shapes' : 'globe';
+
       if (!showShapes) stopDemoMode();
-      screen.dataset.atlasView = showShapes ? 'shapes' : 'globe';
-      if (document.body?.dataset) document.body.dataset.atlasView = showShapes ? 'shapes' : 'globe';
-      // Switching views always lands on that view's calm Explore sub-mode, never
-      // a restored game mode. Globe -> exit any hunt (endHunt calls
-      // setExplorerMode('free')); Shapes -> collapse the quiz setup.
+      screen.dataset.atlasView = view;
+      screen.dataset.atlasMode = modeState.mode;
+      if (document.body?.dataset) {
+        document.body.dataset.atlasView = view;
+        document.body.dataset.atlasMode = modeState.mode;
+      }
+      // Shapes always opens on its calm study layout, never the quiz setup.
       if (showShapes) root.GeoWars?.shapes?.setQuizSetupOpen?.(false);
-      else root.GeoWars?.explorer?.endHunt?.(false);
       // Both views are dark now; the Shapes view no longer flips to a light paper theme.
       themeColor?.setAttribute('content', '#07111f');
       // Relocate the shared country card so it lives beside whichever stage is
       // active. Move BEFORE toggling inert/hidden so focus/aria stay coherent.
       if (showShapes) moveInfoPanelToShapes();
       else restoreInfoPanel();
-      setWorkspaceAvailable(globeWorkspace, !showShapes);
-      setWorkspaceAvailable(shapesWorkspace, showShapes);
-      globeButton.classList.toggle('is-active', !showShapes);
-      shapesButton.classList.toggle('is-active', showShapes);
-      globeButton.setAttribute('aria-pressed', String(!showShapes));
-      shapesButton.setAttribute('aria-pressed', String(showShapes));
+      setRegionAvailable(exploreSwitch, explore);
+      setRegionAvailable(globeWorkspace, showGlobe);
+      setRegionAvailable(shapesWorkspace, showShapes);
+      setRegionAvailable(challengePanel, showPanel);
+      setRegionAvailable(dailyWorkspace, daily);
+      setPressed(exploreModeButton, explore);
+      setPressed(challengeModeButton, challenge);
+      setPressed(dailyModeButton, daily);
+      setPressed(globeButton, modeState.exploreView === 'globe');
+      setPressed(shapesButton, modeState.exploreView === 'shapes');
       if (showShapes) {
         if (!wasShapes) startDemoMode();
         else syncCountry({ render: true });
       }
-      if (options.focus) {
-        var focusTarget = showShapes ? shapeTitle : document.getElementById('explorer-stage-title');
-        focusTarget?.focus({ preventScroll: true });
+      root.GeoWars?.mobile?.sync?.();
+    }
+
+    function focusHeading(target) {
+      target?.focus?.({ preventScroll: true });
+    }
+
+    function exploreHeading(view) {
+      return view === 'shapes'
+        ? shapeTitle
+        : (globeTitle || document.getElementById('explorer-stage-title'));
+    }
+
+    function exploreModeMessage(view) {
+      return view === 'shapes' ? 'Explore mode. Shapes view.' : 'Explore mode. Globe view.';
+    }
+
+    // Leaving the Hunt_Summary stage hides the summary and restores the card.
+    function leaveHuntSummary() {
+      if (modeState.mode === 'challenge' && modeState.challengeStage === 'summary') {
+        try { root.GeoWars?.explorer?.dismissHuntSummary?.(); } catch (e) { /* explorer not ready */ }
       }
+    }
+
+    function setView(view, options) {
+      options = options || {};
+      var showShapes = view === 'shapes';
+      if (showShapes && isHuntActive() && !options.confirmedEndHunt) {
+        // A hunt is in progress. Don't switch silently; ask first (unless the
+        // caller already confirmed and ended the hunt on the player's behalf).
+        requestHuntSwitch('shapes', null);
+        return false;
+      }
+      leaveHuntSummary();
+      if (modeState.mode === 'daily') root.GeoWars?.worldle?.close?.();
+      modeState.dailyReturn = null;
+      // Switching views always lands on that view's calm Explore state, never a
+      // restored game mode.
+      modeState.mode = 'explore';
+      modeState.exploreView = showShapes ? 'shapes' : 'globe';
+      modeState.challengeStage = 'panel';
+      // Globe -> exit a running hunt silently (showGlobe contract).
+      if (isHuntActive()) endHuntQuietly();
+      applyLayout();
+      if (options.focus) focusHeading(exploreHeading(modeState.exploreView));
       if (options.announce !== false) announce(showShapes ? 'Country shapes view.' : 'Interactive globe view.');
       return true;
+    }
+
+    // Mode_Nav switch. Explore shows the remembered Explore view (or
+    // options.view); Challenge shows Challenge_Panel.
+    function setMode(mode, options) {
+      options = options || {};
+      var scrollTop = options.focus && options.scroll !== false;
+      if (mode === 'challenge') {
+        if (isHuntActive()) {
+          // A running hunt stays running and keeps Challenge pressed.
+          modeState.mode = 'challenge';
+          modeState.challengeStage = 'hunt';
+          applyLayout();
+          if (options.announce !== false) announce('Country Hunt in progress.');
+          return false;
+        }
+        leaveHuntSummary();
+        if (modeState.mode === 'daily') root.GeoWars?.worldle?.close?.();
+        modeState.dailyReturn = null;
+        modeState.mode = 'challenge';
+        modeState.challengeStage = 'panel';
+        applyLayout();
+        if (options.focus) focusHeading(challengeTitle);
+        if (scrollTop) root.scrollTo?.({ top: 0, left: 0, behavior: 'auto' });
+        if (options.announce !== false) announce('Challenge mode. Choose Country Hunt or Shape Quiz.');
+        return true;
+      }
+      var view = options.view === 'shapes' || options.view === 'globe'
+        ? options.view
+        : modeState.exploreView;
+      if (isHuntActive() && !options.confirmedEndHunt) {
+        // Never end a running hunt from Explore without asking first.
+        requestHuntSwitch('explore', options.opener || null);
+        return false;
+      }
+      if (!setView(view, { announce: false, confirmedEndHunt: options.confirmedEndHunt })) return false;
+      if (options.focus) focusHeading(exploreHeading(view));
+      if (scrollTop) root.scrollTo?.({ top: 0, left: 0, behavior: 'auto' });
+      if (options.announce !== false) announce(exploreModeMessage(view));
+      return true;
+    }
+
+    // Hunt lifecycle from globe-explorer.js (design "Atlas reaction to the
+    // event" table). Idempotent: returnHome() emits two free events in a row.
+    function handleExplorerModeEvent(detail) {
+      detail = detail || {};
+      if (suppressHuntEvents) return;
+      if (detail.mode === 'hunt') {
+        // Panel start, "Play again", or the explorer.startHunt() API. No focus
+        // change: startHunt focuses the canvas itself.
+        modeState.mode = 'challenge';
+        modeState.challengeStage = 'hunt';
+        applyLayout();
+        return;
+      }
+      if (detail.mode !== 'free') return;
+      if (detail.summary) {
+        // Timer expiry or End hunt: stay in Challenge on the summary.
+        modeState.mode = 'challenge';
+        modeState.challengeStage = 'summary';
+        applyLayout();
+        if (isHuntSwitchOpen()) {
+          // Summary arrived while the dialog was open: close it, clear pending,
+          // and focus the opener.
+          var opener = modeState.pendingSwitch?.opener;
+          huntSwitchDialog.classList.add('hidden');
+          huntSwitchDialog.hidden = true;
+          modeState.pendingSwitch = null;
+          if (opener && typeof opener.focus === 'function') {
+            opener.focus({ preventScroll: true });
+          }
+        }
+        return;
+      }
+      // "Explore freely", the hidden #btn-explorer-free, or returnHome: leave
+      // Challenge for Explore Globe. Already in Explore means nothing to do.
+      if (modeState.mode !== 'challenge') return;
+      if (isHuntSwitchOpen()) {
+        modeState.pendingSwitch = null;
+        cancelHuntSwitch();
+      }
+      setMode('explore', { view: 'globe' });
+    }
+
+    // Challenge_Panel "Start hunt". Show the globe stage first so the engine
+    // starts against a visible canvas, then hand off to the hunt engine.
+    function startCountryHunt() {
+      var explorer = root.GeoWars?.explorer;
+      if (!explorer || typeof explorer.startHunt !== 'function') {
+        announce('Country Hunt is unavailable.');
+        return false;
+      }
+      modeState.mode = 'challenge';
+      modeState.challengeStage = 'hunt';
+      applyLayout();
+      try {
+        explorer.startHunt();
+      } catch (e) {
+        if (!isHuntActive()) {
+          modeState.challengeStage = 'panel';
+          applyLayout();
+          announce('Country Hunt is unavailable.');
+          return false;
+        }
+      }
+      return true;
+    }
+
+    // Keep the remembered mode for the puzzle's back control while direct
+    // navigation can move to either Explore or Challenge.
+    function openDailyPuzzle(options) {
+      options = options || {};
+      if (isHuntActive() && !options.confirmedEndHunt) {
+        requestHuntSwitch('daily', options.opener || null);
+        return false;
+      }
+      if (root.GeoWars?.worldle?.open) {
+        if (modeState.mode !== 'daily') {
+          stopDemoMode();
+          leaveHuntSummary();
+          modeState.dailyReturn = {
+            mode: modeState.mode,
+            exploreView: modeState.exploreView
+          };
+        }
+        modeState.mode = 'daily';
+        modeState.challengeStage = 'panel';
+        root.GeoWars?.navigate?.showExplorer?.();
+        applyLayout();
+        root.GeoWars.worldle.open({ embedded: true });
+        focusHeading(dailyTitle);
+        root.scrollTo?.({ top: 0, left: 0, behavior: 'auto' });
+        announce('Daily Puzzle. Identify the mystery country.');
+        return true;
+      }
+      announce('Daily Puzzle is unavailable.');
+      return false;
+    }
+
+    // Returns from the Daily Puzzle to the remembered state.
+    function returnFromDailyPuzzle() {
+      var returnState = modeState.dailyReturn;
+      modeState.dailyReturn = null;
+      if (returnState && returnState.mode === 'challenge') {
+        // Challenge always returns to Challenge_Panel.
+        setMode('challenge', { focus: true, announce: false });
+        announce('Back to Challenge.');
+      } else {
+        // null or explore: return to Explore with the remembered view.
+        var view = returnState?.exploreView || 'globe';
+        setView(view, { focus: true, announce: false });
+        announce('Back to Explore.');
+      }
+      var worldleButton = document.getElementById('btn-open-worldle');
+      if (worldleButton && typeof worldleButton.focus === 'function') {
+        worldleButton.focus({ preventScroll: true });
+      }
     }
 
     if (shapeSelect) {
@@ -329,8 +607,15 @@
 
     globeButton.addEventListener('click', function () { setView('globe', { focus: true }); });
     shapesButton.addEventListener('click', function () { setView('shapes', { focus: true }); });
+    exploreModeButton?.addEventListener('click', function () {
+      setMode('explore', { view: modeState.exploreView, focus: true, opener: exploreModeButton });
+    });
+    challengeModeButton?.addEventListener('click', function () {
+      setMode('challenge', { focus: true });
+    });
+    challengeHuntButton?.addEventListener('click', startCountryHunt);
     root.addEventListener?.('geowars:explorer-mode', function (event) {
-      syncHuntAvailability(event.detail?.mode === 'hunt');
+      handleExplorerModeEvent(event?.detail);
     });
     previousButton?.addEventListener('click', function () {
       stopDemoOnInteraction();
@@ -354,8 +639,13 @@
     shapeChallengeButton?.addEventListener('click', stopDemoOnInteraction);
 
     syncCountry({ render: false });
+    // First_Load: Explore with Globe (or Shapes if the markup preset it), and
+    // Challenge_Panel unavailable.
     setView(screen.dataset.atlasView === 'shapes' ? 'shapes' : 'globe', { announce: false });
-    syncHuntAvailability();
+    if (root.matchMedia?.('(max-width: 767px)').matches) {
+      setMode('challenge', { focus: false, announce: false });
+    }
+    if (isHuntActive()) handleExplorerModeEvent({ mode: 'hunt', summary: false });
 
     root.GeoWars = root.GeoWars || {};
     root.GeoWars.atlas = Object.freeze({
@@ -370,9 +660,23 @@
           view: screen.dataset.atlasView,
           countryId: cards[currentIndex]?.id || null,
           countryCount: cards.length,
-          demoActive: demoActive
+          demoActive: demoActive,
+          mode: modeState.mode,
+          exploreView: modeState.exploreView,
+          challengeStage: modeState.challengeStage,
+          dailyReturn: modeState.dailyReturn
+            ? { mode: modeState.dailyReturn.mode, exploreView: modeState.dailyReturn.exploreView }
+            : null
         };
-      }
+      },
+      showExplore: function (options) {
+        return setMode('explore', Object.assign({ focus: true }, options));
+      },
+      showChallenge: function (options) {
+        return setMode('challenge', Object.assign({ focus: true }, options));
+      },
+      openDailyPuzzle: openDailyPuzzle,
+      returnFromDailyPuzzle: returnFromDailyPuzzle
     });
   }
 

@@ -156,8 +156,15 @@ function createHarness() {
     countryName: getElement('explorer-country-name'),
     countryCapital: getElement('explorer-country-capital'),
     focusButton: getElement('btn-explorer-focus-country'),
-    countryCard: getElement('explorer-country-card')
+    countryCard: getElement('explorer-country-card'),
+    emptyCard: getElement('explorer-empty-card'),
+    huntSummary: getElement('explorer-hunt-summary'),
+    huntCompare: getElement('explorer-hunt-compare')
   };
+}
+
+function modeEvents(events) {
+  return events.filter(event => event.type === 'geowars:explorer-mode');
 }
 
 test('the country card markup includes a Zoom to country control', () => {
@@ -255,4 +262,90 @@ test('the Zoom to country button is disabled during a hunt', () => {
 
   explorer.startHunt();
   assert.equal(focusButton.disabled, true, 'focus button must be disabled while a hunt is active');
+});
+
+// Hunt lifecycle hooks consumed by the Atlas mode controller
+// (mode-first-navigation, Requirements 3.10, 3.12).
+
+test('startHunt emits a hunt mode event without a summary', () => {
+  const { explorer, events } = createHarness();
+
+  explorer.open();
+  const before = modeEvents(events).length;
+  explorer.startHunt();
+
+  const emitted = modeEvents(events);
+  assert.equal(emitted.length, before + 1);
+  assert.deepEqual({ ...emitted.at(-1).detail }, { mode: 'hunt', summary: false });
+  assert.equal(explorer.getState().huntActive, true);
+});
+
+test('endHunt(true) emits a free mode event with a summary and shows the summary', () => {
+  const { explorer, events, huntSummary, countryCard, emptyCard } = createHarness();
+
+  explorer.open();
+  explorer.startHunt();
+  const before = modeEvents(events).length;
+  explorer.endHunt(true);
+
+  const emitted = modeEvents(events);
+  assert.equal(emitted.length, before + 1);
+  assert.deepEqual({ ...emitted.at(-1).detail }, { mode: 'free', summary: true });
+  assert.equal(explorer.getState().huntActive, false);
+  assert.equal(huntSummary.classList.contains('hidden'), false);
+  assert.equal(countryCard.classList.contains('hidden'), true);
+  assert.equal(emptyCard.classList.contains('hidden'), true);
+});
+
+test('endHunt(false) emits a free mode event without a summary and leaves the summary hidden', () => {
+  const { explorer, events, huntSummary } = createHarness();
+
+  explorer.open();
+  explorer.startHunt();
+  const before = modeEvents(events).length;
+  explorer.endHunt(false);
+
+  const emitted = modeEvents(events);
+  assert.equal(emitted.length, before + 1);
+  assert.deepEqual({ ...emitted.at(-1).detail }, { mode: 'free', summary: false });
+  assert.equal(explorer.getState().huntActive, false);
+  assert.equal(huntSummary.classList.contains('hidden'), true);
+});
+
+test('dismissHuntSummary hides a visible summary and returns true', () => {
+  const { explorer, events, huntSummary, huntCompare, emptyCard, countryCard } = createHarness();
+
+  explorer.open();
+  explorer.startHunt();
+  explorer.endHunt(true);
+  assert.equal(huntSummary.classList.contains('hidden'), false, 'precondition: summary visible');
+  const before = modeEvents(events).length;
+
+  assert.equal(explorer.dismissHuntSummary(), true);
+  assert.equal(huntSummary.classList.contains('hidden'), true);
+  assert.equal(huntCompare.classList.contains('hidden'), true);
+  // No selection survives a hunt, so the free-explore placeholder returns.
+  assert.equal(emptyCard.classList.contains('hidden'), false);
+  assert.equal(countryCard.classList.contains('hidden'), true);
+  assert.equal(modeEvents(events).length, before, 'dismissing the summary emits no mode event');
+});
+
+test('dismissHuntSummary returns false and changes nothing while a hunt is active', () => {
+  const { explorer, events, huntSummary, huntCompare, emptyCard, countryCard } = createHarness();
+
+  explorer.open();
+  explorer.startHunt();
+  const snapshot = () => ({
+    summary: huntSummary.classList.contains('hidden'),
+    compare: huntCompare.classList.contains('hidden'),
+    empty: emptyCard.classList.contains('hidden'),
+    card: countryCard.classList.contains('hidden'),
+    huntActive: explorer.getState().huntActive,
+    events: events.length
+  });
+  const before = snapshot();
+
+  assert.equal(explorer.dismissHuntSummary(), false);
+  assert.deepEqual(snapshot(), before);
+  assert.equal(explorer.getState().huntActive, true);
 });

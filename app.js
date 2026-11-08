@@ -38,6 +38,16 @@ const state = {
 const difficultyLadder = window.GeoWarsDifficulty || null;
 const ladderProgress = window.GeoWarsLadderProgress || null;
 const learningProgress = window.GeoWarsLearning || null;
+let quizPreferencesReady = false;
+
+function saveQuizPreferences() {
+  if (!quizPreferencesReady) return;
+  try {
+    localStorage.setItem('earthling-quiz-preferences', JSON.stringify({
+      mode: state.mode, level: state.level, continent: state.continent
+    }));
+  } catch (e) { /* Playing remains available when storage is blocked. */ }
+}
 
 // Feed a single answered round into the spaced-repetition store. Central helper
 // so every answer path (typed, choices, skip) records consistently. Skips are
@@ -218,8 +228,11 @@ function polygonArea(polygon) {
 function createLocalSilhouette(card, geometry, elementId = 'silhouette-img', options = {}) {
   const country = geometry.find(entry => entry.i === card.id);
   if (!country?.p?.length) return null;
-  if (document.body?.classList?.contains('design-review') && window.GeoWarsShapeGeometry?.buildOutline && !options.largestLandmass) {
-    const outline = window.GeoWarsShapeGeometry.buildOutline(country, { padding: 0.08, compactBounds: true, label: 'Guess this country' });
+  if (window.GeoWarsShapeGeometry?.buildOutline) {
+    const framedCountry = options.largestLandmass
+      ? { ...country, p: [country.p.reduce((largest, polygon) => polygonArea(polygon) > polygonArea(largest) ? polygon : largest)] }
+      : country;
+    const outline = window.GeoWarsShapeGeometry.buildOutline(framedCountry, { padding: 0.08, compactBounds: true, label: 'Guess this country' });
     if (outline && elementId) outline.id = elementId;
     return outline;
   }
@@ -234,14 +247,19 @@ function createLocalSilhouette(card, geometry, elementId = 'silhouette-img', opt
   const maxLongitude = Math.max(...longitudes);
   const minLatitude = Math.min(...latitudes);
   const maxLatitude = Math.max(...latitudes);
-  const width = Math.max(1, maxLongitude - minLongitude);
-  const height = Math.max(1, maxLatitude - minLatitude);
+  const longitudeScale = Math.max(0.25, Math.round(Math.cos(((minLatitude + maxLatitude) / 2) * Math.PI / 180) * 1000) / 1000);
+  const rawWidth = (maxLongitude - minLongitude) * longitudeScale;
+  const rawHeight = maxLatitude - minLatitude;
+  const width = Math.max(1, rawWidth);
+  const height = Math.max(1, rawHeight);
+  const offsetX = (width - rawWidth) / 2;
+  const offsetY = (height - rawHeight) / 2;
   const padding = Math.max(width, height) * 0.08;
   const viewBoxWidth = width + padding * 2;
   const viewBoxHeight = height + padding * 2;
   const pathData = polygons.flatMap(polygon => polygon.map(ring => ring.map((point, index) => {
-    const x = point[0] - minLongitude + padding;
-    const y = maxLatitude - point[1] + padding;
+    const x = (point[0] - minLongitude) * longitudeScale + padding + offsetX;
+    const y = maxLatitude - point[1] + padding + offsetY;
     return (index === 0 ? 'M' : 'L') + x.toFixed(3) + ' ' + y.toFixed(3);
   }).join(' ') + ' Z')).join(' ');
 
@@ -324,7 +342,7 @@ function restoreRecoveredRound(card) {
 }
 
 function renderSilhouetteAsset(card) {
-  if (document.body?.classList?.contains('design-review')) {
+  if (window.GeoWarsShapeGeometry?.buildOutline || document.body?.classList?.contains('design-review')) {
     $silhouetteBox?.querySelector('#silhouette-img, [data-asset-fallback="silhouette"]')?.remove();
     renderLocalSilhouette(card).catch(() => handleSilhouetteAssetFailure(card));
     return;
@@ -528,6 +546,7 @@ const $atlasPlayerSlot = document.getElementById('atlas-player-slot');
 const $atlasStatsSlot = document.getElementById('atlas-stats-slot');
 const $atlasShapeSetupSlot = document.getElementById('atlas-shape-setup-slot');
 const $atlasMenuSetupSlot = document.getElementById('atlas-menu-setup-slot');
+const $atlasChallengeQuizSlot = document.getElementById('atlas-challenge-quiz-slot');
 const $levelButtons = Array.from(document.querySelectorAll('.diff-btn[data-level]'));
 const $btnIKnow = document.getElementById('btn-i-know');
 const $btnShowOptions = document.getElementById('btn-show-options');
@@ -541,7 +560,7 @@ const $btnOpenWorldle = document.getElementById('btn-open-worldle');
 // ============================================================
 
 function showScreen(screen) {
-  [$landing, $explorer, $game, $results, $worldleScreen].filter(Boolean).forEach(s => s.classList.add('hidden'));
+  [$landing, $explorer, $game, $results].filter(Boolean).forEach(s => s.classList.add('hidden'));
   screen.classList.remove('hidden');
   if (screen !== $landing) {
     stopLandingShowcase();
@@ -554,7 +573,10 @@ function showScreen(screen) {
 
 if ($btnOpenWorldle) {
   $btnOpenWorldle.addEventListener('click', () => {
-    if (window.GeoWars?.worldle?.open) {
+    // Route through atlas.openDailyPuzzle to handle hunt confirmation if needed.
+    if (window.GeoWars?.atlas?.openDailyPuzzle) {
+      window.GeoWars.atlas.openDailyPuzzle({ opener: $btnOpenWorldle });
+    } else if (window.GeoWars?.worldle?.open) {
       window.GeoWars.worldle.open();
     }
   });
@@ -795,11 +817,13 @@ function wireLandingShowcaseInteractionStop() {
 
 function setShapeChallengeExpanded(expanded) {
   if (!$shapeChallengePanel) return;
-  // When the panel lives in the atlas Menu, the Menu dropdown is the disclosure
-  // and the form stays visible inside it; the landing Play toggle no longer
-  // hides it. Only apply hidden/aria toggling on the landing homepage mount.
-  const inMenu = $atlasMenuSetupSlot && $atlasMenuSetupSlot.contains($shapeChallengePanel);
-  if (!inMenu) {
+  // When the panel lives in the atlas Menu or the challenge quiz slot, the
+  // dropdown or slot is the disclosure and the form stays visible inside it;
+  // the landing Play toggle no longer hides it. Only apply hidden/aria toggling
+  // on the landing homepage mount.
+  const inAtlasHome = ($atlasMenuSetupSlot && $atlasMenuSetupSlot.contains($shapeChallengePanel))
+    || ($atlasChallengeQuizSlot && $atlasChallengeQuizSlot.contains($shapeChallengePanel));
+  if (!inAtlasHome) {
     $shapeChallengePanel.hidden = !expanded;
     $shapeChallengePanel.classList.toggle('hidden', !expanded);
   }
@@ -826,15 +850,22 @@ function composeExplorerHomepage() {
   if (playerDestination && $playerContext) playerDestination.append($playerContext);
 
   // The quiz setup (mode / difficulty / region + Start) belongs with the quiz
-  // launcher, not the settings menu. It lives in the Shapes view's setup slot
-  // and is revealed only when the player chooses "Shape Quiz". Fall back to the
-  // menu slot only if the shape slot is somehow absent.
-  const shapeSetupHome = $atlasShapeSetupSlot || $atlasMenuSetupSlot;
+  // launcher, not the settings menu. In the Shapes view it lives in the
+  // challenge-quiz slot (next to the Shape Quiz title), falling back to the
+  // dedicated setup slot or the legacy menu slot.
+  const shapeSetupHome = $atlasChallengeQuizSlot || $atlasShapeSetupSlot || $atlasMenuSetupSlot;
   if (shapeSetupHome && $shapeChallengePanel) {
     shapeSetupHome.append($shapeChallengePanel);
-    // Start collapsed; the "Shape Quiz" toggle opens it (see the button wiring).
-    $shapeChallengePanel.hidden = true;
-    $shapeChallengePanel.classList.add('hidden');
+    const inChallengeSlot = shapeSetupHome === $atlasChallengeQuizSlot;
+    if (inChallengeSlot) {
+      $shapeChallengePanel.hidden = false;
+      $shapeChallengePanel.classList.remove('hidden');
+      $shapeChallengePanel.setAttribute('aria-labelledby', 'atlas-challenge-quiz-title');
+    } else {
+      // Start collapsed; the "Shape Quiz" toggle opens it (see the button wiring).
+      $shapeChallengePanel.hidden = true;
+      $shapeChallengePanel.classList.add('hidden');
+    }
   }
   if ($atlasStatsSlot) {
     [$landingStatistics, $statsResetDialog, $statsResetStatus]
@@ -866,6 +897,9 @@ function setShapeQuizSetupOpen(open) {
   const shapesWorkspace = document.getElementById('atlas-shapes-workspace');
   const shapeStudy = shapesWorkspace?.querySelector('.atlas-shape-study');
   if (shapesWorkspace) shapesWorkspace.dataset.quizSetup = String(open);
+  // Always restore the Shapes study layout: hide the study when the quiz setup
+  // is open, reveal it when the setup closes. The challenge panel lives in the
+  // challenge-quiz slot and stays visible; it does not need toggling here.
   if (shapeStudy) {
     shapeStudy.hidden = open;
     shapeStudy.inert = open;
@@ -877,10 +911,6 @@ function setShapeQuizSetupOpen(open) {
     shapeToolbar.hidden = open;
     shapeToolbar.classList.toggle('hidden', open);
   }
-  if ($shapeChallengePanel) {
-    $shapeChallengePanel.hidden = !open;
-    $shapeChallengePanel.classList.toggle('hidden', !open);
-  }
   if ($atlasShapeChallengeButton) {
     $atlasShapeChallengeButton.classList.toggle('is-active', open);
     $atlasShapeChallengeButton.setAttribute('aria-pressed', String(open));
@@ -890,8 +920,9 @@ function setShapeQuizSetupOpen(open) {
     exploreButton.classList.toggle('is-active', !open);
     exploreButton.setAttribute('aria-pressed', String(!open));
   }
-  if (open && $shapeChallengePanel) {
-    $shapeChallengePanel.querySelector('button, select, [tabindex]')?.focus?.({ preventScroll: true });
+  if (open) {
+    // Ensure the Shapes view (which hosts the challenge-quiz slot) is visible.
+    window.GeoWars?.atlas?.showChallenge?.({ focus: true });
   }
 }
 
@@ -910,17 +941,35 @@ if ($atlasShapeExploreButton) {
 // region control, so the player can change what the summary describes without
 // hunting for the Menu themselves.
 const $changeSettingsButton = document.getElementById('btn-change-settings');
+let menuOpenedBySettingsButton = false;
 if ($changeSettingsButton) {
   $changeSettingsButton.addEventListener('click', () => {
     const menu = document.getElementById('atlas-utility-menu');
     const settings = document.getElementById('challenge-settings');
-    if (menu) menu.open = true;
+    if (menu && menu.contains(settings)) {
+      menu.open = true;
+      menuOpenedBySettingsButton = true;
+    }
     if (settings) {
       settings.open = true;
       settings.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       // Focus the first difficulty option so keyboard users land on the control.
       const firstControl = settings.querySelector('.diff-btn, button, select');
       firstControl?.focus?.({ preventScroll: true });
+    }
+  });
+}
+
+// When the atlas Menu closes, if focus is inside it and the Settings button
+// opened it, return focus to the Settings button for keyboard navigation.
+const $atlasUtilityMenu = document.getElementById('atlas-utility-menu');
+if ($atlasUtilityMenu) {
+  $atlasUtilityMenu.addEventListener('toggle', () => {
+    if ($atlasUtilityMenu.open) return;
+    if (!menuOpenedBySettingsButton) return;
+    menuOpenedBySettingsButton = false;
+    if ($atlasUtilityMenu.contains(document.activeElement)) {
+      $changeSettingsButton?.focus?.();
     }
   });
 }
@@ -994,6 +1043,7 @@ function selectLevelOption(selectedButton) {
   }
   updateLevelAvailability();
   updateFilterSummary();
+  saveQuizPreferences();
 }
 
 function selectFilterOption(buttons, selectedButton) {
@@ -1003,6 +1053,7 @@ function selectFilterOption(buttons, selectedButton) {
     button.setAttribute('aria-pressed', String(isSelected));
   });
   syncFiltersFromUI();
+  saveQuizPreferences();
 }
 
 // Difficulty ladder buttons
@@ -1019,22 +1070,11 @@ $continentButtons.forEach(button => {
 const $btnSprint = document.getElementById('btn-sprint');
 const $btnShowoff = document.getElementById('btn-showoff');
 const $modeButtons = [$btnSprint, $btnShowoff];
-const $modeSummary = document.getElementById('mode-summary');
 const $startGameButton = document.getElementById('btn-start-game');
 const $startGameLabel = document.getElementById('start-game-label');
 
 function updateModeSummary() {
-  const level = getLevelConfig(state.level);
   const isSprint = state.mode === 'sprint';
-  const diffLabel = level.name || 'Hard';
-  const continentLabel = state.continent === 'all'
-    ? 'Worldwide'
-    : (state.continent === 'North America' ? 'Americas' : state.continent);
-  if ($modeSummary) {
-    $modeSummary.textContent = isSprint
-      ? `Sprint · 60 seconds · ${diffLabel} · ${continentLabel}`
-      : `Practice · No timer · ${diffLabel} · ${continentLabel}`;
-  }
   if ($startGameLabel) $startGameLabel.textContent = isSprint ? 'Start sprint' : 'Start practice';
 }
 
@@ -1055,6 +1095,7 @@ function selectModeOption(selectedButton) {
     button.setAttribute('aria-pressed', String(isSelected));
   });
   updateModeSummary();
+  saveQuizPreferences();
 }
 
 // Derive state from the visible selection, retaining Sprint as a valid fallback.
@@ -1082,6 +1123,7 @@ $btnShowoff.addEventListener('click', () => selectModeOption($btnShowoff));
 // The sole primary action captures what the player can currently see before play starts.
 $startGameButton.addEventListener('click', () => {
   syncLandingStateFromUI();
+  saveQuizPreferences();
   // When the setup is launched from inside the Shapes view, seed the quiz with
   // the country currently on the plate (same behaviour the old direct launcher had).
   const atlasState = window.GeoWars?.atlas?.getState?.();
@@ -1148,7 +1190,24 @@ if ($dailyReviewButton) $dailyReviewButton.addEventListener('click', () => start
 const $dailyChallengeButton = document.getElementById('btn-daily-challenge');
 if ($dailyChallengeButton) $dailyChallengeButton.addEventListener('click', () => startDailyChallenge());
 
+// A first phone session starts gently; subsequent visits restore explicit choices.
+function restoreQuizPreferences() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem('earthling-quiz-preferences') || 'null'); } catch (e) { /* optional */ }
+  const phone = window.matchMedia?.('(max-width: 767px)').matches;
+  if (!saved && !phone) return;
+  const level = $levelButtons.find(button => button.dataset.level === saved?.level)
+    || $levelButtons.find(button => button.dataset.level === 'cadet');
+  selectLevelOption(level);
+  selectModeOption(saved?.mode === 'sprint' ? $btnSprint : $btnShowoff);
+  const continent = Array.from($continentButtons).find(button => button.dataset.continent === saved?.continent)
+    || Array.from($continentButtons).find(button => button.dataset.continent === 'all');
+  if (continent) selectFilterOption($continentButtons, continent);
+}
+
+restoreQuizPreferences();
 syncLandingStateFromUI();
+quizPreferencesReady = true;
 
 // Load player statistics. Guest records remain device-owned; claimed profiles
 // keep using their synced Supabase totals and intentionally cannot be reset here.
@@ -1402,8 +1461,10 @@ function startGame(options) {
     state.sessionKind = options.sessionKind || 'review';
   } else {
     state.deck = shuffle(filterDeck(state.level));
-    state.finiteDeck = false;
-    state.sessionKind = 'standard';
+    const shortPractice = state.mode === 'showoff' && window.matchMedia?.('(max-width: 767px)').matches;
+    if (shortPractice) state.deck = state.deck.slice(0, 5);
+    state.finiteDeck = Boolean(shortPractice);
+    state.sessionKind = shortPractice ? 'practice' : 'standard';
     // Optional seed: when the Atlas launches the quiz from the study plate, start
     // with the country the player was just looking at. Move it to the end of the
     // deck so the first nextRound() pop serves it. If it isn't in the filtered
@@ -1416,6 +1477,7 @@ function startGame(options) {
       }
     }
   }
+  state.sessionSize = state.finiteDeck ? state.deck.length : 0;
   state.score = 0;
   state.streak = 0;
   state.bestStreak = 0;
@@ -1526,8 +1588,23 @@ function updateHUD() {
   animateScore(state.score);
   if ($roundDisplay) {
     const roundNumber = Math.max(1, state.total);
-    $roundDisplay.textContent = 'Round ' + roundNumber;
-    $roundDisplay.setAttribute('aria-label', 'Current round: ' + roundNumber);
+    const totalLabel = state.sessionKind === 'practice' ? ' of ' + state.sessionSize : '';
+    $roundDisplay.textContent = 'Round ' + roundNumber + totalLabel;
+    $roundDisplay.setAttribute('aria-label', 'Current round: ' + roundNumber + totalLabel);
+  }
+  const progress = document.getElementById('game-round-progress');
+  if (progress) {
+    progress.hidden = !state.finiteDeck;
+    if (state.finiteDeck && state.sessionSize) {
+      const completed = Math.min(state.sessionSize, state.roundHistory.length);
+      const countryNumber = Math.min(state.sessionSize, Math.max(1, state.total));
+      document.getElementById('game-progress-label').textContent = `Country ${countryNumber} of ${state.sessionSize}`;
+      const track = document.getElementById('game-progress-track');
+      track.setAttribute('aria-valuemax', String(state.sessionSize));
+      track.setAttribute('aria-valuenow', String(completed));
+      track.setAttribute('aria-valuetext', `${completed} of ${state.sessionSize} countries explored`);
+      document.getElementById('game-progress-fill').style.width = `${completed / state.sessionSize * 100}%`;
+    }
   }
   $scoreDisplay.setAttribute('aria-label', 'Current score: ' + state.score);
   if (state.streak > 0) {
@@ -1645,6 +1722,11 @@ function nextRound() {
   // Show/hide skip button
   const $btnSkip = document.getElementById('btn-skip');
   if (state.mode === 'sprint') { $btnSkip.classList.remove('hidden'); } else { $btnSkip.classList.add('hidden'); }
+  // Easy phone rounds open directly on answer choices, avoiding a redundant tap.
+  if (!level.showTypedAnswer && level.choiceCount && window.matchMedia?.('(max-width: 767px)').matches) {
+    $answerSection.classList.add('hidden');
+    showChoiceButtons(1, false);
+  }
 }
 
 // ============================================================
@@ -1901,6 +1983,9 @@ $btnReveal.addEventListener('click', () => {
   }
   // Reveal the answer
   state.answered = true;
+  state.roundHistory.push({ card: state.currentCard, correct: false, multiplier: 0, revealed: true });
+  recordLearningOutcome(state.currentCard, false);
+  updateHUD();
   showFeedback(true, true); // show as reveal, not scored
   setControlIcon($btnReveal, 'icon-next');
   setControlLabel($btnReveal, 'Next country');
@@ -1975,16 +2060,11 @@ function finishPracticeSession(destination) {
   if (state.mode !== 'showoff' || !state.answered || state.gameOver) return;
   clearTimeout(state.feedbackTimeout);
   state.feedbackTimeout = null;
-  quitGame();
-
   if (destination === 'home') {
-    showExplorerFirstLanding();
-    loadStats();
+    quitGame();
     return;
   }
-
-  $resultsTitle.textContent = 'Practice complete.';
-  if ($resultsStatus) $resultsStatus.textContent = 'Practice session complete. Review your results or replay.';
+  endGame();
 }
 
 if ($feedbackResults) {
@@ -2040,7 +2120,7 @@ function showFeedback(correct, isReveal) {
   if (fact) appendFeedbackDetail($feedbackText, 'reveal-fact', 'Fact: ' + fact);
 
   setControlIcon($feedbackNext, 'icon-next');
-  setControlLabel($feedbackNext, 'Next country');
+  setControlLabel($feedbackNext, state.finiteDeck && !state.deck.length ? 'See your discoveries' : 'Next country');
   setControlDisabled($feedbackNext, false);
   $feedbackActions.classList.toggle('hidden', !showPracticeRoutes);
   if ($feedbackContinueHint) $feedbackContinueHint.classList.toggle('hidden', showPracticeRoutes);
@@ -2087,18 +2167,23 @@ function buildReview() {
   $review.classList.remove('hidden');
   $review.innerHTML = '<h3 class="review-title">Round Review</h3>' +
     state.roundHistory.map(r => {
-      const icon = r.correct ? '✓' : '✗';
-      const cls = r.correct ? 'review-correct' : 'review-wrong';
-      return `<div class="review-row ${cls}"><span class="review-icon">${icon}</span><span class="review-name">${r.card.name}</span><span class="review-meta">${r.card.continent}</span></div>`;
+      const icon = r.revealed ? '•' : r.correct ? '✓' : '✗';
+      const cls = r.revealed ? 'review-revealed' : r.correct ? 'review-correct' : 'review-wrong';
+      return `<div class="review-row ${cls}"><span class="review-icon">${icon}</span><span class="review-name">${r.card.name}</span><span class="review-meta">${r.revealed ? 'Revealed · ' : ''}${r.card.continent}</span></div>`;
     }).join('');
 }
 
 function endGame() {
+  if (state.gameOver) return;
   state.gameOver = true;
   clearInterval(state.timer);
   const savePromise = saveStats();
   invokeBackgroundMusic('stop');
   AudioEngine.playGameEnd();
+  const discoveryMark = document.getElementById('results-discovery-mark');
+  if (discoveryMark) discoveryMark.hidden = state.sessionKind !== 'practice';
+  const replayLabel = document.querySelector('#btn-again span');
+  if (replayLabel) replayLabel.textContent = state.sessionKind === 'practice' ? 'Explore more countries' : 'Replay';
 
   if (ladderProgress && typeof ladderProgress.recordRun === 'function') {
     ladderProgress.recordRun(state.level, {
@@ -2128,6 +2213,12 @@ function endGame() {
   } else if (state.sessionKind === 'daily') {
     $resultsTitle.textContent = "Daily challenge complete.";
     if ($resultsStatus) $resultsStatus.textContent = 'Daily challenge complete. Come back tomorrow for a new one.';
+  } else if (state.sessionKind === 'practice') {
+    $resultsTitle.textContent = `${state.roundHistory.length} ${state.roundHistory.length === 1 ? 'country' : 'countries'}, discovered.`;
+    if ($resultsStatus) $resultsStatus.textContent = `You explored ${state.roundHistory.length} ${state.roundHistory.length === 1 ? 'country' : 'countries'}. Try another round, or find them on the globe.`;
+  } else if (state.mode === 'showoff') {
+    $resultsTitle.textContent = 'Practice complete.';
+    if ($resultsStatus) $resultsStatus.textContent = 'Practice session complete. Review your results or replay.';
   } else {
     $resultsTitle.textContent = getLevelConfig(state.level).name + ' run complete.';
     if ($resultsStatus) $resultsStatus.textContent = 'Sprint complete. Review your results or replay.';

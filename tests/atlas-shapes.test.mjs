@@ -170,7 +170,7 @@ function createHarness(randomValues = [0]) {
 }
 
 test('Shapes toolbar markup has the requested controls and unique IDs', () => {
-  assert.match(indexHtml, /class="atlas-shape-toolbar"[\s\S]*Shape library[\s\S]*Explore a country outline/);
+  assert.match(indexHtml, /class="atlas-shape-toolbar"[\s\S]*Explore a country outline/);
   assert.match(indexHtml, /id="atlas-shape-status"[^>]*>Preview mode is on - click to take over\.<\/p>/);
   assert.equal((indexHtml.match(/id="btn-atlas-shape-previous"/g) ?? []).length, 1);
   assert.equal((indexHtml.match(/id="atlas-shape-country"/g) ?? []).length, 1);
@@ -180,10 +180,21 @@ test('Shapes toolbar markup has the requested controls and unique IDs', () => {
 });
 
 test('Globe and Shapes navigation keeps accessible labels, controls, and pressed states', () => {
-  assert.match(indexHtml, /id="btn-atlas-globe"[^>]*aria-pressed="true"[^>]*aria-controls="atlas-globe-workspace"[^>]*aria-label="Globe, Explore"/);
+  assert.match(indexHtml, /id="btn-atlas-globe"[^>]*aria-pressed="true"[^>]*aria-controls="atlas-globe-workspace"[^>]*aria-label="Globe, spin and search"/);
   assert.match(indexHtml, /id="btn-atlas-shapes"[^>]*aria-pressed="false"[^>]*aria-controls="atlas-shapes-workspace"[^>]*aria-label="Shapes, Learn outlines"/);
-  assert.match(indexHtml, /class="atlas-nav-copy"><strong>Globe<\/strong><small>Explore<\/small>/);
-  assert.match(indexHtml, /class="atlas-nav-copy"><strong>Shapes<\/strong><small>Learn outlines<\/small>/);
+  assert.match(indexHtml, /class="atlas-nav-copy"><strong>Globe<\/strong><\/span>/);
+  assert.match(indexHtml, /class="atlas-nav-copy"><strong>Shapes<\/strong><\/span>/);
+
+  // Both view controls live in the Explore view switch, not in the Atlas modes nav.
+  const exploreSwitch = indexHtml.match(/<div id="atlas-explore-switch"[^>]*>([\s\S]*?)<\/div>/);
+  assert.ok(exploreSwitch, 'Explore view switch group exists');
+  assert.match(exploreSwitch[0], /^<div id="atlas-explore-switch"[^>]*role="group"[^>]*aria-label="Explore views"/);
+  assert.match(exploreSwitch[1], /id="btn-atlas-globe"/);
+  assert.match(exploreSwitch[1], /id="btn-atlas-shapes"/);
+  const primaryNav = indexHtml.match(/<nav class="atlas-primary-nav"[^>]*>([\s\S]*?)<\/nav>/);
+  assert.ok(primaryNav, 'Atlas modes nav exists');
+  assert.doesNotMatch(primaryNav[1], /id="btn-atlas-globe"/);
+  assert.doesNotMatch(primaryNav[1], /id="btn-atlas-shapes"/);
 });
 
 test('opening Shapes selects a random country and starts one five-second demo timer', () => {

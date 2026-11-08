@@ -75,6 +75,25 @@ test('evaluateGuess gives correct outcome on exact match and proximity on miss',
   assert.ok(guessWrong.proximityPercent > 0 && guessWrong.proximityPercent < 100);
 });
 
+test('missing guidance and storage failures do not record a guess', () => {
+  worldle.reset();
+  const game = worldle.getDailyGame(mockCards);
+  const wrong = mockCards.find(card => card.id !== game.target.id);
+  const missing = worldle.submitGuess(wrong, mockCards, { hintBetween: () => null });
+  assert.match(missing.error, /guidance is unavailable/);
+  assert.equal(worldle.getDailyGame(mockCards).guesses.length, 0);
+
+  const setItem = globalThis.localStorage.setItem;
+  globalThis.localStorage.setItem = () => { throw new Error('Storage disabled'); };
+  try {
+    const result = worldle.submitGuess(wrong, mockCards, mockGeography);
+    assert.match(result.error, /Could not save/);
+    assert.equal(worldle.getDailyGame(mockCards).guesses.length, 0);
+  } finally {
+    globalThis.localStorage.setItem = setItem;
+  }
+});
+
 test('submitGuess manages 6 guesses, win condition, and statistics', () => {
   worldle.reset();
   const game1 = worldle.getDailyGame(mockCards);

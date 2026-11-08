@@ -4,14 +4,12 @@
 
 .worldle-screen {
   display: grid;
-  grid-template-rows: auto 1fr;
+  align-content: start;
   width: 100%;
-  max-width: 680px;
-  min-height: 100vh;
-  min-height: 100dvh;
+  max-width: none;
   margin: 0 auto;
-  padding: clamp(12px, 2.5vw, 24px) clamp(16px, 3.5vw, 32px);
-  gap: clamp(14px, 2vh, 24px);
+  padding: 0 0 36px;
+  gap: clamp(20px, 3vw, 32px);
   animation: fadeIn 0.25s ease-out;
 }
 
@@ -20,67 +18,28 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.worldle-header {
+.worldle-intro-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(113, 130, 156, 0.42);
+  gap: 16px;
 }
 
-.worldle-header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.worldle-icon-btn svg,
+.worldle-submit-btn svg,
+.worldle-modal-close svg,
+.worldle-share-btn svg {
+  display: block;
+  flex: none;
+  width: 18px;
+  height: 18px;
 }
 
-.worldle-home-btn {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border: 1px solid rgba(113, 130, 156, 0.46);
-  border-radius: 12px;
-  background: rgba(17, 30, 49, 0.7);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.worldle-home-btn img {
-  width: 28px;
-  height: 28px;
-}
-
-.worldle-home-btn:hover {
-  border-color: var(--color-focus);
-  background: rgba(31, 70, 108, 0.6);
-}
-
-.worldle-title-block {
-  display: grid;
-  gap: 2px;
-}
-
-.worldle-badge {
-  color: var(--color-warning);
-  font-size: 0.6875rem;
-  font-weight: 850;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.worldle-title {
+.worldle-intro h1 {
   color: var(--color-text);
   font-family: var(--font-display);
-  font-size: 1.4rem;
-  font-weight: 850;
-  line-height: 1.1;
-}
-
-.worldle-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  font-size: clamp(1.35rem, 2.2vw, 1.8rem);
+  line-height: 1.2;
 }
 
 .worldle-icon-btn {
@@ -88,17 +47,17 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 38px;
-  padding: 6px 12px;
+  min-height: 44px;
+  padding: 8px 14px;
   border: 1px solid rgba(113, 130, 156, 0.46);
   border-radius: 10px;
-  background: rgba(17, 30, 49, 0.75);
+  background: #14283b;
   color: var(--color-text);
   font: inherit;
   font-size: 0.8125rem;
   font-weight: 750;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .worldle-icon-btn:hover {
@@ -106,19 +65,93 @@
   background: var(--color-surface-raised);
 }
 
+.worldle-icon-btn:focus-visible,
+.worldle-submit-btn:focus-visible,
+.worldle-modal-close:focus-visible,
+.worldle-share-btn:focus-visible,
+.worldle-autocomplete-item:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
 .worldle-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  align-items: start;
+  gap: clamp(20px, 3vw, 36px);
+}
+
+.worldle-puzzle {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.worldle-intro,
+.worldle-panel-heading {
+  display: grid;
+  gap: 8px;
+}
+
+.worldle-section-kicker {
+  color: #b4e1e9;
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.worldle-panel-heading h2 {
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 2.2vw, 1.8rem);
+  line-height: 1.2;
+}
+
+.worldle-intro > p:last-child,
+.worldle-hint {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.worldle-play-panel {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  min-width: 0;
+  padding: clamp(18px, 2.2vw, 26px);
+  border: 1px solid rgba(113, 130, 156, 0.4);
+  border-radius: 20px;
+  background: #102838;
+}
+
+.worldle-history-heading {
   display: flex;
-  flex-direction: column;
-  gap: 18px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.worldle-history-heading h3 {
+  color: var(--color-text);
+  font-size: 0.9rem;
+}
+
+.worldle-history-heading span {
+  color: var(--color-muted);
+  font-size: 0.75rem;
 }
 
 /* Mystery Silhouette Hero Box */
 .worldle-silhouette-card {
   position: relative;
   display: grid;
+  grid-template-rows: minmax(0, 1fr);
   place-items: center;
-  min-height: clamp(200px, 32vh, 320px);
-  padding: clamp(16px, 3vw, 28px);
+  height: clamp(300px, 48vh, 440px);
+  padding: 48px 24px 24px;
   overflow: hidden;
   border: 1px solid rgba(113, 130, 156, 0.5);
   border-radius: 20px;
@@ -126,7 +159,7 @@
     linear-gradient(rgba(120, 184, 255, 0.055) 1px, transparent 1px),
     linear-gradient(90deg, rgba(120, 184, 255, 0.055) 1px, transparent 1px),
     radial-gradient(circle at 50% 50%, rgba(37, 91, 145, 0.45), transparent 60%),
-    #07111f;
+    #081521;
   background-size: 28px 28px, 28px 28px, auto, auto;
   box-shadow: 0 20px 50px rgba(1, 7, 18, 0.35);
 }
@@ -134,7 +167,7 @@
 .worldle-silhouette-card::before {
   position: absolute;
   inset: 12px;
-  border: 1px solid rgba(99, 228, 169, 0.24);
+  border: 1px solid rgba(130, 192, 207, 0.24);
   border-radius: 12px;
   content: '';
   pointer-events: none;
@@ -146,6 +179,7 @@
   display: grid;
   width: 100%;
   height: 100%;
+  min-height: 0;
   place-items: center;
 }
 
@@ -153,7 +187,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  max-height: min(28vh, 260px);
+  max-height: 100%;
   filter: brightness(0) invert(1) drop-shadow(0 12px 30px rgba(72, 164, 255, 0.28));
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -185,6 +219,7 @@
 .worldle-guesses-container {
   display: grid;
   gap: 8px;
+  counter-reset: guess;
 }
 
 .worldle-guess-row {
@@ -202,18 +237,12 @@
   font-weight: 750;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   animation: slideInRow 0.25s ease-out;
+  counter-increment: guess;
 }
 
 @keyframes slideInRow {
   from { opacity: 0; transform: translateY(-4px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.worldle-guess-row.is-empty {
-  border: 1px dashed rgba(113, 130, 156, 0.25);
-  background: rgba(7, 17, 31, 0.3);
-  color: transparent;
-  pointer-events: none;
 }
 
 .worldle-guess-row.is-correct {
@@ -232,9 +261,54 @@
   white-space: nowrap;
 }
 
-.worldle-guess-flag {
-  font-size: 1.15rem;
+.worldle-guess-flag,
+.worldle-autocomplete-flag,
+.worldle-revealed-flag {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(195, 216, 225, 0.3);
+  border-radius: 4px;
+  background: #20374a;
+  color: #d3e2e8;
+  font-size: 0.65rem;
+  font-weight: 800;
   line-height: 1;
+}
+
+.worldle-guess-flag img,
+.worldle-autocomplete-flag img,
+.worldle-revealed-flag img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.worldle-guess-flag img.is-nonrect-flag,
+.worldle-autocomplete-flag img.is-nonrect-flag,
+.worldle-revealed-flag img.is-nonrect-flag {
+  object-fit: contain;
+}
+
+.worldle-guess-flag .asset-fallback--compact,
+.worldle-autocomplete-flag .asset-fallback--compact,
+.worldle-revealed-flag .asset-fallback--compact {
+  width: 100%;
+  height: 100%;
+}
+
+.worldle-revealed-flag {
+  width: 48px;
+  height: 32px;
+}
+
+.worldle-revealed-flag svg {
+  width: 24px;
+  height: 24px;
 }
 
 .worldle-guess-name {
@@ -262,6 +336,11 @@
   font-size: 1.05rem;
   line-height: 1;
   font-weight: 900;
+}
+
+.worldle-guess-direction svg {
+  width: 18px;
+  height: 18px;
 }
 
 .worldle-guess-row.is-correct .worldle-guess-direction {
@@ -315,10 +394,20 @@
   width: 100%;
 }
 
+.worldle-search-icon {
+  position: absolute;
+  z-index: 1;
+  left: 15px;
+  width: 19px;
+  height: 19px;
+  color: #a7bbc6;
+  pointer-events: none;
+}
+
 .worldle-input {
   width: 100%;
   min-height: 52px;
-  padding: 12px 16px;
+  padding: 12px 110px 12px 44px;
   border: 1px solid rgba(113, 130, 156, 0.55);
   border-radius: 14px;
   background: rgba(17, 30, 49, 0.92);
@@ -326,7 +415,7 @@
   font: inherit;
   font-size: 1.05rem;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .worldle-input:focus {
@@ -344,7 +433,7 @@
   justify-content: center;
   gap: 6px;
   min-height: 40px;
-  padding: 8px 18px;
+  padding: 8px 12px;
   border: 1px solid var(--color-primary);
   border-radius: 10px;
   background: var(--color-primary);
@@ -353,9 +442,14 @@
   font-size: 0.9rem;
   font-weight: 850;
   cursor: pointer;
-  transition: all 0.15s ease;
+  box-shadow: 0 3px 12px rgba(255, 151, 29, 0.2);
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 
+.worldle-submit-btn svg {
+  width: 16px;
+  height: 16px;
+}
 .worldle-submit-btn:hover:not(:disabled) {
   background: var(--color-primary-hover);
   border-color: var(--color-primary-hover);
@@ -407,11 +501,6 @@
   background: rgba(120, 184, 255, 0.14);
 }
 
-.worldle-autocomplete-flag {
-  font-size: 1.2rem;
-  line-height: 1;
-}
-
 /* Outcome Modal & Share Panel */
 .worldle-modal {
   position: fixed;
@@ -435,6 +524,8 @@
   display: grid;
   gap: 20px;
   width: min(100%, 480px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
   padding: clamp(24px, 4vw, 36px);
   border: 1px solid rgba(120, 184, 255, 0.55);
   border-radius: 22px;
@@ -504,11 +595,6 @@
   background: rgba(7, 17, 31, 0.6);
 }
 
-.worldle-revealed-flag {
-  font-size: 2rem;
-  line-height: 1;
-}
-
 .worldle-revealed-info {
   display: grid;
   text-align: left;
@@ -573,7 +659,7 @@
   font-size: 1rem;
   font-weight: 850;
   cursor: pointer;
-  box-shadow: 0 10px 24px rgba(67, 220, 158, 0.25);
+  box-shadow: 0 10px 24px rgba(255, 151, 29, 0.2);
   transition: all 0.15s ease;
 }
 
@@ -588,5 +674,111 @@
   font-size: 0.82rem;
   font-weight: 800;
   text-align: center;
-  min-height: 20px;
+}
+
+.worldle-copied-toast:empty {
+  display: none;
+}
+
+@media (max-width: 850px) {
+  .worldle-screen {
+    max-width: 680px;
+  }
+
+  .worldle-stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .worldle-silhouette-card {
+    height: clamp(200px, 32vh, 300px);
+  }
+}
+
+@media (max-width: 420px) {
+  .worldle-play-panel {
+    padding: 16px 12px;
+  }
+
+  .worldle-guess-row {
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .worldle-proximity-meter {
+    min-width: 44px;
+  }
+
+  .worldle-meter-track {
+    display: none;
+  }
+
+  .worldle-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* The daily discovery opens with a destination to chase, then builds a real trail. */
+.worldle-intro > .worldle-section-kicker { color: #c4b5ff; font-size: 0.68rem; letter-spacing: 0.08em; }
+.worldle-panel-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.worldle-panel-meta .worldle-section-kicker { color: #c4b5ff; font-size: 0.66rem; }
+#worldle-guesses-remaining { color: #b4b4c8; font-size: 0.72rem; white-space: nowrap; }
+.worldle-panel-heading h2 { font-size: clamp(1.4rem, 2.4vw, 1.9rem); }
+.worldle-silhouette-card { padding-bottom: 42px; }
+.worldle-mystery-caption { position: absolute; inset: auto 12px 16px; z-index: 2; color: #b4b4c8; font-size: 0.65rem; text-align: center; letter-spacing: 0.12em; text-transform: uppercase; }
+.worldle-silhouette-card::after { content: ''; position: absolute; inset: 12% 18%; border: 1px dashed #b9a4ff26; border-radius: 50%; transform: rotate(-20deg); pointer-events: none; }
+.worldle-guidance {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  align-items: center;
+  gap: 20px;
+  padding: 24px 20px;
+  border: 1px solid #48405f;
+  border-radius: 16px;
+  background: radial-gradient(ellipse at 0 0, #6c3bff1c, transparent 75%), #17151f;
+}
+.worldle-guidance-copy { display: grid; gap: 8px; min-width: 0; }
+.worldle-guidance-copy .worldle-section-kicker { color: #c4b5ff; font-size: 0.64rem; letter-spacing: 0.09em; }
+.worldle-guidance-copy h3 { font: 650 1.18rem/1.4 var(--font-display); letter-spacing: -0.025em; color: #f4f4fa; }
+.worldle-guidance-copy > p:last-child,
+.worldle-guidance .worldle-empty-hint { padding: 0; border: 0; border-radius: 0; background: transparent; color: #b4b4c8; font-size: 0.82rem; line-height: 1.65; }
+.worldle-compass { width: 84px; height: 84px; color: #82749e; }
+.worldle-compass svg { display: block; width: 100%; height: 100%; stroke: currentColor; stroke-width: 1; }
+.worldle-compass-inner { stroke-dasharray: 1 5; opacity: 0.7; }
+.worldle-compass-needle { transform-origin: 50px 50px; transform: rotate(-35deg); transition: transform 650ms cubic-bezier(0.2, 0.7, 0.3, 1); }
+.worldle-compass-north { fill: #b9a4ff; stroke: #b9a4ff; }
+.worldle-compass-south { fill: #48405f; stroke: #48405f; }
+.worldle-compass-pin { fill: #f4f4fa; stroke: #17151f; }
+.worldle-closest { grid-column: 1 / -1; display: grid; gap: 10px; padding-top: 2px; }
+.worldle-closest > div:first-child { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; font-size: 0.72rem; color: #b4b4c8; }
+.worldle-closest strong { color: #d6caff; font-variant-numeric: tabular-nums; }
+.worldle-closest-track { height: 5px; overflow: hidden; border-radius: 8px; background: #343043; }
+.worldle-closest-track span { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #a78bff, #3df2b5); transition: width 500ms ease; }
+.worldle-guidance[data-state='solved'] { border-color: #3df2b580; background: #10261e; }
+.worldle-guidance[data-state='solved'] .worldle-guidance-copy .worldle-section-kicker,
+.worldle-guidance[data-state='solved'] .worldle-closest strong { color: #3df2b5; }
+.worldle-guidance[data-state='solved'] .worldle-compass-north { fill: #3df2b5; stroke: #3df2b5; }
+.worldle-history-heading[hidden],
+.worldle-closest[hidden],
+.worldle-guidance-copy [hidden],
+.worldle-hint[hidden],
+.worldle-guesses-container:empty { display: none; }
+
+@media (max-width: 767px) {
+  .worldle-intro > .worldle-section-kicker { font-size: 0.58rem; }
+  .worldle-panel-heading { gap: 8px; }
+  .worldle-panel-heading h2 { font-size: 1.2rem; }
+  .worldle-panel-meta .worldle-section-kicker { font-size: 0.6rem; }
+  .worldle-guidance { grid-template-columns: 54px minmax(0, 1fr); gap: 12px; padding: 16px 14px; }
+  .worldle-compass { width: 54px; height: 54px; }
+  .worldle-guidance-copy h3 { font-size: 1rem; }
+  .worldle-guidance-copy > p:last-child,
+  .worldle-guidance .worldle-empty-hint { font-size: 0.77rem; line-height: 1.5; }
+  .worldle-guidance-copy .worldle-section-kicker { font-size: 0.58rem; letter-spacing: 0.04em; }
+  .worldle-mystery-caption { bottom: 10px; font-size: 0.55rem; letter-spacing: 0.09em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .worldle-compass-needle,
+  .worldle-closest-track span { transition: none; }
+  .worldle-guess-row { animation: none; }
 }

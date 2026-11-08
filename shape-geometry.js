@@ -6,8 +6,8 @@
  * window.GeoWarsGlobeCountries). Used by the Playable Atlas "Shapes" view
  * (see atlas.js) to draw the silhouette for the country being studied.
  *
- * The projection matches app.js#createLocalSilhouette (equirectangular,
- * latitude flipped so north is up) so the atlas outline is visually
+ * The projection matches app.js#createLocalSilhouette (equirectangular with
+ * longitude scaled by mid-latitude, latitude flipped so north is up) so the atlas outline is visually
  * consistent with the Shape Challenge silhouette. Geometry is the sole
  * source; nothing here duplicates or regenerates country data.
  *
@@ -64,6 +64,7 @@
   // Build an inline SVG outline for one country's polygons. Returns null when
   // the country has no geometry so callers can show their own fallback.
   function buildOutline(country, options) {
+    options = options || {};
     if (!country || !Array.isArray(country.p) || !country.p.length) return null;
 
     var polygons = country.p;
@@ -75,7 +76,9 @@
       var largestGap = -1;
       longitudes.forEach(function (value, index) {
         var next = index + 1 < longitudes.length ? longitudes[index + 1] : longitudes[0] + 360;
-        if (next - value > largestGap) { largestGap = next - value; start = next % 360; }
+        // Reuse the exact normalized vertex. Taking (first + 360) % 360 can
+        // round it upwards, moving that vertex a full turn across the seam.
+        if (next - value > largestGap) { largestGap = next - value; start = longitudes[(index + 1) % longitudes.length]; }
       });
       polygons = polygons.map(function (polygon) { return polygon.map(function (ring) { return ring.map(function (point) {
         var longitude = (point[0] + 360) % 360;
@@ -99,8 +102,16 @@
     }
 
     var minimumSpan = options.compactBounds ? 0.0001 : 1;
-    var width = Math.max(minimumSpan, maxLongitude - minLongitude);
-    var height = Math.max(minimumSpan, maxLatitude - minLatitude);
+    // Equirectangular maps stretch high-latitude countries horizontally, so
+    // scale longitude by the country's mid-latitude to keep proportions natural.
+    var longitudeScale = Math.max(0.25, Math.round(Math.cos(((minLatitude + maxLatitude) / 2) * Math.PI / 180) * 1000) / 1000);
+    var rawWidth = (maxLongitude - minLongitude) * longitudeScale;
+    var rawHeight = maxLatitude - minLatitude;
+    var width = Math.max(minimumSpan, rawWidth);
+    var height = Math.max(minimumSpan, rawHeight);
+    // Tiny countries are padded out to the minimum frame; keep them centred in it.
+    var offsetX = (width - rawWidth) / 2;
+    var offsetY = (height - rawHeight) / 2;
     var paddingFraction = typeof options.padding === 'number' ? options.padding : 0.08;
     var padding = Math.max(width, height) * paddingFraction;
     var viewBoxWidth = width + padding * 2;
@@ -109,9 +120,9 @@
     var pathData = polygons.map(function (polygon) {
       return polygon.map(function (ring) {
         return ring.map(function (point, index) {
-          var x = point[0] - minLongitude + padding;
+          var x = (point[0] - minLongitude) * longitudeScale + padding + offsetX;
           // Flip latitude so north renders at the top of the SVG.
-          var y = maxLatitude - point[1] + padding;
+          var y = maxLatitude - point[1] + padding + offsetY;
           return (index === 0 ? 'M' : 'L') + x.toFixed(3) + ' ' + y.toFixed(3);
         }).join(' ') + ' Z';
       }).join(' ');
@@ -160,7 +171,7 @@
         }
       }
 
-      var label = card.name ? card.name + ' border outline' : 'Country border outline';
+      var label = options.label || (card.name ? card.name + ' border outline' : 'Country border outline');
       var svg = buildOutline(country, { padding: options.padding, label: label, compactBounds: options.compactBounds });
       if (!svg) {
         throw new Error('No geometry for country id ' + card.id);
@@ -174,6 +185,7 @@
 
   root.GeoWarsShapeGeometry = {
     render: render,
+    loadGeometry: loadGeometry,
     // Exposed for tests and reuse; renders straight from a supplied geometry
     // array without touching the DOM loader.
     buildOutline: buildOutline

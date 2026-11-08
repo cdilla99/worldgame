@@ -5,7 +5,7 @@
 
 body.is-explorer-active,
 body.is-explorer-active .app {
-  background: #07111f;
+  background: #081521;
 }
 
 /* The Shapes view is dark like the rest of the app (globe, game, results).
@@ -14,8 +14,8 @@ body.is-explorer-active .app {
 body.is-explorer-active[data-atlas-view='shapes'],
 body.is-explorer-active[data-atlas-view='shapes'] .app {
   background:
-    radial-gradient(circle at 15% -10%, rgba(45, 119, 202, 0.16), transparent 34rem),
-    #07111f;
+    radial-gradient(circle at 15% -10%, rgba(38, 130, 157, 0.16), transparent 34rem),
+    #081521;
 }
 
 .atlas-shell {
@@ -40,9 +40,16 @@ body.is-explorer-active[data-atlas-view='shapes'] .app {
   color: var(--atlas-ink);
 }
 
+@media (min-width: 768px) {
+  body.is-explorer-active .app {
+    width: 100%;
+    max-width: 1440px;
+  }
+}
+
 .atlas-shell[data-atlas-view='globe'],
 .atlas-shell[data-atlas-view='shapes'] {
-  --atlas-ink: #f2f7f5;
+  --atlas-ink: #f7f1e8;
   --atlas-muted: #91a59e;
   /* Globe scope (F6): decorative grid bumped 0.24 -> 0.4 (flattened ~2.33:1 on
      the #07111f body -- decorative, exempt). --atlas-line-strong tuned to clear
@@ -56,28 +63,27 @@ body.is-explorer-active[data-atlas-view='shapes'] .app {
    Globe dark family (matching .game-stage / .silhouette-box in styles.css) so
    the plate and notes column read as the same dark app, not a light outlier. */
 .atlas-shell[data-atlas-view='shapes'] {
-  --atlas-paper: rgba(17, 30, 49, 0.94);
-  --atlas-paper-raised: #07111f;
-  --atlas-accent: #63e4a9;
-  --atlas-accent-dark: #43dc9e;
+  --atlas-paper: rgba(16, 40, 56, 0.94);
+  --atlas-paper-raised: #081521;
+  --atlas-accent: #ff971d;
+  --atlas-accent-dark: #ffad42;
 }
 
 .atlas-workspace.hidden,
-:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot):empty {
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot, .atlas-challenge-quiz-slot):empty {
   display: none;
 }
 
 .atlas-header {
   display: grid;
-  grid-template-columns: minmax(170px, 1fr) auto minmax(170px, 1fr);
-  min-height: 68px;
-  padding: 8px 0 14px;
-  /* structural header divider (F6): use the 3:1-tuned strong line token */
-  border-color: var(--atlas-line-strong);
+  grid-template-columns: minmax(170px, 1fr) auto minmax(120px, 1fr);
+  min-height: 80px;
+  padding: 6px 0 18px;
+  border-color: rgba(149, 177, 190, 0.3);
 }
 
 .atlas-header .explorer-brand { justify-self: start; }
-.atlas-header .explorer-home-logo { width: clamp(190px, 17vw, 248px); }
+.atlas-header .explorer-home-logo { width: clamp(176px, 15vw, 215px); }
 
 
 
@@ -86,85 +92,198 @@ body.is-explorer-active[data-atlas-view='shapes'] .app {
   grid-auto-flow: column;
   align-items: stretch;
   align-self: center;
-  gap: 10px;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid #405562;
+  border-radius: 14px;
+  background: #102838;
 }
 
-/* Globe and Shapes are the app's primary navigation. Each segment carries a
-   clear view label plus a short explanation, while the filled/outlined states
-   remain distinguishable without color alone. */
-.atlas-primary-nav button {
+:is(.atlas-primary-nav, .atlas-explore-switch) button {
   position: relative;
   display: inline-flex;
-  min-width: 132px;
-  min-height: 52px;
-  padding: 8px 14px;
+  min-width: 120px;
+  min-height: 44px;
+  padding: 9px 15px;
   align-items: center;
-  gap: 9px;
-  border: 1px solid rgba(120, 184, 255, 0.5);
-  border-radius: 14px;
-  background: #0c1622;
-  color: #dce8f5;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #c5d5d9;
   cursor: pointer;
   font: inherit;
   text-align: left;
-  transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+  transition: background-color 0.16s ease, color 0.16s ease;
 }
 
-.atlas-primary-nav button .icon {
-  width: 19px;
-  height: 19px;
+:is(.atlas-primary-nav, .atlas-explore-switch) button .icon {
+  width: 20px;
+  height: 20px;
   flex: none;
+  color: currentColor;
+  fill: currentColor;
+  stroke: none;
 }
 
 .atlas-nav-copy {
   display: grid;
-  gap: 2px;
   min-width: 0;
 }
 
 .atlas-nav-copy strong {
   color: currentColor;
-  font-size: 0.78rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
-.atlas-nav-copy small {
-  color: #8fb6d8;
-  font-size: 0.66rem;
+  font-size: 0.86rem;
   font-weight: 750;
   letter-spacing: 0;
-  line-height: 1.15;
+  line-height: 1.1;
   text-transform: none;
 }
 
-.atlas-primary-nav button:hover:not(:disabled) {
-  border-color: #78b8ff;
-  background: #12243a;
-  transform: translateY(-1px);
+:is(.atlas-primary-nav, .atlas-explore-switch) button:hover:not(:disabled) {
+  background: #254759;
+  color: #f7f1e8;
 }
 
-/* Keep the selected view readable when its pointer hover rule also matches. */
-.atlas-primary-nav button:hover:not(:disabled).is-active,
-.atlas-primary-nav button:hover:not(:disabled)[aria-pressed="true"] {
-  border-color: #43dc9e;
-  background: #43dc9e;
-  color: #07111f;
+:is(.atlas-primary-nav, .atlas-explore-switch) button:hover:not(:disabled).is-active,
+:is(.atlas-primary-nav, .atlas-explore-switch) button:hover:not(:disabled)[aria-pressed="true"] {
+  background: #45778e;
+  color: #ffffff;
 }
 
-.atlas-primary-nav button.is-active,
-.atlas-primary-nav button[aria-pressed="true"] {
-  color: #07111f;
-  background: #43dc9e;
-  border-color: #43dc9e;
-  box-shadow: 0 6px 16px rgba(67, 220, 158, 0.16);
+:is(.atlas-primary-nav, .atlas-explore-switch) button.is-active,
+:is(.atlas-primary-nav, .atlas-explore-switch) button[aria-pressed="true"] {
+  color: #ffffff;
+  background: #45778e;
 }
 
-.atlas-primary-nav button.is-active .atlas-nav-copy small,
-.atlas-primary-nav button[aria-pressed="true"] .atlas-nav-copy small { color: #174b3c; }
-.atlas-primary-nav button:disabled { color: var(--atlas-muted); cursor: not-allowed; opacity: 0.48; }
+:is(.atlas-primary-nav, .atlas-explore-switch) button:disabled { color: var(--atlas-muted); cursor: not-allowed; opacity: 0.48; }
+
+.atlas-explore-switch {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: min(100%, 320px);
+  align-items: stretch;
+  justify-self: start;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid #405562;
+  border-radius: 14px;
+  background: #102838;
+}
+
+.atlas-explore-switch button {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.atlas-challenge-panel {
+  display: grid;
+  gap: 22px;
+}
+
+.atlas-challenge-heading {
+  display: grid;
+  gap: 5px;
+}
+
+.atlas-challenge-heading h2 {
+  color: #f7f1e8;
+  font-size: clamp(1.35rem, 2vw, 1.8rem);
+  line-height: 1.2;
+}
+
+.atlas-challenge-heading > span {
+  color: #b6c8ce;
+  font-size: 0.9rem;
+}
+
+.atlas-challenge-grid {
+  display: grid;
+  align-items: stretch;
+  gap: 18px;
+}
+
+/* Two columns from 768px for challenge cards */
+@media (min-width: 768px) {
+  .atlas-challenge-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.atlas-challenge-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: clamp(18px, 2.2vw, 28px);
+  border: 1px solid #46616f;
+  border-radius: 18px;
+  background: #102838;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.atlas-challenge-card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.atlas-challenge-card h3,
+.atlas-challenge-card .atlas-card-title {
+  margin: 3px 0 0;
+  color: #f7f1e8;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.atlas-challenge-card p,
+.atlas-challenge-card .atlas-card-text {
+  margin: 0;
+  color: #b6c8ce;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.atlas-challenge-stage {
+  position: relative;
+  display: grid;
+  flex: 1;
+  min-height: 150px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(180, 180, 210, 0.2);
+  border-radius: 14px;
+  background:
+    linear-gradient(rgba(167, 139, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(167, 139, 255, 0.06) 1px, transparent 1px),
+    radial-gradient(circle at 50% 50%, rgba(108, 59, 255, 0.3), transparent 62%),
+    #0a0a10;
+  background-size: 28px 28px, 28px 28px, auto, auto;
+}
+
+.atlas-hunt-preview {
+  display: block;
+  width: clamp(120px, 13vw, 168px);
+  height: auto;
+}
+
+.atlas-challenge-hunt .atlas-challenge-start {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 52px;
+  margin-top: auto;
+  margin-bottom: 0;
+}
+
+.atlas-challenge-start svg {
+  width: 18px;
+  height: 18px;
+}
 
 .atlas-utility-menu {
   position: relative;
@@ -180,38 +299,31 @@ body.is-explorer-active[data-atlas-view='shapes'] .app {
 .atlas-utility-menu > summary {
   display: inline-flex;
   min-height: 44px;
+  min-width: 44px;
   padding: 9px 13px;
   align-items: center;
-  gap: 8px;
-  border: 1px solid var(--atlas-line);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.35);
-  color: var(--atlas-ink);
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  color: #c5d5d9;
   cursor: pointer;
-  font-size: 0.72rem;
-  font-weight: 800;
+  font-size: 0.82rem;
+  font-weight: 700;
   list-style: none;
 }
 
 .atlas-utility-menu > summary::-webkit-details-marker { display: none; }
-.atlas-utility-menu > summary svg {
-  width: 18px;
-  height: 18px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-width: 1.8;
-}
 
 /* F9: subtle hover feedback for the utility-menu summary, consistent with
    other Atlas controls (border shifts toward --atlas-ink, background tints up).
    Scoped to :not([open]) so it never conflicts with the inverted [open] style. */
 .atlas-utility-menu:not([open]) > summary:hover {
-  border-color: var(--atlas-ink);
-  background: rgba(255, 255, 255, 0.55);
+  border-color: #a2c6c5;
+  background: #193444;
 }
 
-.atlas-utility-menu[open] > summary { background: var(--atlas-ink); color: var(--atlas-paper-raised); }
+.atlas-utility-menu[open] > summary { background: #254759; border-color: #8fbecb; color: #f7f1e8; }
 
 .atlas-utility-panel {
   position: absolute;
@@ -387,18 +499,18 @@ body.is-explorer-active[data-atlas-view='shapes'] .app {
   width: 52px;
   min-height: 52px;
   padding: 0;
-  border: 1px solid rgba(67, 220, 158, 0.42);
+  border: 1px solid #507589;
   border-radius: 13px;
-  background: rgba(67, 220, 158, 0.1);
-  color: #cdeede;
+  background: #173b4c;
+  color: #e2edf0;
   cursor: pointer;
   transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
 }
 .mode-settings-icon svg { flex: none; }
 .mode-settings-icon:hover {
-  border-color: rgba(67, 220, 158, 0.7);
-  background: rgba(67, 220, 158, 0.18);
-  color: #eafff5;
+  border-color: #9dc9d3;
+  background: #254e60;
+  color: #f7f1e8;
 }
 .mode-settings-icon:focus-visible {
   outline: 2px solid #63e4a9;
@@ -420,13 +532,13 @@ body.is-explorer-active[data-atlas-view='shapes'] .app {
 .mode-chip .mode-icon { width: 18px; height: 18px; margin-bottom: 2px; color: currentColor; }
 .mode-chip .mode-title { font-size: 0.9rem; font-weight: 800; }
 .mode-chip .mode-desc { color: #8fb6a7; font-size: 0.62rem; font-weight: 750; opacity: 1; }
-.mode-chip:hover { border-color: rgba(99, 232, 176, 0.6); }
+.mode-chip:hover { border-color: #a3c6d3; }
 .mode-chip.active,
 .mode-chip[aria-pressed="true"] {
-  border-color: #43dc9e;
-  background: rgba(99, 228, 169, 0.12);
-  color: #f2f7f5;
-  box-shadow: inset 0 0 0 1px rgba(99, 228, 169, 0.34);
+  border-color: #83b9cc;
+  background: #24485b;
+  color: #f7f1e8;
+  box-shadow: inset 0 0 0 1px rgba(131, 185, 204, 0.35);
 }
 .mode-chip:disabled { opacity: 0.45; cursor: not-allowed; }
 .mode-chip:focus-visible { outline: 2px solid #43dc9e; outline-offset: 2px; }
@@ -616,9 +728,9 @@ body.is-explorer-active[data-atlas-view='shapes'] .app {
 
 .atlas-plate-axis {
   position: absolute;
-  top: 50%;
-  right: 15px;
-  bottom: 24px;
+  top: 64px;
+  right: 30px;
+  bottom: 36px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -796,7 +908,7 @@ body.is-explorer-active[data-atlas-view='shapes'] .app {
   font-weight: 850;
 }
 
-.atlas-shape-pagination button:hover { border-color: var(--atlas-accent); background: rgba(99, 228, 169, 0.14); color: var(--atlas-ink); }
+.atlas-shape-pagination button:hover { border-color: var(--atlas-accent); background: rgba(255, 151, 29, 0.14); color: var(--atlas-ink); }
 .atlas-text-action {
   width: 100%;
   margin-top: 10px;
@@ -808,11 +920,11 @@ body.is-explorer-active[data-atlas-view='shapes'] .app {
 }
 .atlas-text-action:hover { border-color: var(--atlas-accent-dark); background: var(--atlas-accent-dark); }
 
-:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) {
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot, .atlas-challenge-quiz-slot) {
   padding: clamp(20px, 4vw, 48px) 0;
 }
 
-:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) .landing-game-panel {
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot, .atlas-challenge-quiz-slot) .landing-game-panel {
   width: min(100%, 980px);
   margin: 0 auto;
 }
@@ -856,14 +968,14 @@ body.is-explorer-active[data-atlas-view='shapes'] .app {
    (body #07111f family, ink #f2f7f5, muted #91a59e); the accent references
    the shared --atlas-accent terracotta (identical in both view scopes) instead
    of the previous independent green/blue. */
-:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) .landing-border-outline-setup {
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot, .atlas-challenge-quiz-slot) .landing-border-outline-setup {
   border-color: rgba(155, 186, 175, 0.24);
   background: #0c1622;
   box-shadow: 0 22px 54px rgba(7, 17, 31, 0.4);
   color: #f2f7f5;
 }
 
-:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) .mode-icon {
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot, .atlas-challenge-quiz-slot) .mode-icon {
   width: 28px;
   height: 28px;
   color: var(--atlas-accent);
@@ -874,28 +986,162 @@ body.is-explorer-active[data-atlas-view='shapes'] .app {
   stroke-linejoin: round;
 }
 
-:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) .mode-card {
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot, .atlas-challenge-quiz-slot) .mode-card {
   color: #f2f7f5;
 }
 
-:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) .mode-card[aria-pressed='true'] {
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot, .atlas-challenge-quiz-slot) .mode-card[aria-pressed='true'] {
   border-color: var(--atlas-accent);
   box-shadow: inset 0 0 0 1px rgba(182, 65, 47, 0.35);
 }
 
-:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) .landing-mode-heading p,
-:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) .mode-desc,
-:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) .landing-start-note {
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot, .atlas-challenge-quiz-slot) .landing-mode-heading p,
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot, .atlas-challenge-quiz-slot) .mode-desc,
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot, .atlas-challenge-quiz-slot) .landing-start-note {
   color: #91a59e;
 }
 
-:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) #landing-shape-preview-flag {
+:is(.atlas-shape-setup-slot, .atlas-menu-setup-slot, .atlas-challenge-quiz-slot) #landing-shape-preview-flag {
   display: grid;
   width: 100%;
   height: 100%;
   place-items: center;
   font-size: 1.55rem;
   line-height: 1;
+}
+
+/* Compact slot layout for Challenge Quiz (Req 8.11) */
+.atlas-challenge-quiz-slot .landing-border-outline-setup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.atlas-challenge-quiz-slot {
+  flex: 1;
+  padding: 0;
+}
+
+@media (min-width: 768px) {
+  .atlas-challenge-quiz-slot .landing-border-outline-setup {
+    height: 100%;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+}
+
+.atlas-challenge-quiz-slot .landing-border-outline-setup > * {
+  grid-column: 1;
+  grid-row: auto;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+.atlas-challenge-quiz-slot .landing-start-action {
+  min-height: 52px;
+}
+
+.atlas-challenge-quiz-slot .landing-shape-preview {
+  display: none;
+}
+
+/* Quiz card: the preview stage replaces the old mode / difficulty controls. */
+.atlas-quiz-stage {
+  padding: 18px 14px;
+}
+
+.atlas-quiz-preview {
+  display: block;
+  width: auto;
+  height: 100%;
+  margin: 0 auto;
+}
+
+/* The shape changes every few seconds; the stage keeps a fixed size so nothing jumps. */
+.atlas-quiz-art {
+  position: relative;
+  width: clamp(120px, 14vw, 170px);
+  height: clamp(96px, 11vw, 128px);
+}
+
+.atlas-quiz-shape {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+
+.atlas-quiz-shape.is-visible {
+  opacity: 1;
+}
+
+.atlas-quiz-shape svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atlas-quiz-shape {
+    transition: none;
+  }
+}
+
+.atlas-stage-settings {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #34344a;
+  border-radius: 12px;
+  background: rgba(19, 19, 28, 0.85);
+  color: #e8e8f4;
+  cursor: pointer;
+}
+
+.atlas-stage-settings svg {
+  width: 20px;
+  height: 20px;
+}
+
+.atlas-stage-settings:hover {
+  border-color: rgba(167, 139, 255, 0.6);
+  background: #1c1c29;
+  color: #ffffff;
+}
+
+/* Menu: everything that shapes a quiz run. */
+.menu-mode-select {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.menu-setting-heading {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #3df2b5;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.menu-mode-select .mode-chip {
+  min-width: 0;
+  min-height: 56px;
 }
 
 @media (max-width: 900px) {
@@ -912,34 +1158,37 @@ body.is-explorer-active[data-atlas-view='shapes'] .app {
   .atlas-header { gap: 10px; min-height: 58px; }
   .atlas-header .explorer-home-logo { width: 152px; }
 
-  /* Mobile primary nav: keep both the view name and the short explanation
-     visible, while making each segment a large, clear touch target. */
-  .atlas-primary-nav { width: 100%; gap: 10px; justify-content: center; }
+  .atlas-primary-nav { width: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; justify-content: stretch; }
   .atlas-primary-nav button {
     flex: 1;
     min-width: 0;
     min-height: 56px;
-    padding: 10px 11px;
-    border-radius: 14px;
+    padding: 8px 4px;
+    border-radius: 10px;
   }
-  .atlas-primary-nav button .icon { width: 25px; height: 25px; }
-  .atlas-nav-copy strong { font-size: 0.7rem; }
-  .atlas-nav-copy small { font-size: 0.61rem; }
-
-  /* Menu recedes on mobile: icon-only, smaller, quieter than the nav tiles so
-     the two view segments stay the clear focal point. */
-  .atlas-utility-menu > summary span { display: none; }
-  .atlas-utility-menu > summary {
-    width: 38px;
-    height: 38px;
-    min-height: 0;
-    padding: 0;
+  :is(.atlas-primary-nav, .atlas-explore-switch) button {
+    flex-direction: column;
     justify-content: center;
-    border-color: transparent;
-    background: transparent;
-    opacity: 0.72;
+    gap: 4px;
+    min-height: 56px;
   }
-  .atlas-utility-menu > summary svg { width: 22px; height: 22px; }
+  :is(.atlas-primary-nav, .atlas-explore-switch) button .icon { width: 20px; height: 20px; }
+  .atlas-nav-copy strong {
+    font-size: 0.75rem;
+    white-space: normal;
+    text-align: center;
+  }
+  /* Keep every new control at least 44×44 on mobile (Req 8.12) */
+  .atlas-explore-switch button,
+  .atlas-challenge-panel button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .atlas-utility-menu > summary {
+    height: 44px;
+    padding: 0 10px;
+  }
   .atlas-context-bar { align-items: flex-start; flex-direction: column; }
   .atlas-context-bar > button { width: 100%; justify-content: space-between; }
   .atlas-shape-study { min-height: 0; }
@@ -977,6 +1226,16 @@ body.is-explorer-active[data-atlas-view='shapes'] .app {
   .atlas-shape-facts { margin: 28px 0; }
   .atlas-shape-facts > div { grid-template-columns: 92px minmax(0, 1fr); }
   :is(.atlas-shape-setup-slot, .atlas-menu-setup-slot) { padding-top: 24px; }
+  .atlas-challenge-panel { gap: 14px; }
+  .atlas-challenge-heading > span { display: none; }
+  .atlas-challenge-card { gap: 10px; padding: 15px; }
+  .atlas-challenge-stage { flex: none; min-height: 104px; }
+  .atlas-hunt-preview { width: 76px; }
+  .atlas-quiz-stage { padding: 14px 10px; }
+  .atlas-quiz-preview { height: 100%; }
+  .atlas-quiz-art { width: 104px; height: 68px; }
+  .atlas-challenge-card h3 { font-size: 1.05rem; }
+  .atlas-challenge-quiz-slot .landing-border-outline-setup { gap: 10px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -994,6 +1253,8 @@ body.is-explorer-active[data-atlas-view='shapes'] .app {
    light ring on the Globe body (#f2f7f5 vs #07111f = 16.8:1). The global rule
    remains the fallback; this only overrides the color where it under-contrasts. */
 .atlas-shell .atlas-primary-nav button:focus-visible,
+.atlas-shell .atlas-explore-switch button:focus-visible,
+.atlas-shell .atlas-challenge-panel button:focus-visible,
 .atlas-shell .atlas-utility-menu > summary:focus-visible,
 .atlas-shell .atlas-context-bar > button:focus-visible,
 .atlas-shell .atlas-shape-mode-switch button:focus-visible,

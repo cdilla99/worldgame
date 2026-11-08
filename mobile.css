@@ -1,0 +1,242 @@
+/* Phone experience: one task per surface, quiet chrome, reachable navigation. */
+.mobile-nav-label,
+.mobile-recommendation,
+.mobile-play-eyebrow,
+.mobile-play-description,
+.country-sheet-toggle { display: none; }
+
+.worldle-empty-hint,
+.worldle-revealed-fact { color: var(--color-muted); font-size: 0.9rem; line-height: 1.6; }
+.worldle-revealed-fact:empty { display: none; }
+.worldle-empty-hint[hidden] { display: none; }
+
+.game-round-progress { display: grid; gap: 9px; }
+.game-round-progress[hidden], .results-discovery-mark[hidden] { display: none; }
+.game-progress-label { font: 600 0.85rem/1.4 var(--font-display); color: #c4b5ff; }
+.game-progress-track { height: 5px; background: #343043; border-radius: 8px; overflow: hidden; }
+.game-progress-track > span { display: block; height: 100%; width: 0; background: #3df2b5; border-radius: inherit; transition: width 200ms ease; }
+.results-discovery-mark { display: grid; place-items: center; width: 64px; height: 64px; margin-bottom: 8px; color: #3df2b5; background: #152c24; border-radius: 50%; }
+.results-discovery-mark svg { width: 48px; height: 48px; }
+.review-revealed .review-icon { color: #b9a4ff; }
+@media (prefers-reduced-motion: reduce) { .game-progress-track > span { transition: none; } }
+
+@media (min-width: 768px) {
+  .atlas-challenge-heading { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
+}
+
+@media (max-width: 767px) {
+  :root { --phone-nav-height: calc(68px + env(safe-area-inset-bottom, 0px)); }
+  html { scroll-padding-bottom: calc(var(--phone-nav-height) + 20px); }
+  body,
+  body.is-explorer-active,
+  body.is-explorer-active[data-atlas-view='shapes'] { background: #0a0a10; }
+  body.is-explorer-active .app { padding: env(safe-area-inset-top, 0px) 16px calc(var(--phone-nav-height) + 20px); }
+  .atlas-shell { gap: 16px; }
+  .atlas-header {
+    min-height: 60px;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    padding: 6px 0;
+    border-bottom: 0;
+  }
+  .atlas-header .explorer-home-logo { width: 160px; }
+  .atlas-header .explorer-home-logo img { filter: none; }
+  .atlas-utility-menu { grid-column: 2; grid-row: 1; }
+  .atlas-utility-menu > summary { background: transparent; border: 0; min-height: 44px; }
+  .atlas-utility-panel { max-height: calc(100dvh - var(--phone-nav-height) - 86px); overflow-y: auto; width: min(360px, calc(100vw - 32px)); }
+  .desktop-nav-label { display: none; }
+  .mobile-nav-label { display: inline; }
+
+  /* Keep the original nav controls, with the same state and focus behaviour. */
+  .atlas-header .atlas-primary-nav {
+    position: fixed;
+    z-index: 80;
+    inset: auto 0 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-flow: initial;
+    align-items: start;
+    height: var(--phone-nav-height);
+    padding: 6px max(16px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(16px, env(safe-area-inset-left, 0px));
+    border: 0;
+    border-top: 1px solid #292936;
+    border-radius: 0;
+    background: #13131c;
+    box-shadow: none;
+  }
+  .atlas-primary-nav #btn-mode-challenge { order: -1; }
+  .atlas-header .atlas-primary-nav button {
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    min-height: 54px;
+    padding: 5px 8px;
+    border: 0;
+    border-radius: 10px;
+    background: #13131c;
+    color: #a9a9bc;
+    box-shadow: none;
+    font-size: 0.72rem;
+    transition: none;
+  }
+  .atlas-header .atlas-primary-nav button[aria-pressed='true'],
+  .atlas-header .atlas-primary-nav button[aria-pressed='true']:hover {
+    background: #666078;
+    color: #ffffff;
+    box-shadow: none;
+  }
+  .atlas-primary-nav button .icon { width: 22px; height: 22px; }
+  .is-phone-keyboard .atlas-primary-nav { visibility: hidden; }
+  .atlas-explore-switch {
+    justify-self: center;
+    width: 220px;
+    margin: 0;
+    padding: 3px;
+    background: #13131c;
+    border: 0;
+  }
+  .atlas-explore-switch button { min-height: 44px; padding: 6px 12px; transition: none; }
+  .atlas-explore-switch button .icon { display: none; }
+  .atlas-explore-switch button[aria-pressed='true'],
+  .atlas-explore-switch button[aria-pressed='true']:hover { background: #666078; box-shadow: none; color: #fff; }
+
+  /* Play: the recommended round comes first, with settings beside its action. */
+  .atlas-challenge-panel { gap: 18px; padding-top: 4px; }
+  .atlas-challenge-heading { position: static; display: grid; gap: 9px; }
+  .mobile-play-eyebrow { display: block; color: #b9a4ff; font-size: 0.72rem; font-weight: 600; }
+  .atlas-challenge-heading h2 { max-width: none; font-size: clamp(1.45rem, 6.5vw, 1.9rem); line-height: 1.22; letter-spacing: -0.04em; }
+  .mobile-play-description { display: block; max-width: 310px; color: #b4b4c8; font-size: 0.87rem; line-height: 1.6; }
+  .atlas-challenge-grid { display: flex; flex-direction: column; gap: 16px; }
+  .atlas-challenge-card { padding: 18px; gap: 12px; box-shadow: none; border-color: #30303f; border-radius: 20px; background: #13131c; }
+  .atlas-challenge-card:not(.atlas-challenge-hunt) { order: -1; }
+  .atlas-challenge-card h3 { font-size: 1.12rem; }
+  .atlas-challenge-card-header { justify-content: space-between; }
+  .mobile-recommendation { display: inline-flex; color: #bce5d6; background: #18352d; padding: 5px 9px; border-radius: 6px; font-size: 0.65rem; font-weight: 600; white-space: nowrap; }
+  .atlas-challenge-card p { color: #b4b4c8; font-size: 0.85rem; }
+  .atlas-challenge-card .atlas-quiz-stage { min-height: 80px; padding: 4px; border: 0; background: #0e0e16; border-radius: 12px; }
+  .atlas-quiz-art { width: 112px; height: 72px; filter: none; }
+  .atlas-quiz-stage #btn-change-settings { display: none; }
+  #atlas-menu-setup-slot { display: grid; gap: 14px; padding: 4px 0 0; }
+  #atlas-menu-setup-slot .mode-select { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 0; }
+  #atlas-menu-setup-slot #mode-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  #atlas-menu-setup-slot .mode-chip { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 6px; min-height: 48px; padding: 8px; border-radius: 10px; background: #0a0a10; box-shadow: none; }
+  #atlas-menu-setup-slot .mode-chip.active { border-color: #8b75c9; background: #252033; }
+  #atlas-menu-setup-slot #btn-showoff { order: -1; }
+  #atlas-menu-setup-slot .mode-title { font-size: 0.8rem; }
+  #atlas-menu-setup-slot .mode-icon,
+  #atlas-menu-setup-slot .mode-desc { display: none; }
+  #atlas-menu-setup-slot .setup-group { padding: 0; border: 0; margin: 0; min-width: 0; }
+  #atlas-menu-setup-slot legend { color: #b4b4c8; font-size: 0.72rem; margin-bottom: 8px; }
+  #atlas-menu-setup-slot .difficulty-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+  #atlas-menu-setup-slot .diff-btn { min-width: 0; min-height: 44px; padding: 6px 2px; font-size: 0.72rem; border-radius: 8px; }
+  #atlas-menu-setup-slot .diff-btn em { display: none; }
+  #atlas-menu-setup-slot .diff-btn.active { border-color: #8b75c9; background: #252033; box-shadow: none; }
+  #atlas-menu-setup-slot .game-setup { border: 0; border-top: 1px solid #292936; border-radius: 0; background: transparent; }
+  #atlas-menu-setup-slot .game-setup-summary { min-height: 44px; padding: 6px 0; }
+  #atlas-menu-setup-slot .game-setup-title { font-size: 0.78rem; color: #b4b4c8; }
+  #atlas-menu-setup-slot .filter-summary { display: none; }
+  #atlas-menu-setup-slot .game-setup-content { padding: 6px 0 12px; border: 0; background: transparent; }
+  #atlas-menu-setup-slot .region-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .atlas-challenge-card .cta { min-height: 52px; box-shadow: none; text-transform: none; letter-spacing: 0; font-size: 0.95rem; }
+  .atlas-challenge-hunt { display: grid; grid-template-columns: 1fr 66px; gap: 8px 12px; }
+  .atlas-challenge-hunt .atlas-challenge-card-header,
+  .atlas-challenge-hunt > p { grid-column: 1; }
+  .atlas-challenge-hunt .atlas-challenge-stage { grid-column: 2; grid-row: 1 / 3; min-height: 0; padding: 0; border: 0; background: transparent; }
+  .atlas-challenge-hunt .atlas-hunt-preview { width: 66px; filter: none; }
+  .atlas-challenge-hunt .atlas-challenge-start { grid-column: 1 / -1; min-height: 46px; margin: 4px 0 0; border-color: #454057; background: #24202f; box-shadow: none; }
+  .atlas-challenge-hunt .atlas-challenge-start:hover { background: #302a40; }
+
+  /* Explore: the country card stays within reach of the globe. */
+  .atlas-globe-workspace .explorer-layout { gap: 0; }
+  .atlas-globe-workspace .explorer-stage { gap: 12px; padding: 0; }
+  .explorer-search-input-wrap { min-height: 46px; box-shadow: none; }
+  .explorer-country-search { font-size: 16px; min-height: 46px; }
+  .explorer-globe-frame { width: min(90vw, 350px, 49svh); height: auto; aspect-ratio: 1; }
+  .explorer-globe-controls { margin-top: 10px; box-shadow: none; }
+  .is-country-sheet {
+    position: fixed;
+    z-index: 60;
+    inset: auto 12px calc(var(--phone-nav-height) + 10px);
+    width: auto;
+    min-height: 0;
+    max-height: 230px;
+    overflow-y: hidden;
+    padding: 0 16px 14px;
+    border: 1px solid #39394a;
+    border-radius: 22px;
+    background: #181822;
+    box-shadow: 0 -8px 30px #0005;
+  }
+  .is-country-sheet.is-expanded { max-height: min(66dvh, 620px); overflow-y: auto; overscroll-behavior: contain; }
+  .is-country-sheet .country-sheet-toggle { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; width: 100%; padding: 16px 0 4px; border: 0; background: #181822; color: #b4b4c8; font: inherit; font-size: 0.65rem; touch-action: none; cursor: ns-resize; }
+  .country-sheet-grip { position: absolute; top: 7px; left: calc(50% - 16px); width: 32px; height: 3px; border-radius: 4px; background: #656579; }
+  .country-sheet-toggle svg { width: 14px; height: 14px; }
+  .is-expanded .country-sheet-toggle svg { transform: rotate(180deg); }
+  .is-country-sheet .explorer-country-card { gap: 10px; flex: none; }
+  .is-country-sheet .explorer-country-card > * { flex-shrink: 0; }
+  .is-country-sheet .explorer-country-identity { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; }
+  .is-country-sheet .explorer-country-flag { width: 44px; height: 32px; font-size: 1.7rem; }
+  .is-country-sheet .explorer-country-identity h2 { font-size: 1.25rem; }
+  .is-country-sheet .explorer-country-region { font-size: 0.68rem; }
+  .is-country-sheet .explorer-country-facts { margin: 0; border: 0; background: transparent; border-radius: 0; }
+  .is-country-sheet:not(.is-expanded) .explorer-country-facts { display: block; }
+  .is-country-sheet:not(.is-expanded) .explorer-country-facts > div:first-child { display: flex; gap: 8px; padding: 0; background: transparent; }
+  .is-country-sheet:not(.is-expanded) .explorer-country-facts > div:not(:first-child),
+  .is-country-sheet:not(.is-expanded) .explorer-more-details,
+  .is-country-sheet:not(.is-expanded) .explorer-focus-country { display: none; }
+  .is-country-sheet .explorer-country-facts dt { font-size: 0.68rem; }
+  .is-country-sheet .explorer-country-facts dd { font-size: 0.78rem; }
+  .is-country-sheet .explorer-fact { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; color: #d5dfdc; font-size: 0.8rem; line-height: 1.5; }
+  .is-country-sheet .explorer-fact::before { display: none; }
+  .is-country-sheet:not(.is-expanded) .explorer-fact { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .is-country-sheet.is-expanded .explorer-focus-country { grid-column: 1 / -1; min-height: 44px; }
+  .is-country-sheet .explorer-country-status { margin: 4px 0; font-size: 0.7rem; }
+
+  /* Daily: silhouette, guess and guidance fit together in the first viewport. */
+  .worldle-stage { gap: 14px; }
+  .worldle-puzzle { gap: 16px; }
+  .worldle-intro h1 { font-size: 1.6rem; }
+  .worldle-silhouette-card { height: clamp(150px, 27svh, 228px); padding: 36px 24px 32px; border-color: #292936; background: #101018; box-shadow: none; }
+  .worldle-silhouette-card::before { display: none; }
+  .worldle-silhouette-art svg { filter: brightness(0) invert(1); }
+  .worldle-round-counter { top: 12px; left: 14px; background: transparent; border: 0; font-size: 0.65rem; }
+  .worldle-play-panel { padding: 0; gap: 14px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+  .worldle-input-wrapper { min-height: 54px; }
+  .worldle-input { min-height: 54px; font-size: 16px; padding-right: 96px; }
+  .worldle-submit-btn { width: 72px; min-width: 72px; min-height: 44px; padding: 8px 10px; box-shadow: none; transition: background-color 150ms; }
+  .worldle-submit-btn svg { display: none; }
+  .worldle-autocomplete-list { max-height: min(240px, 36dvh); overflow-y: auto; overscroll-behavior: contain; }
+  .worldle-autocomplete-item { min-height: 48px; }
+  .worldle-guesses-container:empty { display: none; }
+  .worldle-guess-row { min-height: 62px; padding: 10px; box-shadow: none; }
+  .worldle-hint { font-size: 0.75rem; }
+  .worldle-history-heading h3 { font-size: 0.8rem; }
+  .worldle-modal-card { max-height: calc(100dvh - 32px); overflow-y: auto; }
+  .worldle-modal-close { width: 44px; height: 44px; }
+  .worldle-revealed-fact { padding: 0 4px; font-size: 0.85rem; }
+
+  .game-stage,
+  .answer-interaction-panel,
+  .results-card { box-shadow: none; }
+  .game-stage .silhouette-box { height: clamp(200px, 32svh, 290px); filter: none; }
+  .choice-btn { min-height: 52px; }
+  .feedback-next-btn { min-height: 52px; }
+  .feedback-facts .reveal-fact { font-size: 0.88rem; }
+  .results-card h2 { font-size: 1.6rem; }
+}
+
+@media (max-width: 767px) and (max-height: 700px) {
+  .mobile-play-eyebrow { display: none; }
+  .atlas-challenge-card .atlas-quiz-stage { display: none; }
+  .atlas-challenge-panel { gap: 14px; padding-top: 0; }
+}
+
+@media (max-width: 767px) and (max-height: 620px) {
+  .mobile-play-description { display: none; }
+  .atlas-challenge-card { padding: 16px; }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .worldle-screen { animation: none; }
+  .is-country-sheet { scroll-behavior: auto; }
+}

@@ -6,11 +6,11 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#07111f",
-  "theme_color": "#07111f",
+  "background_color": "#0a0a10",
+  "theme_color": "#0a0a10",
   "icons": [
     {
-      "src": "assets/geowars-logo.svg",
+      "src": "earthling-icon.svg",
       "type": "image/svg+xml",
       "sizes": "any",
       "purpose": "any"
