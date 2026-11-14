@@ -4,7 +4,7 @@ select plan(3);
 select policies_are(
   'public',
   'game_sessions',
-  array['Players can insert their own sessions', 'Players can view their own sessions'],
+  array['Players can view their own sessions'],
   'game_sessions exposes only owner-scoped policies'
 );
 

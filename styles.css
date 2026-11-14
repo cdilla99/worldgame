@@ -385,6 +385,17 @@ summary.game-setup-summary::-moz-list-bullet { list-style-type: none; }
   transition: color 0.12s ease, border-color 0.12s ease, background-color 0.12s ease, box-shadow 0.12s ease, transform 0.12s ease;
 }
 
+.game-setup .diff-btn em {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 @media (hover: hover) {
   .game-setup .diff-btn:hover {
     color: var(--ink);
@@ -565,7 +576,7 @@ summary.game-setup-summary::-moz-list-bullet { list-style-type: none; }
   transition: opacity 0.3s ease;
 }
 
-/* Flag hint (small, corner, blurred by default) */
+/* Flag hint: the neutral cover conceals colours and symbols until revealed. */
 .flag-hint {
   position: absolute;
   bottom: 12px;
@@ -579,7 +590,17 @@ summary.game-setup-summary::-moz-list-bullet { list-style-type: none; }
 }
 
 .flag-hint img { width: 100%; height: 100%; object-fit: cover; filter: none; }
-.flag-blurred img { filter: blur(6px) saturate(0.3); }
+.flag-blurred > * { visibility: hidden; }
+.flag-blurred::after {
+  content: '?';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: repeating-linear-gradient(135deg, #211e2d 0 7px, #191722 7px 14px);
+  color: #b8b2cb;
+  font: 700 22px/1 var(--font-body);
+}
 .flag-revealed img { filter: none; }
 
 /* Round info */
@@ -2099,6 +2120,32 @@ summary.game-setup-summary::-moz-list-bullet { list-style-type: none; }
   line-height: 1.35;
 }
 
+/* Compact variant for chip-sized slots that clip the full fallback card. */
+.asset-fallback--compact {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.04) 0 4px,
+    transparent 4px 8px
+  );
+  place-items: center;
+}
+
+.asset-fallback__code {
+  color: var(--color-muted);
+  font-size: 0.625rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+
 .silhouette-box > .asset-fallback {
   width: min(100%, 360px);
   min-height: min(48vw, 320px);
@@ -2324,21 +2371,21 @@ summary.game-setup-summary::-moz-list-bullet { list-style-type: none; }
    The globe is a useful region picker, not continuous decoration.
    ============================================================ */
 :root {
-  --color-page: #07111f;
-  --color-surface: #111e31;
-  --color-surface-raised: #1b2c44;
-  --color-primary: #43dc9e;
-  --color-primary-hover: #2cbc83;
-  --color-on-primary: #06170f;
-  --color-text: #f8fbff;
-  --color-muted: #b7c5d9;
-  --color-success: #63e4a9;
-  --color-error: #ff7d73;
-  --color-warning: #ffd071;
-  --color-focus: #78b8ff;
-  --color-border: #40516d;
-  --color-border-strong: #71829c;
-  --color-brand: #ff6458;
+  --color-page: #0a0a10;
+  --color-surface: #13131c;
+  --color-surface-raised: #1c1c29;
+  --color-primary: #6c3bff;
+  --color-primary-hover: #7a4dff;
+  --color-on-primary: #ffffff;
+  --color-text: #f4f4fa;
+  --color-muted: #b4b4c8;
+  --color-success: #3df2b5;
+  --color-error: #ff7d8f;
+  --color-warning: #ffd166;
+  --color-focus: #b9a4ff;
+  --color-border: #34344a;
+  --color-border-strong: #6a6a88;
+  --color-brand: #6c3bff;
 }
 
 body {

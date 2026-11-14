@@ -47,7 +47,7 @@ function renderEconomicComparison(event: Event): void {
 
   const bigMacQuality = economics?.bigMacQuality ?? "N";
 
-  setValue("explorer-economics-salary", formatUsd(economics?.annualNetSalaryUsd ?? null, 0));
+  setValue("explorer-economics-salary", formatUsd(economics?.annualGrossSalaryUsd ?? null, 0));
   setValue("explorer-economics-big-mac", formatBigMac(economics?.bigMacUsd ?? null, bigMacQuality));
   setValue("explorer-economics-coke", formatUsd(economics?.coke330Usd ?? null, 2));
 }

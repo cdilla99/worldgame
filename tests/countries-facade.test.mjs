@@ -7,12 +7,12 @@ const facade = globalThis.GeoWars.data;
 
 assert.ok(Array.isArray(legacyCards), 'the historical CommonJS export remains an array');
 assert.strictEqual(legacyCards, globalThis.countryCards, 'the historical global uses the same array');
-assert.equal(legacyCards.length, 195, 'the complete legacy card collection is unchanged');
+assert.equal(legacyCards.length, 197, 'the complete legacy card collection is unchanged');
 assert.strictEqual(facade.countryCards, legacyCards, 'the facade preserves full legacy records');
 assert.strictEqual(globalThis.GeoWars.Data, facade, 'the namespaced compatibility alias is stable');
 assert.strictEqual(globalThis.GeoWarsData, facade, 'the legacy-style compatibility alias is stable');
 assert.strictEqual(legacyCards.getIndex, facade.getIndex, 'CommonJS consumers can access facade functions');
-assert.deepEqual(Object.keys(legacyCards), Array.from({ length: 195 }, (_, i) => String(i)), 'facade members do not alter array enumeration');
+assert.deepEqual(Object.keys(legacyCards), Array.from({ length: 197 }, (_, i) => String(i)), 'facade members do not alter array enumeration');
 
 const index = facade.getIndex();
 assert.ok(Array.isArray(index), 'index access is synchronous');

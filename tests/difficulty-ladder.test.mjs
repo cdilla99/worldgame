@@ -14,7 +14,11 @@ const syntheticPool = [
 ];
 
 assert.deepEqual(ladder.LEVEL_ORDER, ['cadet', 'explorer', 'earthling', 'expert']);
-assert.equal(ladder.getLevel('cadet').name, 'Cadet');
+assert.deepEqual(
+	ladder.listLevels().map(level => level.name),
+	['Easy', 'Medium', 'Hard', 'Expert'],
+	'display labels use the plain-language difficulty scale while level IDs remain stable'
+);
 assert.ok(ladder.getLevel('cadet').allowedModes.includes('sprint'), 'cadet keeps Sprint available');
 assert.equal(ladder.getLevel('cadet').showSprintTimer, true, 'cadet Sprint uses the timer');
 assert.equal(ladder.getLevel('explorer').showSprintTimer, true, 'explorer Sprint uses the timer');

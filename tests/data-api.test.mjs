@@ -18,7 +18,7 @@ assert.ok(southAmerica.every(country => country.continent === 'South America'), 
 assert.strictEqual(await getContinentCountries('south america'), southAmerica, 'loader aliases reuse the loaded chunk');
 
 const requiredFullFields = ['capital', 'neighbors', 'flag', 'silhouette_url'];
-const canonicalIndex = countries.slice(0, 195);
+const canonicalIndex = countries;
 let randomState = 0xDA7A;
 
 // Property: every indexed canonical ID resolves to matching full lazy-loaded data.

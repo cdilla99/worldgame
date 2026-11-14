@@ -16,6 +16,10 @@ export default defineConfig({
   projects: [{
     name: 'chromium',
     use: { ...devices['Desktop Chrome'] },
+  }, {
+    name: 'webkit-phone',
+    testMatch: ['phone-game-viewport.spec.mjs', 'globe-drag.spec.mjs'],
+    use: { ...devices['iPhone 13'] },
   }],
   webServer: {
     command: 'npm run preview -- --host 127.0.0.1 --port 4173',

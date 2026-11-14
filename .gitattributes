@@ -1,0 +1,13 @@
+# Keep repository text deterministic across Windows and CI checkouts.
+* text=auto eol=lf
+
+# Preserve binary assets byte-for-byte.
+*.gif binary
+*.ico binary
+*.jpeg binary
+*.jpg binary
+*.mp3 binary
+*.ogg binary
+*.png binary
+*.wav binary
+*.webp binary

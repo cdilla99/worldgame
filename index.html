@@ -2,53 +2,151 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#07111f" />
-  <title>EARTHLING | World Shape Game</title>
-  <link rel="stylesheet" href="styles.css?v=20260802-game-choice2" />
-  <link rel="stylesheet" href="ux-polish.css?v=20260802-stats-disclosure1" />
-  <link rel="stylesheet" href="globe-explorer.css?v=20260802-landmark-media3" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="theme-color" content="#0a0a10" />
+  <title>EARTHLING | World Geography Game</title>
+  <meta name="description" content="EARTHLING is a browser geography game: explore an interactive globe, learn 197 countries, and test yourself with shape and country-hunt challenges." />
+  <meta name="robots" content="index, follow" />
+  <link rel="icon" href="assets/earthling-icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="assets/earthling-icon.svg" />
+  <link rel="manifest" href="assets/site.webmanifest" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="EARTHLING" />
+  <meta property="og:title" content="EARTHLING | World Geography Game" />
+  <meta property="og:description" content="Explore an interactive globe, learn 197 countries, and test yourself with shape and country-hunt challenges." />
+  <meta property="og:image" content="assets/geowars-logo.svg" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="EARTHLING | World Geography Game" />
+  <meta name="twitter:description" content="Explore an interactive globe, learn 197 countries, and test yourself with shape and country-hunt challenges." />
+  <meta name="twitter:image" content="assets/geowars-logo.svg" />
+
+  <link rel="stylesheet" href="styles.css?v=20261108-flagcover1" />
+  <link rel="stylesheet" href="ux-polish.css?v=20261107-tangerine1" />
+  <link rel="stylesheet" href="globe-explorer.css?v=20261107-ocean1" />
+  <link rel="stylesheet" href="atlas.css?v=20261108-playerclose1" />
+  <link rel="stylesheet" href="design-review.css?v=20261107-mode-nav2" />
+  <link rel="stylesheet" href="worldle.css?v=20261108-layout2" />
+  <link rel="stylesheet" href="theme.css?v=20261107-clean2" />
+  <link rel="stylesheet" href="mobile.css?v=20261108-countrycard5" />
+  <link rel="stylesheet" href="activities.css?v=20261108-replay1" />
+  <link rel="stylesheet" href="app-design.css?v=20261113-action-buttons1" />
+  <link rel="stylesheet" href="retro-theme.css?v=20261113-retro1" />
 </head>
-<body>
+<body class="is-explorer-active">
+  <script>if (new URLSearchParams(location.search).get('design') === 'atlas') document.body.classList.add('design-review');</script>
   <div class="app">
 
-    <!-- Landing / Game Select -->
+    <!-- Explorer-first landing -->
     <section
       id="landing"
-      class="screen landing"
+      class="screen landing hidden"
       aria-labelledby="landing-title"
-      data-explorer-eyebrow="Interactive world atlas"
-      data-explorer-title="Explore the world."
-      data-explorer-objective="Discover 195 countries. Then race to find them."
     >
       <header class="landing-utility-header landing-top">
         <button id="btn-landing-home" class="brand-lockup" type="button" aria-label="Return to the EARTHLING home page">
           <img class="brand-logo" src="assets/geowars-logo.svg" alt="EARTHLING">
-          <p class="landing-utility-copy">Country shape game</p>
         </button>
         <section id="player-context" class="player-context landing-player-context" aria-labelledby="player-context-title">
           <div class="player-context-copy">
-            <p id="player-context-title" class="player-context-eyebrow">Playing as</p>
+            <p id="player-context-title" class="player-context-eyebrow">Exploring as</p>
             <p id="player-context-name" class="player-context-name">Guest</p>
-            <p id="player-context-detail" class="player-context-detail">Guest stats are shared on this browser/device.</p>
+            <p id="player-context-detail" class="player-context-detail">Progress stays on this device.</p>
           </div>
-          <button id="btn-choose-player" class="player-context-action" type="button">Switch</button>
+          <button id="btn-choose-player" class="player-context-action" type="button">Choose player</button>
         </section>
       </header>
 
-      <section class="landing-proposition" aria-labelledby="landing-title">
-        <div class="landing-copy">
-          <p id="landing-eyebrow" class="landing-eyebrow">Country shape challenge</p>
-          <h1 id="landing-title" class="landing-tagline">See the <span class="landing-title-accent">shape</span>. Name the country.</h1>
-          <p id="landing-objective" class="landing-objective">Race through country outlines in a 60-second sprint, or learn at your own pace.</p>
-          <ul class="landing-proof" aria-label="Game highlights">
-            <li><strong id="landing-proof-one-value">195</strong><span id="landing-proof-one-label">countries</span></li>
-            <li><strong id="landing-proof-two-value">60s</strong><span id="landing-proof-two-label">sprint</span></li>
-            <li><strong id="landing-proof-three-value">Free</strong><span id="landing-proof-three-label">practice</span></li>
-          </ul>
+      <section class="landing-hero" aria-labelledby="landing-title">
+        <h1 id="landing-title" class="landing-tagline">Explore the world.</h1>
+        <p id="landing-objective" class="landing-objective">Drag the globe and select a country to discover something new.</p>
+        <p id="landing-eyebrow" class="landing-eyebrow" hidden>Interactive world atlas</p>
+        <ul class="landing-proof" aria-label="Explorer highlights" hidden>
+          <li><strong id="landing-proof-one-value">197</strong><span id="landing-proof-one-label">countries</span></li>
+          <li><strong id="landing-proof-two-value">Free</strong><span id="landing-proof-two-label">to explore</span></li>
+          <li><strong id="landing-proof-three-value">Your pace</strong><span id="landing-proof-three-label">no pressure</span></li>
+        </ul>
+      </section>
+
+      <section id="world-explorer-panel" class="landing-proposition landing-explorer-showcase" aria-labelledby="landing-explorer-title">
+        <div class="landing-explorer-globe-card">
+          <h2 id="landing-explorer-title" class="sr-only">World Explorer globe</h2>
+          <div id="landing-globe-shell" class="landing-globe-shell">
+            <div id="landing-globe" class="landing-globe">
+              <canvas id="landing-globe-canvas" width="360" height="360" tabindex="-1" role="img" aria-label="Animated preview of the World Explorer globe."></canvas>
+              <img class="landing-globe-art" src="assets/landing-globe.svg" alt="" aria-hidden="true">
+              <span class="landing-globe-atmosphere" aria-hidden="true"></span>
+            </div>
+            <p id="landing-globe-status" class="landing-globe-status" role="status" aria-live="polite">Drag to explore. Select a country to learn more.</p>
+          </div>
+          <div class="landing-globe-legacy-controls" hidden aria-hidden="true">
+            <button id="btn-globe-region-mode" type="button" aria-pressed="false" tabindex="-1"><span id="globe-region-toggle-label">Regions</span></button>
+            <button id="btn-globe-worldwide" type="button" aria-pressed="true" tabindex="-1">Worldwide</button>
+            <div id="globe-selection-card"><strong id="globe-selection-label">Worldwide</strong></div>
+          </div>
         </div>
-        <details id="landing-shape-preview" class="landing-shape-preview" aria-label="Shape Challenge preview. Identify a country from its outline.">
-          <summary class="landing-shape-preview-toggle">Demo</summary>
+
+        <aside class="landing-country-preview" aria-labelledby="landing-country-preview-title">
+          <h2 id="landing-country-preview-title" class="sr-only">Selected country details</h2>
+          <div class="landing-country-example" aria-label="Selected country details">
+            <div class="landing-country-example-identity">
+              <span id="landing-preview-flag" class="landing-country-example-flag" aria-hidden="true">🌍</span>
+              <div><span id="landing-preview-region">Select a country</span><h3 id="landing-preview-country">Your discovery will appear here</h3></div>
+            </div>
+            <dl class="landing-country-example-facts">
+              <div><dt>Capital</dt><dd id="landing-preview-capital">—</dd></div>
+              <div><dt>Languages</dt><dd id="landing-preview-languages">—</dd></div>
+              <div><dt>Landmark</dt><dd id="landing-preview-landmark">—</dd></div>
+            </dl>
+            <p id="landing-preview-fact" class="landing-country-example-fact">Select a country on the globe to see its details.</p>
+          </div>
+          <button id="btn-open-explorer" class="landing-explore-action landing-explore-primary" type="button" hidden aria-hidden="true" tabindex="-1">Open Explorer</button>
+        </aside>
+      </section>
+
+      <section class="landing-challenges" aria-labelledby="landing-challenges-title">
+        <div class="landing-challenges-heading">
+          <h2 id="landing-challenges-title">Now find them without the labels</h2>
+          <p>Two ways to check what actually stuck.</p>
+        </div>
+        <div class="landing-challenge-grid">
+          <button id="btn-open-explorer-hunt" class="landing-challenge-card landing-challenge-card-primary" type="button">
+            <span><strong>Country Hunt</strong><small>We name a country, you find it on the globe. 60 seconds.</small></span>
+            <span class="landing-challenge-action">Start</span>
+          </button>
+          <button id="btn-landing-shape-game" class="landing-challenge-card" type="button" aria-expanded="false" aria-controls="shape-challenge-panel">
+            <span><strong>Border Outline <em>Advanced</em></strong><small>Just the outline, no coastline context. Name it.</small></span>
+            <span class="landing-challenge-action">Play</span>
+          </button>
+        </div>
+
+        <section id="shape-challenge-panel" class="landing-game-panel landing-border-outline-setup hidden" aria-labelledby="btn-atlas-shape-challenge" hidden>
+          <!-- Quiz settings stay beside the launcher. The same controls
+               move into this card, beside Start, without duplicating state. -->
+          <div class="atlas-challenge-stage atlas-quiz-stage">
+            <div id="quiz-preview-art" class="atlas-quiz-art" aria-hidden="true">
+              <img class="atlas-quiz-preview" src="assets/quiz-preview.svg" alt="" width="100" height="116" />
+            </div>
+            <button id="btn-change-settings" class="atlas-stage-settings" type="button" aria-label="Change quiz difficulty and region">
+              <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M40,88H73a32,32,0,0,0,62,0h81a8,8,0,0,0,0-16H135a32,32,0,0,0-62,0H40a8,8,0,0,0,0,16Zm64-24A16,16,0,1,1,88,80,16,16,0,0,1,104,64ZM216,168H199a32,32,0,0,0-62,0H40a8,8,0,0,0,0,16h97a32,32,0,0,0,62,0h17a8,8,0,0,0,0-16Zm-48,24a16,16,0,1,1,16-16A16,16,0,0,1,168,192Z"/></svg>
+            </button>
+          </div>
+          <button id="btn-start-game" class="cta landing-start-action" type="button">
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <use href="assets/geowars-icons.svg#icon-next"></use>
+            </svg>
+            <span id="start-game-label">Start sprint</span>
+          </button>
+        </section>
+
+        <!-- Always-on rotating sample-round card. Sits outside the (hidden until
+             "Play") Border Outline setup panel so it stays visible on every
+             screen size, cycling silhouette + flag + answer via app.js. -->
+        <details id="landing-shape-preview" class="landing-shape-preview" open aria-label="Border Outline preview. Identify a country from its outline.">
+          <summary class="landing-shape-preview-toggle">See a sample round</summary>
           <div class="landing-shape-preview-stage">
             <span class="landing-shape-preview-kicker landing-shape-preview-kicker-desktop">Sample round</span>
             <span class="landing-shape-preview-kicker landing-shape-preview-kicker-mobile">How it works</span>
@@ -58,7 +156,7 @@
               </svg>
             </div>
             <div class="landing-shape-preview-answer">
-              <span class="landing-shape-preview-marker"><img id="landing-shape-preview-flag" src="https://flagcdn.com/w80/us.png" alt="United States flag"></span>
+              <span class="landing-shape-preview-marker"><span id="landing-shape-preview-flag" role="img" aria-label="United States flag">🇺🇸</span></span>
               <div class="landing-shape-preview-copy">
                 <span>Answer</span>
                 <strong id="landing-shape-preview-country">United States</strong>
@@ -66,180 +164,46 @@
             </div>
           </div>
         </details>
-        <div id="landing-globe-shell" class="landing-globe-shell hidden" aria-hidden="true">
-          <div id="landing-globe" class="landing-globe">
-            <canvas
-              id="landing-globe-canvas"
-              width="360"
-              height="360"
-              tabindex="0"
-              role="button"
-              aria-describedby="landing-globe-status"
-              aria-label="Interactive world globe. Drag to rotate, use arrow keys to explore, and press Enter to select the centered continent."
-            ></canvas>
-            <img class="landing-globe-art" src="assets/landing-globe.svg" alt="A blue and green globe">
-            <span class="landing-globe-atmosphere" aria-hidden="true"></span>
-          </div>
-          <div class="landing-globe-meta">
-            <span class="landing-globe-kicker">Choose the map</span>
-          </div>
-          <div class="globe-scope-switch" role="group" aria-label="Challenge scope">
-            <button id="btn-globe-region-mode" class="globe-scope-option" type="button" aria-pressed="false">
-              <span class="globe-scope-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" focusable="false"><path d="M4 7.5h16M7.5 4v16M4 16.5h16M16.5 4v16"></path></svg>
-              </span>
-              <span class="globe-scope-copy">
-                <strong id="globe-region-toggle-label">Regions</strong>
-                <small>On globe</small>
-              </span>
-            </button>
-            <button id="btn-globe-worldwide" class="globe-scope-option globe-scope-worldwide is-active" type="button" aria-pressed="true">
-              <span class="globe-scope-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="8.5"></circle><path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.3 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.8 8.6 12s1.2 6.1 3.4 8.5"></path></svg>
-              </span>
-              <span class="globe-scope-copy">
-                <strong>Worldwide</strong>
-                <small>195 countries</small>
-              </span>
-           </button>
-          </div>
-          <div id="globe-selection-card" class="globe-selection-card" aria-live="polite">
-            <span class="globe-selection-check" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" focusable="false"><path d="m7 12 3.2 3.2L17.5 8"></path></svg>
-            </span>
-            <span class="globe-selection-copy">
-              <span>Game region</span>
-              <strong id="globe-selection-label">Worldwide</strong>
-            </span>
-            <span class="globe-selection-applied">Selected</span>
-          </div>
-          <p id="landing-globe-status" class="landing-globe-status" role="status" aria-live="polite">Drag to rotate. Select a continent.</p>
-
-        </div>
       </section>
 
-      <section class="landing-setup-panel landing-games-panel" aria-labelledby="landing-games-title">
-        <div class="landing-games-heading">
-          <p class="landing-setup-kicker">Games</p>
-          <h2 id="landing-games-title">Choose a game</h2>
-          <p>Two ways to learn the world.</p>
-        </div>
-
-        <div class="landing-game-switch" role="group" aria-labelledby="landing-games-title">
-          <button id="btn-landing-shape-game" class="landing-game-option is-active" type="button" aria-pressed="true" aria-controls="shape-challenge-panel">
-            <svg class="landing-game-option-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <use href="assets/geowars-icons.svg#icon-mode-practice"></use>
-            </svg>
-            <span>
-              <strong>Shape Challenge</strong>
-              <small>Name countries from their shapes.</small>
-            </span>
-          </button>
-          <button id="btn-landing-explorer-game" class="landing-game-option" type="button" aria-pressed="false" aria-controls="world-explorer-panel">
-            <svg class="landing-game-option-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <circle cx="12" cy="12" r="8.5"></circle>
-              <path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.3 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.8 8.6 12s1.2 6.1 3.4 8.5"></path>
-            </svg>
-            <span>
-              <strong>World Explorer</strong>
-              <small>Explore freely or race in Country Hunt.</small>
-            </span>
-          </button>
-        </div>
-
-        <section id="shape-challenge-panel" class="landing-game-panel" aria-labelledby="btn-landing-shape-game">
-          <div class="landing-mode-heading">
-            <h3 id="setup-title">Choose a mode</h3>
-            <p>Race the clock or learn without a timer.</p>
+      <section id="learning-progress-panel" class="learning-progress" aria-labelledby="learning-progress-title">
+        <header class="learning-progress-header">
+          <div>
+            <h2 id="learning-progress-title">Progress</h2>
           </div>
-
-        <div class="mode-select" role="group" aria-labelledby="mode-title">
-          <h3 id="mode-title" class="setup-subheading sr-only">Game modes</h3>
-          <button id="btn-sprint" class="mode-card mode-secondary active" type="button" aria-pressed="true" aria-describedby="sprint-description">
-            <svg class="mode-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <use href="assets/geowars-icons.svg#icon-mode-sprint"></use>
-            </svg>
-            <span class="mode-title">Sprint</span>
-            <span id="sprint-description" class="mode-desc">60 seconds. Name as many as you can.</span>
-          </button>
-          <button id="btn-showoff" class="mode-card mode-secondary" type="button" aria-pressed="false" aria-describedby="practice-description">
-            <svg class="mode-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <use href="assets/geowars-icons.svg#icon-mode-practice"></use>
-            </svg>
-            <span class="mode-title">Practice</span>
-            <span id="practice-description" class="mode-desc">No timer. Answer, reveal, repeat.</span>
-          </button>
-        </div>
-
-        <div class="game-setup-wrap">
-          <details id="challenge-settings" class="game-setup">
-            <summary class="game-setup-summary">
-              <span class="game-setup-copy">
-                <span class="game-setup-title">Choose a ladder</span>
-                <span id="filter-summary" class="filter-summary">Earthling · Worldwide</span>
-              </span>
-              <span class="game-setup-chevron" aria-hidden="true"></span>
-            </summary>
-            <div class="game-setup-content">
-              <fieldset class="setup-group">
-                <legend>Difficulty ladder</legend>
-                <div class="option-grid difficulty-grid">
-                  <button type="button" class="diff-btn" data-level="cadet" aria-pressed="false">Cadet</button>
-                  <button type="button" class="diff-btn" data-level="explorer" aria-pressed="false">Explorer</button>
-                  <button type="button" class="diff-btn active" data-level="earthling" aria-pressed="true">Earthling</button>
-                  <button type="button" class="diff-btn" data-level="expert" aria-pressed="false">Expert Verification</button>
-                </div>
-              </fieldset>
-              <fieldset class="setup-group">
-                <legend>Region</legend>
-                <div id="continent-row" class="option-grid region-grid">
-                  <button type="button" class="diff-btn active" data-continent="all" aria-pressed="true">Worldwide</button>
-                  <button type="button" class="diff-btn" data-continent="Africa" aria-pressed="false">Africa</button>
-                  <button type="button" class="diff-btn" data-continent="Asia" aria-pressed="false">Asia</button>
-                  <button type="button" class="diff-btn" data-continent="Europe" aria-pressed="false">Europe</button>
-                  <button type="button" class="diff-btn" data-continent="North America" aria-pressed="false">Americas</button>
-                  <button type="button" class="diff-btn" data-continent="Oceania" aria-pressed="false">Oceania</button>
-                </div>
-              </fieldset>
+          <div class="learning-progress-meters">
+            <div class="learning-meter" aria-label="Countries learned">
+              <strong id="learning-learned-count">0</strong>
+              <span>of <span id="learning-total-count">197</span> learned</span>
             </div>
-          </details>
+            <div class="learning-meter" aria-label="Due for review today">
+              <strong id="learning-due-count">0</strong>
+              <span>due today</span>
+            </div>
+            <div class="learning-meter" aria-label="Currently learning">
+              <strong id="learning-active-count">0</strong>
+              <span>in progress</span>
+            </div>
+          </div>
+        </header>
+        <div class="learning-progress-bar" role="img" aria-labelledby="learning-progress-barlabel">
+          <span id="learning-progress-fill" class="learning-progress-fill" style="width:0%"></span>
         </div>
-
-        <div class="landing-selection-status" role="status" aria-live="polite">
-          <span class="landing-selection-check" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" focusable="false"><path d="m6.5 12 3.5 3.5 7.5-8"></path></svg>
-          </span>
-          <span class="landing-selection-copy">
-            <span>Ready</span>
-            <p id="mode-summary">Sprint · 60 seconds · Earthling · Worldwide</p>
-          </span>
+        <p id="learning-progress-barlabel" class="learning-progress-caption sr-only">No progress yet.</p>
+        <div class="learning-progress-actions">
+          <button id="btn-daily-review" class="cta learning-review-action" type="button">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 8a8 8 0 1 1-1 6M5 8V3m0 5h5"></path></svg>
+            <span id="daily-review-label">Start today's review</span>
+          </button>
+          <button id="btn-daily-challenge" class="ghost-sm learning-challenge-action" type="button">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3v18M5 8l7-5 7 5M5 16l7 5 7-5"></path></svg>
+            <span id="daily-challenge-label">Daily challenge</span>
+          </button>
         </div>
-        <button id="btn-start-game" class="cta landing-start-action" type="button">
-          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <use href="assets/geowars-icons.svg#icon-next"></use>
-          </svg>
-          <span id="start-game-label">Start sprint</span>
-        </button>
-        <p class="landing-start-note">No account required. Your best scores stay on this device.</p>
-        </section>
-
-        <section id="world-explorer-panel" class="landing-game-panel landing-explore-feature hidden" aria-labelledby="landing-explorer-title">
-          <span class="landing-explore-visual" aria-hidden="true">
-            <svg viewBox="0 0 24 24" focusable="false">
-              <circle cx="12" cy="12" r="8.5"></circle>
-              <path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.3 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.8 8.6 12s1.2 6.1 3.4 8.5"></path>
-            </svg>
-          </span>
-          <span class="landing-explore-copy">
-            <span>World Explorer</span>
-            <strong id="landing-explorer-title">Explore or race</strong>
-            <small>Discover every country at your pace, or find as many as you can in 60 seconds.</small>
-          </span>
-          <span class="landing-explore-actions">
-            <button id="btn-open-explorer" class="landing-explore-action landing-explore-primary" type="button">Explore freely <span aria-hidden="true">→</span></button>
-            <button id="btn-open-explorer-hunt" class="landing-explore-action landing-explore-hunt-action" type="button"><span>Country Hunt</span><small>60-second challenge</small></button>
-          </span>
-        </section>
+        <details class="learning-continents-disclosure">
+          <summary class="learning-continents-toggle"><span>Mastery by region</span></summary>
+          <dl id="learning-continents" class="learning-continents" aria-label="Mastery by region"></dl>
+        </details>
       </section>
 
       <aside class="landing-statistics" aria-labelledby="statistics-title">
@@ -252,7 +216,7 @@
                 <span>Reset stats</span>
               </button>
             </div>
-            <p id="records-empty" class="records-empty">Your first game sets the score to beat.</p>
+            <p id="records-empty" class="records-empty">No games yet.</p>
             <dl id="stats-bar" class="stats-bar hidden" aria-label="Player statistics">
               <div class="stat"><dt>Games</dt><dd id="stat-played">0</dd></div>
               <div class="stat"><dt>Best streak</dt><dd id="stat-best">0</dd></div>
@@ -262,11 +226,11 @@
           </div>
         </details>
       </aside>
+
       <dialog id="stats-reset-dialog" class="stats-reset-dialog" aria-labelledby="stats-reset-title" aria-describedby="stats-reset-description">
         <div class="stats-reset-dialog-card">
-          <p class="landing-setup-kicker">Device stats</p>
-          <h2 id="stats-reset-title">Reset Your Best?</h2>
-          <p id="stats-reset-description">This clears the guest statistics stored on this device. Supabase and signed-in profile records will not change.</p>
+          <h2 id="stats-reset-title">Reset guest stats?</h2>
+          <p id="stats-reset-description">Clears guest stats on this device.</p>
           <div class="stats-reset-actions">
             <button id="btn-cancel-stats-reset" class="statistics-reset-cancel" type="button">Keep stats</button>
             <button id="btn-confirm-stats-reset" class="statistics-reset-confirm" type="button">Reset this device</button>
@@ -276,52 +240,197 @@
       <p id="stats-reset-status" class="sr-only" role="status" aria-live="polite"></p>
     </section>
 
-    <!-- Globe Explorer -->
-    <section id="explorer" class="screen hidden explorer-screen" aria-labelledby="explorer-title">
-      <header class="explorer-utility">
+    <!-- Playable Atlas -->
+    <section id="explorer" class="screen explorer-screen atlas-shell" aria-label="Playable Atlas" data-atlas-view="globe">
+      <header class="explorer-utility atlas-header">
         <div class="explorer-brand">
-          <button class="explorer-home-logo" type="button" data-explorer-home aria-label="Return to the EARTHLING home page">
-            <img src="assets/geowars-logo.svg" alt="" aria-hidden="true">
+          <button id="btn-explorer-home" class="explorer-home-logo" type="button" data-explorer-home aria-label="Home">
+            <img class="atlas-logo-globe" src="assets/geowars-logo.svg" alt="EARTHLING">
           </button>
-          <div class="explorer-heading-copy">
-            <p class="explorer-eyebrow">Explore</p>
-            <h1 id="explorer-title" tabindex="-1">World explorer</h1>
+        </div>
+        <nav class="atlas-primary-nav" aria-label="Atlas modes">
+          <button id="btn-mode-explore" class="is-active" type="button" aria-pressed="true" aria-controls="atlas-globe-workspace atlas-shapes-workspace" aria-label="Explore, globe and shapes">
+            <svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M128,24h0A104,104,0,1,0,232,128,104.12,104.12,0,0,0,128,24Zm88,104a87.61,87.61,0,0,1-3.33,24H174.16a157.44,157.44,0,0,0,0-48h38.51A87.61,87.61,0,0,1,216,128ZM102,168H154a115.11,115.11,0,0,1-26,45A115.27,115.27,0,0,1,102,168Zm-3.9-16a140.84,140.84,0,0,1,0-48h59.88a140.84,140.84,0,0,1,0,48ZM40,128a87.61,87.61,0,0,1,3.33-24H81.84a157.44,157.44,0,0,0,0,48H43.33A87.61,87.61,0,0,1,40,128ZM154,88H102a115.11,115.11,0,0,1,26-45A115.27,115.27,0,0,1,154,88Zm52.33,0H170.71a135.28,135.28,0,0,0-22.3-45.6A88.29,88.29,0,0,1,206.37,88ZM107.59,42.4A135.28,135.28,0,0,0,85.29,88H49.63A88.29,88.29,0,0,1,107.59,42.4ZM49.63,168H85.29a135.28,135.28,0,0,0,22.3,45.6A88.29,88.29,0,0,1,49.63,168Zm98.78,45.6a135.28,135.28,0,0,0,22.3-45.6h35.66A88.29,88.29,0,0,1,148.41,213.6Z"/></svg>
+            <span class="atlas-nav-copy"><strong>Explore</strong></span>
+          </button>
+          <button id="btn-mode-challenge" type="button" aria-pressed="false" aria-controls="atlas-challenge-panel" aria-label="Challenge, Country Hunt and Shape Quiz">
+            <svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M221.87,83.16A104.1,104.1,0,1,1,195.67,49l22.67-22.68a8,8,0,0,1,11.32,11.32l-96,96a8,8,0,0,1-11.32-11.32l27.72-27.72a40,40,0,1,0,17.87,31.09,8,8,0,1,1,16-.9,56,56,0,1,1-22.38-41.65L184.3,60.39a87.88,87.88,0,1,0,23.13,29.67,8,8,0,0,1,14.44-6.9Z"/></svg>
+            <span class="atlas-nav-copy"><strong><span class="desktop-nav-label">Challenge</span><span class="mobile-nav-label">Play</span></strong></span>
+          </button>
+          <button id="btn-open-worldle" class="atlas-nav-worldle" type="button" aria-pressed="false" aria-controls="worldle-screen" aria-label="Daily Puzzle, today's Worldle">
+            <svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"/></svg>
+            <span class="atlas-nav-copy"><strong><span class="desktop-nav-label">Daily Puzzle</span><span class="mobile-nav-label">Daily</span></strong></span>
+          </button>
+        </nav>
+        <button id="btn-header-google" class="activity-signin" type="button" aria-label="Sign in"><span id="header-google-label">Sign in</span></button>
+        <details id="atlas-utility-menu" class="atlas-utility-menu">
+          <summary aria-label="Player and preferences">
+            <svg class="player-avatar" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>
+            <span>Player</span>
+          </summary>
+          <div id="atlas-utility-panel" class="atlas-utility-panel">
+            <div class="atlas-utility-panel-heading">
+              <strong>Player &amp; preferences</strong>
+              <button id="btn-close-player-panel" type="button" aria-label="Close player panel">&#215;</button>
+            </div>
+            <div id="atlas-player-slot" class="atlas-player-slot"></div>
+            <div class="atlas-preference-controls" aria-label="Preferences">
+              <button id="btn-explorer-music" class="explorer-music-toggle" type="button" aria-label="Start music" aria-pressed="false">
+                <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-sound"></use></svg>
+                <span>Start music</span>
+              </button>
+              <button id="btn-explorer-haptics" class="explorer-haptics-toggle hidden" type="button" aria-label="Turn haptics on" aria-pressed="false">
+                <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="8" y="4" width="8" height="16" rx="2"></rect><path d="M5.5 8.5a5 5 0 0 0 0 7M18.5 8.5a5 5 0 0 1 0 7M11 17h2"></path></svg>
+                <span>Haptics off</span>
+              </button>
+            </div>
+            <a class="app-privacy-link" href="/privacy.html" target="_blank" rel="noopener" aria-label="Privacy (opens in a new tab)">Privacy</a>
+            <div id="atlas-menu-setup-slot" class="atlas-menu-setup-slot">
+              <!-- Shared controls move into the quiz launcher on every screen. -->
+              <div class="mode-select menu-mode-select" role="group" aria-labelledby="mode-title">
+                <h3 id="mode-title" class="menu-setting-heading">Game mode</h3>
+                <button id="btn-sprint" class="mode-chip active" type="button" aria-pressed="true" aria-describedby="sprint-description">
+                  <svg class="mode-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <use href="assets/geowars-icons.svg#icon-mode-sprint"></use>
+                  </svg>
+                  <span class="mode-title">Sprint</span>
+                  <span id="sprint-description" class="mode-desc">60 seconds</span>
+                </button>
+                <button id="btn-showoff" class="mode-chip" type="button" aria-pressed="false" aria-describedby="practice-description">
+                  <svg class="mode-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <use href="assets/geowars-icons.svg#icon-mode-practice"></use>
+                  </svg>
+                  <span class="mode-title">Practice</span>
+                  <span id="practice-description" class="mode-desc">No timer</span>
+                </button>
+              </div>
+              <div class="game-setup-wrap">
+                <details id="challenge-settings" class="game-setup" open>
+                  <summary class="game-setup-summary">
+                    <span class="game-setup-copy">
+                      <span class="game-setup-title">Difficulty &amp; region</span>
+                      <span id="filter-summary" class="filter-summary">Hard · Worldwide</span>
+                    </span>
+                    <span class="game-setup-chevron" aria-hidden="true"></span>
+                  </summary>
+                  <div class="game-setup-content">
+                    <fieldset class="setup-group">
+                      <legend>Difficulty</legend>
+                      <div class="option-grid difficulty-grid">
+                        <button type="button" class="diff-btn" data-level="cadet" aria-pressed="false">Easy <em>Cadet</em></button>
+                        <button type="button" class="diff-btn" data-level="explorer" aria-pressed="false">Medium <em>Explorer</em></button>
+                        <button type="button" class="diff-btn active" data-level="earthling" aria-pressed="true">Hard <em>Earthling</em></button>
+                        <button type="button" class="diff-btn" data-level="expert" aria-pressed="false">Expert <em>Verification</em></button>
+                      </div>
+                    </fieldset>
+                    <fieldset class="setup-group">
+                      <legend>Region</legend>
+                      <div id="continent-row" class="option-grid region-grid">
+                        <button type="button" class="diff-btn active" data-continent="all" aria-pressed="true">Worldwide</button>
+                        <button type="button" class="diff-btn" data-continent="Africa" aria-pressed="false">Africa</button>
+                        <button type="button" class="diff-btn" data-continent="Asia" aria-pressed="false">Asia</button>
+                        <button type="button" class="diff-btn" data-continent="Europe" aria-pressed="false">Europe</button>
+                        <button type="button" class="diff-btn" data-continent="North America" aria-pressed="false">Americas</button>
+                        <button type="button" class="diff-btn" data-continent="Oceania" aria-pressed="false">Oceania</button>
+                      </div>
+                    </fieldset>
+                  </div>
+                </details>
+              </div>
+            </div>
+            <div id="atlas-stats-slot" class="atlas-stats-slot"></div>
           </div>
-        </div>
-        <div class="explorer-utility-actions">
-          <button id="btn-explorer-music" class="explorer-music-toggle" type="button" aria-label="Start music" aria-pressed="false">
-            <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-sound"></use></svg>
-            <span>Start music</span>
-          </button>
-          <button id="btn-explorer-haptics" class="explorer-haptics-toggle hidden" type="button" aria-label="Turn haptics on" aria-pressed="false">
-            <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="8" y="4" width="8" height="16" rx="2"></rect><path d="M5.5 8.5a5 5 0 0 0 0 7M18.5 8.5a5 5 0 0 1 0 7M11 17h2"></path></svg>
-            <span>Haptics off</span>
-          </button>
-          <button class="explorer-home-action" type="button" data-explorer-home aria-label="Back to home">
-            <svg class="icon explorer-home-action-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-geowars-mark"></use></svg>
-            <span>Back to home</span>
-          </button>
-        </div>
+        </details>
       </header>
 
+      <div id="activity-context" class="activity-context" hidden>
+        <button id="btn-activity-home" class="activity-back" type="button">← All activities</button>
+        <div class="activity-section-copy"><strong id="activity-section-title">Country Hunt</strong><span id="activity-section-description" class="sr-only">Explore</span></div>
+        <div class="activity-section-actions">
+          <button id="btn-activity-explore" type="button">Explore</button>
+          <button id="btn-activity-challenge" type="button">Challenge</button>
+          <button id="btn-activity-difficulty" class="activity-difficulty" type="button" aria-haspopup="dialog">Difficulty: Easy</button>
+        </div>
+      </div>
+      <div id="atlas-explore-switch" class="atlas-explore-switch" role="group" aria-label="Explore views">
+        <button id="btn-atlas-globe" class="is-active" type="button" aria-pressed="true" aria-controls="atlas-globe-workspace" aria-label="Globe, spin and search">
+          <svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M128,24h0A104,104,0,1,0,232,128,104.12,104.12,0,0,0,128,24Zm88,104a87.61,87.61,0,0,1-3.33,24H174.16a157.44,157.44,0,0,0,0-48h38.51A87.61,87.61,0,0,1,216,128ZM102,168H154a115.11,115.11,0,0,1-26,45A115.27,115.27,0,0,1,102,168Zm-3.9-16a140.84,140.84,0,0,1,0-48h59.88a140.84,140.84,0,0,1,0,48ZM40,128a87.61,87.61,0,0,1,3.33-24H81.84a157.44,157.44,0,0,0,0,48H43.33A87.61,87.61,0,0,1,40,128ZM154,88H102a115.11,115.11,0,0,1,26-45A115.27,115.27,0,0,1,154,88Zm52.33,0H170.71a135.28,135.28,0,0,0-22.3-45.6A88.29,88.29,0,0,1,206.37,88ZM107.59,42.4A135.28,135.28,0,0,0,85.29,88H49.63A88.29,88.29,0,0,1,107.59,42.4ZM49.63,168H85.29a135.28,135.28,0,0,0,22.3,45.6A88.29,88.29,0,0,1,49.63,168Zm98.78,45.6a135.28,135.28,0,0,0,22.3-45.6h35.66A88.29,88.29,0,0,1,148.41,213.6Z"/></svg>
+          <span class="atlas-nav-copy"><strong>Globe</strong></span>
+        </button>
+        <button id="btn-atlas-shapes" type="button" aria-pressed="false" aria-controls="atlas-shapes-workspace" aria-label="Shapes, Learn outlines">
+          <svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M230.64,49.36a32,32,0,0,0-45.26,0h0a31.9,31.9,0,0,0-5.16,6.76L152,48.42A32,32,0,0,0,97.37,25.36h0a32.06,32.06,0,0,0-5.76,37.41L57.67,93.32a32.05,32.05,0,0,0-40.31,4.05h0a32,32,0,0,0,42.89,47.41l70,51.36a32,32,0,1,0,47.57-14.69l27.39-77.59q1.38.12,2.76.12a32,32,0,0,0,22.63-54.62Zm-122-12.69h0a16,16,0,1,1,0,22.64A16,16,0,0,1,108.68,36.67Zm-80,94.65a16,16,0,0,1,0-22.64h0a16,16,0,1,1,0,22.64Zm142.65,88a16,16,0,0,1-22.63-22.63h0a16,16,0,1,1,22.63,22.63Zm-8.55-43.18a32,32,0,0,0-23,7.08l-70-51.36a32.17,32.17,0,0,0-1.34-26.65l33.95-30.55a32,32,0,0,0,45.47-10.81L176,71.56a32,32,0,0,0,14.12,27Zm56.56-92.84A16,16,0,1,1,196.7,60.68h0a16,16,0,0,1,22.63,22.63Z"/></svg>
+          <span class="atlas-nav-copy"><strong>Shapes</strong></span>
+        </button>
+      </div>
+
+      <section id="atlas-challenge-panel" class="atlas-challenge-panel hidden" aria-labelledby="atlas-challenge-title" hidden inert aria-hidden="true">
+        <div class="atlas-challenge-heading">
+          <h2 id="atlas-challenge-title" class="atlas-challenge-title" tabindex="-1">Activities</h2>
+        </div>
+        <button id="btn-activity-daily" class="activity-daily" type="button" aria-label="Daily challenge">
+          <svg class="activity-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-daily"/></svg>
+          <span class="activity-action-label">Daily challenge</span>
+        </button>
+        <div class="atlas-challenge-grid">
+          <article class="atlas-challenge-card atlas-challenge-hunt" aria-labelledby="atlas-challenge-hunt-title">
+            <div class="atlas-challenge-card-header">
+              <h3 id="atlas-challenge-hunt-title">Country Hunt</h3>
+            </div>
+            <p id="atlas-challenge-hunt-desc" class="sr-only">Find countries on the globe.</p>
+            <div id="activity-hunt-preview" class="atlas-challenge-stage" aria-hidden="true">
+              <img class="atlas-hunt-preview" src="assets/landing-globe.svg" alt="" aria-hidden="true" width="240" height="240" />
+            </div>
+            <div class="activity-paths">
+              <button id="btn-explore-hunt" class="activity-explore-path" type="button" aria-label="Explore Country Hunt" aria-describedby="atlas-challenge-hunt-desc">
+                <svg class="activity-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-learn"/></svg>
+                <span class="activity-action-label">Explore</span>
+              </button>
+              <button id="btn-challenge-hunt" class="cta atlas-challenge-start" type="button" aria-label="Play Country Hunt" aria-describedby="atlas-challenge-hunt-desc">
+                <svg class="activity-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-game"/></svg>
+                <span class="activity-action-label">Play</span>
+              </button>
+            </div>
+          </article>
+          <article class="atlas-challenge-card" aria-labelledby="atlas-challenge-quiz-title">
+            <div class="atlas-challenge-card-header">
+              <h3 id="atlas-challenge-quiz-title">Shape Quiz</h3>
+            </div>
+            <p id="atlas-challenge-quiz-desc" class="sr-only">Identify countries by their outlines.</p>
+            <div id="atlas-challenge-quiz-slot" class="atlas-challenge-quiz-slot"></div>
+            <div id="activity-shape-preview" class="atlas-challenge-stage activity-shape-preview"></div>
+            <div class="activity-paths">
+              <button id="btn-explore-shapes" class="activity-explore-path" type="button" aria-label="Explore Shape Quiz" aria-describedby="atlas-challenge-quiz-desc">
+                <svg class="activity-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-learn"/></svg>
+                <span class="activity-action-label">Explore</span>
+              </button>
+              <button id="btn-challenge-shapes" class="cta atlas-challenge-start" type="button" aria-label="Play Shape Quiz" aria-describedby="atlas-challenge-quiz-desc">
+                <svg class="activity-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-game"/></svg>
+                <span class="activity-action-label">Play</span>
+              </button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <div id="atlas-globe-workspace" class="atlas-workspace atlas-globe-workspace" aria-labelledby="atlas-globe-title">
+      <h2 id="atlas-globe-title" class="sr-only" tabindex="-1">Globe</h2>
       <div class="explorer-layout">
         <section class="explorer-stage" aria-labelledby="explorer-stage-title">
-          <header class="explorer-stage-heading">
-            <div>
-              <p class="explorer-eyebrow">195 countries</p>
-              <h2 id="explorer-stage-title">Choose a country</h2>
-            </div>
-            <p>Drag, zoom, or search the world.</p>
-          </header>
-
-          <div class="explorer-mode-switch" role="group" aria-label="World Explorer mode">
+          <div class="explorer-mode-switch hidden" role="group" aria-label="World Explorer mode" hidden inert>
             <button id="btn-explorer-free" class="is-active" type="button" aria-pressed="true">
-              <span>Explore freely</span><small>Learn at your pace</small>
+              <span>Explore</span><small>Learn at your pace</small>
             </button>
             <button id="btn-explorer-hunt" type="button" aria-pressed="false">
               <span>Country Hunt</span><small>60-second challenge</small>
             </button>
           </div>
+
+          <header class="explorer-stage-heading">
+            <div>
+              <p class="explorer-eyebrow">197 countries</p>
+              <h2 id="explorer-stage-title" tabindex="-1">Explore the world</h2>
+            </div>
+          </header>
 
           <section id="explorer-hunt-hud" class="explorer-hunt-hud hidden" aria-labelledby="explorer-hunt-target">
             <div class="explorer-hunt-timer" role="timer" aria-label="Country Hunt time remaining">
@@ -330,7 +439,7 @@
             <div class="explorer-hunt-prompt">
               <span id="explorer-hunt-target-flag" class="explorer-hunt-target-flag" aria-hidden="true"></span>
               <span class="explorer-hunt-target-copy">
-                <span>Find this country</span>
+                <span>Find</span>
                 <strong id="explorer-hunt-target">Ready?</strong>
               </span>
             </div>
@@ -339,10 +448,9 @@
           </section>
 
           <div class="explorer-search">
-            <label for="explorer-country-search">Find a country or territory</label>
             <div class="explorer-search-input-wrap">
               <svg class="explorer-search-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 4 4"></path></svg>
-              <input id="explorer-country-search" class="explorer-country-search" type="search" autocomplete="off" placeholder="Search countries and territories" role="combobox" aria-autocomplete="list" aria-controls="explorer-search-results" aria-expanded="false">
+              <input id="explorer-country-search" class="explorer-country-search" type="search" autocomplete="off" aria-label="Find a country or territory" placeholder="Search" role="combobox" aria-autocomplete="list" aria-controls="explorer-search-results" aria-expanded="false">
             </div>
             <div id="explorer-search-results" class="explorer-search-results hidden" role="listbox" aria-label="Place search results"></div>
           </div>
@@ -364,11 +472,13 @@
                 <strong>Correct!</strong>
                 <span id="explorer-hunt-celebration-country"></span>
               </div>
-              <div class="explorer-globe-controls" aria-label="Globe controls">
-                <button id="btn-explorer-zoom-out" type="button" aria-label="Zoom out">−</button>
-                <button id="btn-explorer-reset" type="button">Reset</button>
-                <button id="btn-explorer-zoom-in" type="button" aria-label="Zoom in">+</button>
-              </div>
+            </div>
+            <!-- Kept outside the globe frame: the frame is a circle with
+                 overflow:hidden, so anything in its corners is clipped away. -->
+            <div class="explorer-globe-controls" aria-label="Globe controls">
+              <button id="btn-explorer-zoom-out" type="button" aria-label="Zoom out">−</button>
+              <button id="btn-explorer-reset" type="button">Reset</button>
+              <button id="btn-explorer-zoom-in" type="button" aria-label="Zoom in">+</button>
             </div>
           </div>
 
@@ -388,19 +498,23 @@
           </div>
 
           <footer class="explorer-stage-footer">
-            <p id="explorer-globe-status" class="explorer-globe-status" role="status" aria-live="polite">Drag to explore. Select a country or territory to learn more.</p>
+            <p id="explorer-globe-status" class="explorer-globe-status sr-only" role="status" aria-live="polite">Drag to rotate. Select a place.</p>
           </footer>
         </section>
 
         <aside class="explorer-info-panel" aria-label="Place information">
-          <div id="explorer-empty-card" class="explorer-empty-card">
+          <button id="country-sheet-toggle" class="country-sheet-toggle" type="button" aria-expanded="false" aria-controls="explorer-country-card">
+            <span class="country-sheet-grip" aria-hidden="true"></span>
+              <span id="country-sheet-label">Details</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 14 6-6 6 6"/></svg>
+          </button>
+          <div id="explorer-empty-card" class="explorer-empty-card hidden">
             <span class="explorer-empty-mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="8.5"></circle><path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.3 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.8 8.6 12s1.2 6.1 3.4 8.5"></path></svg></span>
             <h2>Select a country or territory</h2>
-            <p>Its flag, capital, status, and essential facts will appear here.</p>
           </div>
           <section id="explorer-hunt-compare" class="explorer-hunt-compare hidden" aria-label="Country Hunt selection feedback">
             <article class="explorer-hunt-compare-card explorer-hunt-target-card">
-              <p class="explorer-country-kicker">Target country</p>
+              <p class="explorer-country-kicker sr-only">Target country</p>
               <div class="explorer-hunt-country-row">
                 <span id="explorer-hunt-panel-target-flag" class="explorer-hunt-panel-flag" aria-hidden="true"></span>
                 <div>
@@ -414,7 +528,7 @@
               <div class="explorer-hunt-country-row">
                 <span id="explorer-hunt-selected-flag" class="explorer-hunt-panel-flag" aria-hidden="true"></span>
                 <div>
-                  <span id="explorer-hunt-selection-label">Waiting for your choice</span>
+                  <span id="explorer-hunt-selection-label">Selected</span>
                   <h2 id="explorer-hunt-selected-country">Tap a country</h2>
                 </div>
               </div>
@@ -423,19 +537,24 @@
                 <span class="explorer-hunt-guidance-copy">
                   <strong id="explorer-hunt-distance">—</strong>
                   <span id="explorer-hunt-direction">Direction to the target</span>
-                  <small>Approximate center-to-center distance</small>
+                  <small class="sr-only">Approximate center-to-center distance</small>
                 </span>
               </div>
-              <p id="explorer-hunt-selection-feedback" class="explorer-hunt-selection-feedback">Your selection will appear here.</p>
+              <p id="explorer-hunt-selection-feedback" class="explorer-hunt-selection-feedback sr-only"></p>
             </article>
           </section>
           <section id="explorer-hunt-summary" class="explorer-hunt-summary hidden" aria-labelledby="explorer-hunt-summary-title">
-            <p class="explorer-country-kicker">Country Hunt complete</p>
-            <h2 id="explorer-hunt-summary-title">Time!</h2>
-            <p>You found <strong id="explorer-hunt-final-score">0</strong> countries.</p>
+            <p class="explorer-country-kicker sr-only">Country Hunt complete</p>
+            <h2 id="explorer-hunt-summary-title">Results</h2>
+            <p><strong id="explorer-hunt-final-score">0</strong> found</p>
+            <p id="explorer-hunt-avg-guesses" class="explorer-hunt-avg-guesses hidden"></p>
+            <fieldset id="hunt-next-difficulty" class="challenge-next-difficulty" hidden>
+              <legend>Difficulty</legend>
+              <div class="next-difficulty-options"></div>
+            </fieldset>
             <div class="explorer-hunt-summary-actions">
               <button id="btn-explorer-hunt-again" class="explorer-practice-action" type="button">Play again</button>
-              <button id="btn-explorer-hunt-free" class="explorer-home-action" type="button">Explore freely</button>
+              <button id="btn-explorer-hunt-free" class="explorer-home-action" type="button">Explore</button>
             </div>
           </section>
           <article id="explorer-country-card" class="explorer-country-card hidden" aria-labelledby="explorer-country-name">
@@ -447,44 +566,126 @@
                 <p id="explorer-country-region" class="explorer-country-region"></p>
                 <p id="explorer-country-status" class="explorer-country-status hidden"></p>
               </div>
+              <button id="btn-explorer-focus-country" class="explorer-focus-country" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="6.5"></circle><path d="m15.6 15.6 4 4"></path><path d="M11 8v6M8 11h6"></path></svg>
+                <span>Zoom to country</span>
+              </button>
             </header>
-            <p id="explorer-country-fact" class="explorer-fact"></p>
             <dl class="explorer-country-facts">
               <div><dt>Capital</dt><dd id="explorer-country-capital"></dd></div>
               <div><dt>Population</dt><dd id="explorer-country-population"></dd></div>
+              <div><dt>Area</dt><dd id="explorer-country-area"></dd></div>
               <div><dt>Languages</dt><dd id="explorer-country-languages"></dd></div>
               <div><dt>Currency</dt><dd id="explorer-country-currency"></dd></div>
             </dl>
             <details id="explorer-more-details" class="explorer-more-details">
-              <summary>More country details</summary>
+              <summary>Details</summary>
+              <div id="explorer-landmark-placeholder" class="explorer-landmark-placeholder hidden" role="status" aria-live="polite">
+                <span class="landmark-placeholder-art" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m3 9 9-6 9 6M4 10h16M5 10v9m5-9v9m4-9v9m5-9v9M3 21h18"/></svg></span>
+                <span><a id="explorer-landmark-placeholder-link" target="_blank" rel="noopener noreferrer">Landmark</a><small id="explorer-landmark-status">Loading photo…</small></span>
+              </div>
+              <figure id="explorer-landmark-media" class="explorer-landmark-media hidden">
+                <button id="explorer-landmark-media-toggle" class="explorer-landmark-media-toggle" type="button" aria-expanded="false">
+                  <img id="explorer-landmark-media-image" alt="" loading="lazy" decoding="async" width="640" height="480">
+                </button>
+                <figcaption><a id="explorer-landmark-learn-more" target="_blank" rel="noopener noreferrer">Wikipedia</a><a id="explorer-landmark-media-source" hidden target="_blank" rel="noopener noreferrer">Wikipedia</a></figcaption>
+              </figure>
               <dl class="explorer-more-facts">
-                <div><dt>Area</dt><dd id="explorer-country-area"></dd></div>
                 <div><dt>Neighbors</dt><dd id="explorer-country-neighbors"></dd></div>
                 <div><dt>Landmark</dt><dd id="explorer-country-landmark"></dd></div>
               </dl>
-              <figure id="explorer-landmark-media" class="explorer-landmark-media hidden">
-                <button id="explorer-landmark-media-toggle" class="explorer-landmark-media-toggle" type="button" aria-expanded="false">
-                  <img id="explorer-landmark-media-image" alt="">
-                </button>
-                <figcaption><a id="explorer-landmark-learn-more" target="_blank" rel="noopener noreferrer">Learn about this landmark</a> · Image from <a id="explorer-landmark-media-source" target="_blank" rel="noopener noreferrer">Wikipedia</a></figcaption>
-              </figure>
+              <div class="explorer-extra-fact">
+                <p id="explorer-country-fact" class="explorer-fact"></p>
+              </div>
               <section id="explorer-economics-callout" class="explorer-economics-callout hidden" aria-labelledby="explorer-economics-title">
                 <header class="explorer-economics-heading">
-                  <p id="explorer-economics-title">Economic comparison</p>
+                  <p id="explorer-economics-title">Economy</p>
                   <small>2026 · USD</small>
                 </header>
                 <dl class="explorer-economics-values">
-                  <div><dt>Annual net salary</dt><dd id="explorer-economics-salary">Data unavailable</dd></div>
+                  <div><dt>Avg annual gross salary</dt><dd id="explorer-economics-salary">Data unavailable</dd></div>
                   <div><dt>Big Mac</dt><dd id="explorer-economics-big-mac">Data unavailable</dd></div>
                   <div><dt>Coke · 330 ml</dt><dd id="explorer-economics-coke">Data unavailable</dd></div>
                 </dl>
               </section>
             </details>
-            <button id="btn-explorer-practice" class="explorer-practice-action" type="button">Practice this region</button>
           </article>
         </aside>
       </div>
+      </div>
+
+      <section id="atlas-shapes-workspace" class="atlas-workspace atlas-shapes-workspace hidden" aria-labelledby="atlas-shapes-title" aria-hidden="true" inert>
+        <h2 id="atlas-shapes-title" class="sr-only" tabindex="-1">Country shapes</h2>
+
+        <div class="atlas-shape-mode-switch hidden" role="group" aria-label="Shapes mode" hidden inert>
+          <button id="btn-atlas-shape-explore" class="is-active" type="button" aria-pressed="true">
+            <span>Explore</span><small>Learn at your pace</small>
+          </button>
+          <button id="btn-atlas-shape-challenge" type="button" aria-pressed="false" aria-expanded="false" aria-controls="atlas-shape-setup-slot">
+            <span>Shape Quiz</span><small>Name it from the outline</small>
+          </button>
+        </div>
+
+        <div id="atlas-shape-toolbar" class="atlas-shape-toolbar" aria-labelledby="atlas-shape-toolbar-title">
+          <div class="atlas-shape-toolbar-copy sr-only">
+            <h3 id="atlas-shape-toolbar-title">Explore a country outline</h3>
+            <p id="atlas-shape-status" class="atlas-shape-status" role="status" aria-live="polite" aria-atomic="true">Preview playing.</p>
+          </div>
+          <div class="atlas-shape-controls" role="group" aria-label="Browse country shapes">
+            <button id="btn-atlas-shape-previous" type="button" aria-label="Previous country"><span aria-hidden="true">←</span><span class="atlas-control-label">Previous</span></button>
+            <label class="sr-only" for="atlas-shape-country">Country</label>
+            <select id="atlas-shape-country" aria-label="Choose a country outline"></select>
+            <button id="btn-atlas-shape-next" type="button" aria-label="Next country"><span class="atlas-control-label">Next</span><span aria-hidden="true">→</span></button>
+          </div>
+        </div>
+
+        <!-- Shape Quiz setup lives here (not in the settings menu): choosing the
+             quiz reveals mode/difficulty/region + Start, right where you launch it. -->
+        <div id="atlas-shape-setup-slot" class="atlas-shape-setup-slot" hidden>
+          <header class="atlas-quiz-heading"><h3>Know the outline?</h3><p>Race the clock or take your time. Choose your mode and start.</p></header>
+        </div>
+
+        <div class="atlas-shape-study">
+          <figure class="atlas-shape-plate" aria-labelledby="explorer-country-name">
+            <figcaption class="atlas-plate-heading">
+              <span>Country shape</span>
+              <strong id="atlas-shape-index" aria-hidden="true">U</strong>
+            </figcaption>
+            <div id="atlas-shape-art" class="atlas-shape-art" aria-live="off"></div>
+            <div class="atlas-plate-axis" aria-hidden="true"><span>N</span><span>S</span></div>
+          </figure>
+
+          <!-- The rich country card (from the globe view) is relocated into this
+               slot while the Shapes view is active, so the facts, fun fact,
+               landmark, and economics are the SAME card, formatted once. -->
+          <div id="atlas-shape-info-slot" class="atlas-shape-info-slot" aria-label="Country facts">
+            <p id="atlas-shape-region" class="sr-only" aria-hidden="true"></p>
+            <h2 id="atlas-shape-name" class="sr-only" aria-hidden="true"></h2>
+            <dl class="sr-only" aria-hidden="true">
+              <dt>Capital</dt><dd id="atlas-shape-capital"></dd>
+              <dt>Land borders</dt><dd id="atlas-shape-borders"></dd>
+              <dt>Area</dt><dd id="atlas-shape-area"></dd>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <div id="explorer-secondary-content" class="explorer-secondary-content hidden" hidden></div>
       <p id="explorer-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+
+      <!-- Confirmation shown when the player switches views (e.g. taps Shapes)
+           while a Country Hunt is running, so the switch that ends the game is
+           deliberate. Mirrors the game screen's #quit-confirm pattern. -->
+      <div id="hunt-switch-confirm" class="quit-confirm hidden" role="dialog" aria-modal="true" aria-labelledby="hunt-switch-title" aria-describedby="hunt-switch-message">
+        <div class="quit-confirm-card">
+          <h2 id="hunt-switch-title" tabindex="-1">End Country Hunt?</h2>
+          <p id="hunt-switch-message">Switching views will end your current Country Hunt.</p>
+          <div class="quit-confirm-btns">
+            <button id="btn-hunt-switch-yes" class="cta" type="button">End hunt</button>
+            <button id="btn-hunt-switch-no" class="ghost-sm" type="button">Keep playing</button>
+          </div>
+        </div>
+      </div>
     </section>
     <!-- Game Screen -->
     <section id="game" class="screen hidden game-layout-region" aria-labelledby="game-title" aria-describedby="game-stage-title" data-layout="desktop-mobile">
@@ -495,7 +696,6 @@
           </button>
           <div class="game-run-context" aria-hidden="true">
             <span id="game-mode-label">Sprint run</span>
-            <span>Country shape game</span>
           </div>
           <h1 id="game-title" class="game-screen-title sr-only" tabindex="-1">EARTHLING game</h1>
         </div>
@@ -515,6 +715,7 @@
             </div>
           </div>
           <div class="game-utility-actions" aria-label="Game utilities">
+            <button id="btn-game-difficulty" class="ghost-sm activity-difficulty" type="button" aria-haspopup="dialog">Difficulty: Easy</button>
             <button id="btn-mute" class="ghost-sm" type="button" aria-label="Mute sound" aria-pressed="false">
               <svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-sound"></use></svg>
               <span>Sound</span>
@@ -528,16 +729,20 @@
       </header>
 
       <section id="game-stage-region" class="game-stage" aria-labelledby="game-stage-title" aria-label="Prompt stage region">
+        <div id="game-round-progress" class="game-round-progress" hidden>
+          <p id="game-progress-label" class="game-progress-label">Country 1 of 5</p>
+          <div id="game-progress-track" class="game-progress-track" role="progressbar" aria-label="Countries explored" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0">
+            <span id="game-progress-fill"></span>
+          </div>
+        </div>
         <header class="game-card-heading">
           <div>
-            <p class="game-card-eyebrow">Country shape</p>
             <h2 id="game-stage-title" class="game-stage-title">Name this country</h2>
           </div>
-          <p class="game-card-instruction">Shape only · hints optional</p>
         </header>
         <div id="silhouette-box" class="silhouette-box">
           <img id="silhouette-img" src="" alt="Guess this country" />
-          <div id="flag-hint" class="flag-hint flag-blurred" aria-label="Country flag hint"><img id="flag-img" src="" alt="" /></div>
+          <div id="flag-hint" class="flag-hint flag-blurred" role="img" aria-label="Flag hidden. Use Show flag to reveal it."><img id="flag-img" src="" alt="" /></div>
         </div>
         <div class="game-prompt-context">
           <div class="round-info" aria-label="Round information">
@@ -548,7 +753,7 @@
         </div>
         <section id="asset-recovery" class="asset-recovery hidden" aria-labelledby="asset-recovery-title" aria-live="polite">
           <h3 id="asset-recovery-title">Country shape unavailable</h3>
-          <p id="asset-recovery-message">The country shape could not be loaded. Retry, move on, or return home without saving this round.</p>
+          <p id="asset-recovery-message">This round will not be scored.</p>
           <div class="asset-recovery-actions">
             <button id="btn-retry-silhouette" class="ghost-sm" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-retry"></use></svg><span>Retry</span></button>
             <button id="btn-recover-next" class="ghost-sm" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-next"></use></svg><span>Next country</span></button>
@@ -558,9 +763,8 @@
       </section>
 
       <section id="answer-interaction-panel" class="answer-interaction-panel" aria-labelledby="answer-panel-title" aria-label="Answer interaction region">
-        <header class="game-card-heading answer-card-heading">
+        <header class="game-card-heading answer-card-heading sr-only">
           <div>
-            <p class="game-card-eyebrow">Answer</p>
             <h2 id="answer-panel-title" class="answer-panel-title">Choose your answer</h2>
           </div>
           <p class="game-card-instruction">Type 3× · Options 1×</p>
@@ -568,22 +772,22 @@
         <div id="answer-section" class="answer-section" role="group" aria-label="Answer path">
           <button id="btn-i-know" class="answer-path-btn know-btn" type="button">
             <span class="answer-path-icon" aria-hidden="true"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" focusable="false"><use href="assets/geowars-icons.svg#icon-mode-practice"></use></svg></span>
-            <span class="answer-path-copy"><strong>Type answer</strong><small>Highest score</small></span>
+            <span class="answer-path-copy"><strong>Type answer</strong></span>
             <span class="answer-path-reward"><strong>3×</strong><small>points</small></span>
           </button>
           <button id="btn-show-options" class="answer-path-btn options-btn" type="button">
             <span class="answer-path-icon" aria-hidden="true"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" focusable="false"><use href="assets/geowars-icons.svg#icon-next"></use></svg></span>
-            <span class="answer-path-copy"><strong>Show options</strong><small>Six countries</small></span>
+            <span class="answer-path-copy"><strong>Show options</strong></span>
             <span class="answer-path-reward"><strong>1×</strong><small>points</small></span>
           </button>
         </div>
 
         <div id="type-answer" class="type-answer hidden" role="group" aria-label="Typed answer">
           <div class="autocomplete-wrap">
-            <input id="answer-input" type="text" placeholder="Type the country..." autocomplete="off" autocapitalize="words" role="combobox" aria-label="Country name" aria-autocomplete="list" aria-controls="autocomplete-list" aria-expanded="false" />
+            <input id="answer-input" type="text" placeholder="Country" autocomplete="off" autocapitalize="words" role="combobox" aria-label="Country name" aria-autocomplete="list" aria-controls="autocomplete-list" aria-expanded="false" />
             <div id="autocomplete-list" class="autocomplete-list hidden" role="listbox" aria-label="Country suggestions"></div>
           </div>
-          <button id="btn-submit-answer" class="cta" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-next"></use></svg><span>Lock in</span></button>
+          <button id="btn-submit-answer" class="cta" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-next"></use></svg><span>Submit</span></button>
           <button id="btn-bail" class="bail-btn" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-next"></use></svg><span>Show options (2×)</span></button>
         </div>
 
@@ -605,11 +809,10 @@
             <strong id="region-reveal-title" class="region-reveal-title"></strong>
             <span id="region-reveal-context" class="region-reveal-context"></span>
           </span>
-          <span class="region-reveal-support">Use the region to narrow your answer.</span>
         </section>
 
         <div class="hint-tools">
-          <p class="hint-tools-label"><strong>Hints</strong><span>Optional</span></p>
+          <p class="hint-tools-label sr-only"><strong>Hints</strong></p>
           <div class="hint-row" role="group" aria-label="Hints">
             <button id="btn-show-flag" class="hint-btn" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-flag"></use></svg><span>Show flag</span></button>
             <button id="btn-show-region" class="hint-btn" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-region"></use></svg><span>Show region</span></button>
@@ -624,25 +827,25 @@
             <div class="feedback-verdict">
               <div id="feedback-icon" class="feedback-icon" aria-hidden="true"></div>
               <div class="feedback-verdict-copy">
-                <p class="feedback-eyebrow">Round result</p>
+                <p class="feedback-eyebrow sr-only">Round result</p>
                 <h2 id="feedback-heading" class="feedback-outcome" tabindex="-1">Round feedback</h2>
-                <p id="feedback-status" class="feedback-status" tabindex="-1">Your answer outcome will appear here.</p>
+                <p id="feedback-status" class="feedback-status sr-only" tabindex="-1"></p>
               </div>
             </div>
             <div id="feedback-score" class="feedback-score"></div>
             <div class="feedback-country-card">
               <div class="feedback-country-copy">
-                <p class="feedback-eyebrow">The country was</p>
+                <p class="feedback-eyebrow sr-only">Answer</p>
                 <h3 id="feedback-country-name" class="reveal-name"></h3>
                 <p id="feedback-region" class="reveal-meta"></p>
               </div>
               <div id="feedback-flag" class="feedback-flag"></div>
             </div>
-            <div class="feedback-facts">
-              <div class="feedback-facts-heading"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-region"></use></svg><span>Country facts</span></div>
+            <details id="feedback-facts" class="feedback-facts" open>
+              <summary class="feedback-facts-heading"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-region"></use></svg><span>Country facts</span></summary>
               <div id="feedback-details" class="feedback-details" aria-label="Country facts"></div>
-            </div>
-            <p id="feedback-continue-hint" class="feedback-continue-hint hidden">Next country in a moment · tap anywhere to continue</p>
+            </details>
+            <p id="feedback-continue-hint" class="feedback-continue-hint hidden">Tap to continue</p>
             <div id="feedback-actions" class="feedback-actions hidden" aria-label="Practice session actions">
               <button id="btn-feedback-next" class="feedback-next-btn" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-next"></use></svg><span>Next country</span></button>
               <button id="btn-feedback-results" class="feedback-results-btn" type="button"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-score"></use></svg><span>View results</span></button>
@@ -655,7 +858,7 @@
       <div id="quit-confirm" class="quit-confirm hidden" role="dialog" aria-modal="true" aria-labelledby="quit-confirm-title">
         <div class="quit-confirm-card">
           <h2 id="quit-confirm-title" tabindex="-1">End this run?</h2>
-          <p id="quit-confirm-message">Current progress will be saved to your session results.</p>
+          <p id="quit-confirm-message">Completed answers are saved.</p>
           <div class="quit-confirm-btns">
             <button id="btn-quit-yes" class="cta" type="button">End run</button>
             <button id="btn-quit-no" class="ghost-sm" type="button">Keep playing</button>
@@ -668,26 +871,33 @@
     <section id="results" class="screen hidden results-screen" aria-labelledby="results-title" aria-describedby="results-status">
       <div class="results-card">
         <header class="results-heading">
-          <p id="results-status" class="results-status" role="status" aria-live="polite" tabindex="-1">Session complete. Review your results and choose what to do next.</p>
+          <div id="results-discovery-mark" class="results-discovery-mark" hidden aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><circle cx="24" cy="24" r="19"/><path d="m15 24 6 6 13-13"/></svg></div>
+          <p id="results-status" class="results-status sr-only" role="status" aria-live="polite" tabindex="-1">Complete.</p>
           <h2 id="results-title" tabindex="-1">Done.</h2>
         </header>
         <section class="results-summary" aria-labelledby="results-summary-title">
-          <h3 id="results-summary-title">Run results</h3>
+          <h3 id="results-summary-title" class="sr-only">Score</h3>
           <div class="results-stats">
-            <div class="result-stat"><strong id="res-level">Earthling</strong><span>Level</span></div>
+            <div class="result-stat"><strong id="res-level">Hard</strong><span>Level</span></div>
             <div class="result-stat"><strong id="res-score">0</strong><span>Score</span></div>
             <div class="result-stat"><strong id="res-streak">0</strong><span>Best streak</span></div>
             <div class="result-stat"><strong id="res-correct">0/0</strong><span>Correct</span></div>
           </div>
         </section>
 
+        <fieldset id="quiz-next-difficulty" class="challenge-next-difficulty" hidden>
+          <legend>Difficulty</legend>
+          <div class="next-difficulty-options"></div>
+        </fieldset>
+
         <!-- Save progress prompt (shown for anonymous users) -->
         <section id="save-progress" class="save-progress hidden" aria-labelledby="save-progress-title">
-          <h3 id="save-progress-title" class="save-prompt">Save your stats across devices?</h3>
-          <form id="claim-form" class="claim-form">
+          <h3 id="save-progress-title" class="save-prompt">Save progress</h3>
+          <button id="btn-save-with-google" class="profile-submit" type="button">Sign in</button>
+          <form id="claim-form" class="claim-form" hidden>
             <input id="claim-name" type="text" placeholder="Display name" autocomplete="name" maxlength="20" />
             <input id="claim-email" type="email" placeholder="your@email.com" autocomplete="email" required />
-            <button type="submit" class="claim-btn">Send link</button>
+            <button type="submit" class="claim-btn">Send sign-in code</button>
           </form>
           <p id="claim-status" class="claim-status hidden" role="status" aria-live="polite"></p>
           <button id="btn-dismiss-save" class="bail-btn" type="button" style="margin-top:8px;">Not now</button>
@@ -703,12 +913,45 @@
       </div>
     </section>
 
+    <dialog id="activity-settings-dialog" class="activity-settings-dialog" aria-labelledby="activity-settings-title">
+      <header><h2 id="activity-settings-title">Settings</h2><button id="btn-close-activity-settings" type="button" aria-label="Close difficulty settings">×</button></header>
+      <p id="activity-settings-description" role="status" aria-live="polite"></p>
+      <div id="activity-settings-slot"></div>
+      <div class="activity-settings-actions"><button id="btn-cancel-activity-settings" type="button">Cancel</button><button id="btn-apply-activity-settings" class="profile-submit" type="button">Apply and restart</button></div>
+    </dialog>
+    <div id="activity-legacy-controls" hidden inert></div>
+
     <div id="player-profile-modal" class="profile-modal hidden" role="dialog" aria-modal="true" aria-labelledby="player-profile-title" aria-describedby="player-profile-description">
       <div class="profile-modal-card">
-        <button id="btn-close-player-modal" class="profile-modal-close" type="button" aria-label="Close player chooser">×</button>
-        <p class="profile-modal-eyebrow">PLAYER PROFILE</p>
-        <h2 id="player-profile-title">Choose a player</h2>
-        <p id="player-profile-description" class="profile-modal-description">Enter an email to create a personal profile or switch to an existing one. Opening the magic link will switch this browser to that player’s saved record.</p>
+        <div class="profile-close-slot"><button id="btn-close-player-modal" class="profile-modal-close" type="button" aria-label="Close player chooser">×</button></div>
+        <h2 id="player-profile-title">Players</h2>
+        <p id="player-profile-description" class="profile-modal-description sr-only">Choose a saved player or create one.</p>
+        <div id="device-player-list" class="device-player-list" aria-label="Players on this device"></div>
+        <form id="local-player-form" class="profile-form">
+          <h3>New player</h3>
+          <label for="player-local-name">Nickname</label>
+          <input id="player-local-name" type="text" maxlength="40" autocomplete="nickname" required />
+          <label for="player-local-avatar">Avatar</label>
+          <select id="player-local-avatar" aria-label="Choose an avatar">
+            <option value="🌍">🌍 Earth</option><option value="🚀">🚀 Rocket</option><option value="🦊">🦊 Fox</option>
+            <option value="🐼">🐼 Panda</option><option value="🐬">🐬 Dolphin</option><option value="🦉">🦉 Owl</option>
+          </select>
+          <label id="keep-guest-progress-label" class="profile-check"><input id="keep-guest-progress" type="checkbox" checked /> Keep my guest progress</label>
+          <button class="profile-submit" type="submit">Create player</button>
+          <small>Saved on this device.</small>
+        </form>
+        <section class="player-google-options" aria-labelledby="player-google-title">
+          <h3 id="player-google-title">Sync across devices</h3>
+          <div id="player-google-button" class="google-signin-container" tabindex="-1" aria-label="Google sign-in"></div>
+          <button id="btn-player-google" class="profile-submit google-signin-button" type="button">
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.73-.06-1.42-.19-2.09H12v3.96h5.92a5.06 5.06 0 0 1-2.2 3.32v2.76h3.56c2.08-1.92 3.28-4.75 3.28-7.95Z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.8l-3.56-2.76c-.98.66-2.24 1.06-3.72 1.06-2.87 0-5.3-1.94-6.17-4.55H2.15v2.84A11 11 0 0 0 12 23Z"/><path fill="#FBBC05" d="M5.83 13.95A6.6 6.6 0 0 1 5.48 12c0-.68.12-1.34.35-1.95V7.21H2.15A11 11 0 0 0 1 12c0 1.77.42 3.43 1.15 4.79l3.68-2.84Z"/><path fill="#EA4335" d="M12 5.5c1.62 0 3.06.56 4.21 1.64l3.16-3.16A10.56 10.56 0 0 0 12 1a11 11 0 0 0-9.85 6.21l3.68 2.84C6.7 7.44 9.13 5.5 12 5.5Z"/></svg>
+            Retry Google sign-in
+          </button>
+          <p id="player-google-status" class="profile-status" role="status" aria-live="polite"></p>
+        </section>
+        <details id="player-email-options" class="player-email-options" hidden>
+          <summary>Save across devices / Sign in</summary>
+          <p>Legacy email sign-in.</p>
         <form id="player-profile-form" class="profile-form">
           <label for="player-profile-name">Display name <span>(optional)</span></label>
           <input id="player-profile-name" type="text" autocomplete="name" maxlength="80" />
@@ -717,29 +960,150 @@
           <p id="player-profile-status" class="profile-status hidden" role="status" aria-live="polite"></p>
           <div class="profile-modal-actions">
             <button id="btn-cancel-player-modal" class="profile-cancel" type="button">Cancel</button>
-            <button id="btn-send-player-link" class="profile-submit" type="submit">Send magic link</button>
+            <button id="btn-send-player-link" class="profile-submit" type="submit">Send sign-in link</button>
           </div>
         </form>
+        </details>
+        <p id="local-player-status" class="profile-status" role="status" aria-live="polite"></p>
+        <a class="app-privacy-link" href="/privacy.html" target="_blank" rel="noopener" aria-label="Privacy (opens in a new tab)">Privacy</a>
       </div>
     </div>
+
+    <!-- Daily Worldle Screen -->
+    <section id="worldle-screen" class="screen hidden worldle-screen" aria-labelledby="worldle-title">
+      <main class="worldle-stage">
+        <div class="worldle-puzzle">
+          <div class="worldle-intro">
+            <p id="worldle-day-label" class="worldle-section-kicker sr-only">Daily Puzzle</p>
+            <div class="worldle-intro-heading">
+              <h1 id="worldle-title" tabindex="-1">Daily Puzzle</h1>
+              <button id="btn-worldle-stats" class="worldle-icon-btn" type="button" aria-label="View daily statistics">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16M6 17v-5M12 17V5M18 17V9"/></svg>
+                <span>Stats</span>
+              </button>
+            </div>
+          </div>
+          <figure class="worldle-silhouette-card" aria-label="Mystery country outline">
+            <span id="worldle-round-counter" class="worldle-round-counter">Attempt <strong>1/6</strong></span>
+            <div id="worldle-shape-art" class="worldle-silhouette-art" aria-live="polite"></div>
+            <figcaption class="worldle-mystery-caption sr-only">Country outline</figcaption>
+          </figure>
+        </div>
+
+        <section class="worldle-play-panel" aria-labelledby="worldle-play-title">
+          <div class="worldle-panel-heading sr-only">
+            <div class="worldle-panel-meta">
+              <p class="worldle-section-kicker">Your guess</p>
+              <span id="worldle-guesses-remaining">6 guesses left</span>
+            </div>
+            <h2 id="worldle-play-title">Name the country</h2>
+          </div>
+          <div class="worldle-input-section">
+            <div class="worldle-input-wrapper">
+              <svg class="worldle-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>
+              <input id="worldle-guess-input" class="worldle-input" type="text" placeholder="Country" autocomplete="off" autocapitalize="words" enterkeyhint="go" aria-label="Country guess" role="combobox" aria-autocomplete="list" aria-controls="worldle-suggestions" aria-expanded="false" />
+              <button id="worldle-guess-submit" class="worldle-submit-btn" type="button"><span>Guess</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
+              <div id="worldle-suggestions" class="worldle-autocomplete-list hidden" role="listbox" aria-label="Country matches"></div>
+            </div>
+            <p id="worldle-toast" class="worldle-copied-toast" role="status" aria-live="polite"></p>
+          </div>
+          <section id="worldle-guidance" class="worldle-guidance" data-state="ready" aria-label="Your next bearing" role="status" aria-live="polite" aria-atomic="true">
+            <div class="worldle-compass" aria-hidden="true">
+              <svg viewBox="0 0 100 100" fill="none">
+                <circle cx="50" cy="50" r="42"/>
+                <circle class="worldle-compass-inner" cx="50" cy="50" r="31"/>
+                <path d="M50 3v10m0 74v10M3 50h10m74 0h10M17 17l7 7m52 52 7 7M17 83l7-7m52-52 7-7"/>
+                <g id="worldle-compass-needle" class="worldle-compass-needle">
+                  <path class="worldle-compass-north" d="m50 22 10 28-10-5-10 5Z"/>
+                  <path class="worldle-compass-south" d="m50 78-10-28 10 5 10-5Z"/>
+                </g>
+                <circle class="worldle-compass-pin" cx="50" cy="50" r="3"/>
+              </svg>
+            </div>
+            <div class="worldle-guidance-copy">
+              <p id="worldle-guidance-kicker" class="worldle-section-kicker sr-only">How to play</p>
+              <h3 id="worldle-guidance-title">Each guess shows distance and direction.</h3>
+              <p id="worldle-empty-hint" class="worldle-empty-hint sr-only">Arrows point toward the answer.</p>
+              <p id="worldle-guidance-copy" hidden></p>
+            </div>
+            <div id="worldle-closest" class="worldle-closest" hidden>
+              <div><span>Closest</span><strong id="worldle-closest-label"></strong></div>
+              <div class="worldle-closest-track"><span id="worldle-closest-fill"></span></div>
+            </div>
+          </section>
+          <div id="worldle-history-heading" class="worldle-history-heading" hidden>
+            <h3>Guesses</h3>
+          </div>
+          <div id="worldle-guesses-container" class="worldle-guesses-container" aria-label="Your guesses" role="region"></div>
+          <p id="worldle-direction-hint" class="worldle-hint sr-only" hidden>Arrows point toward the answer.</p>
+        </section>
+      </main>
+
+      <!-- Outcome / Statistics Modal -->
+      <div id="worldle-modal" class="worldle-modal hidden" role="dialog" aria-modal="true" aria-labelledby="worldle-modal-title">
+        <div class="worldle-modal-card">
+          <button id="btn-worldle-modal-close" class="worldle-modal-close" type="button" aria-label="Close summary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+          <div class="worldle-modal-header">
+            <p id="worldle-modal-kicker" class="worldle-modal-kicker sr-only">Summary</p>
+            <h2 id="worldle-modal-title" class="worldle-modal-title">Daily Worldle</h2>
+          </div>
+
+          <div class="worldle-revealed-country">
+            <span id="worldle-revealed-flag" class="worldle-revealed-flag" aria-hidden="true"></span>
+            <div class="worldle-revealed-info">
+              <strong id="worldle-revealed-name">—</strong>
+              <span id="worldle-revealed-region">—</span>
+            </div>
+          </div>
+
+          <p id="worldle-revealed-fact" class="worldle-revealed-fact"></p>
+
+          <div class="worldle-stats-grid">
+            <div class="worldle-stat-box"><strong id="worldle-stat-played">0</strong><span>Played</span></div>
+            <div class="worldle-stat-box"><strong id="worldle-stat-win-pct">0%</strong><span>Win %</span></div>
+            <div class="worldle-stat-box"><strong id="worldle-stat-streak">0</strong><span>Current</span></div>
+            <div class="worldle-stat-box"><strong id="worldle-stat-max-streak">0</strong><span>Max Streak</span></div>
+          </div>
+
+          <div class="worldle-actions">
+            <button id="btn-worldle-explore-answer" class="worldle-icon-btn hidden" type="button">Explore</button>
+            <button id="btn-worldle-share" class="worldle-share-btn" type="button">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+              <span>Share</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 
-  <script src="data/countries.js?v=20260802-moldova-encoding1"></script>
+  <script src="data/countries.js?v=20260831-cy-ps197"></script>
   <script src="data/territories.js?v=20260730-territories3"></script>
-  <script src="difficulty-ladder.js?v=20260803-ladder1"></script>
+  <script src="difficulty-ladder.js?v=20261014-worldle-nav1"></script>
   <script src="ladder-progress.js?v=20260803-ladder1"></script>
+  <script src="player-profiles.js?v=20261108-profiles1"></script>
+  <script src="learning-progress.js?v=20261108-profiles1"></script>
+  <script src="daily-challenge.js?v=20261014-worldle-nav1"></script>
+  <script src="daily-worldle.js?v=20261108-profiles1"></script>
   <script src="anthems.js"></script>
-  <script src="supabase-client.js?v=20260802-device-stats1"></script>
+  <script src="supabase-client.js?v=20261110-security1"></script>
+  <script src="google-signin.js?v=20261109-google-direct1"></script>
   <script src="audio-engine.js"></script>
   <script src="haptics.js?v=20260802-hunt-resilience1"></script>
   <script src="particles.js"></script>
   <script src="celebration-text.js"></script>
   <script src="background-music.js?v=20260730-explorer2"></script>
-  <script src="asset-fallbacks.js"></script>
-  <script src="app.js?v=20260802-premium-flow1"></script>
+  <script src="asset-fallbacks.js?v=20261111-daily-icon1"></script>
+  <script src="shape-geometry.js?v=20261107-shapes2"></script>
+  <script src="app.js?v=20261110-daily-nav2"></script>
   <script src="assets/globe-data.js?v=20260729-natural-earth"></script>
-  <script src="interactive-globe.js?v=20260729-editorial-layout3"></script>
+  <script src="interactive-globe.js?v=20261014-worldle-nav1"></script>
   <script src="geography.js?v=20260730-guidance1"></script>
-  <script src="globe-explorer.js?v=20260802-landmark-media7"></script>
+  <script src="globe-explorer.js?v=20261111-phone-game1"></script>
+  <script src="atlas.js?v=20261108-approx1"></script>
+  <script src="worldle.js?v=20261110-native-flags1"></script>
+  <script src="challenge-previews.js?v=20261110-globe-reveal1"></script>
+  <script src="mobile-experience.js?v=20261108-activities1"></script>
+  <script src="activities.js?v=20261110-daily-nav2"></script>
 </body>
 </html>

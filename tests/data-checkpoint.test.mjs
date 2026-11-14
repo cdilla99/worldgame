@@ -8,8 +8,8 @@ const require = createRequire(import.meta.url);
 const legacyCards = require('../data/countries.js');
 const expectedChunkSizes = Object.freeze({
   Africa: 54,
-  Asia: 48,
-  Europe: 44,
+  Asia: 49,
+  Europe: 45,
   'North America': 23,
   'South America': 12,
   Oceania: 14

@@ -1,0 +1,753 @@
+/* ============================================================
+   EARTHLING THEME: Mandarin Orange, Forest Green, Crest Yellow
+   Shared component styles. retro-theme.css supplies the final palette and
+   display typography; country flags and map artwork retain their own colours.
+   ============================================================ */
+
+@font-face {
+  font-family: 'Sora';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('assets/fonts/sora-latin-wght.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('assets/fonts/inter-latin-wght.woff2') format('woff2');
+}
+
+:root {
+  --font-display: 'Sora', ui-rounded, 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --color-page: #0a0a10;
+  --color-surface: #13131c;
+  --color-surface-raised: #1c1c29;
+  --color-primary: #f28c28;
+  --color-primary-hover: #ffac59;
+  --color-on-primary: #ffffff;
+  --color-text: #f4f4fa;
+  --color-muted: #b4b4c8;
+  --color-success: #a7c8ad;
+  --color-error: #ff7d8f;
+  --color-warning: #ffd166;
+  --color-focus: #f4c542;
+  --color-border: #34344a;
+  --color-border-strong: #6a6a88;
+  --color-brand: #f28c28;
+
+  --gw-page: #0a0a10;
+  --gw-panel: #13131c;
+  --gw-panel-deep: #0e0e15;
+  --gw-line: rgba(180, 180, 210, 0.22);
+  --gw-line-strong: rgba(244, 197, 66, 0.5);
+  --gw-blue: #f4c542;
+  --gw-green: #a7c8ad;
+  --gw-green-deep: #80ae8c;
+  --gw-red: #ff7d8f;
+
+  --theme-indigo: #f28c28;
+  --theme-indigo-soft: rgba(242, 140, 40, 0.16);
+  --theme-indigo-line: rgba(242, 140, 40, 0.42);
+  --theme-indigo-text: #ffc584;
+  --theme-mint: #a7c8ad;
+  --theme-line: #34344a;
+}
+
+body {
+  background:
+    radial-gradient(circle at 12% -10%, rgba(242, 140, 40, 0.2), transparent 34rem),
+    radial-gradient(circle at 94% 106%, rgba(27, 77, 62, 0.08), transparent 30rem),
+    var(--color-page);
+  font-family: var(--font-body);
+}
+
+body.is-explorer-active .app,
+body.is-explorer-active[data-atlas-view='shapes'] .app {
+  background: transparent;
+}
+
+html {
+  background: var(--color-page);
+}
+
+body.is-explorer-active,
+body.is-explorer-active[data-atlas-view='shapes'] {
+  background:
+    radial-gradient(circle at 12% -10%, rgba(242, 140, 40, 0.2), transparent 34rem),
+    radial-gradient(circle at 94% 106%, rgba(27, 77, 62, 0.08), transparent 30rem),
+    var(--color-page);
+}
+
+.atlas-shell[data-atlas-view='globe'],
+.atlas-shell[data-atlas-view='shapes'] {
+  --atlas-ink: #f4f4fa;
+  --atlas-muted: #9a9ab4;
+  --atlas-line: rgba(180, 180, 210, 0.3);
+  --atlas-line-strong: rgba(180, 180, 210, 0.5);
+}
+
+.atlas-shell[data-atlas-view='shapes'] {
+  --atlas-paper: #13131c;
+  --atlas-paper-raised: #0a0a10;
+  --atlas-accent: #f28c28;
+  --atlas-accent-dark: #ffac59;
+}
+
+/* ---------- Logo ---------- */
+/* The lockup is wider and shorter than before (287 by 56), so size by width to keep the globe prominent. */
+.atlas-header .explorer-home-logo {
+  width: clamp(200px, 17vw, 250px);
+}
+
+.atlas-header .explorer-home-logo img,
+.atlas-logo-globe {
+  filter: drop-shadow(0 4px 18px rgba(242, 140, 40, 0.35));
+  transition: filter 160ms ease, transform 160ms ease;
+}
+
+.atlas-header .explorer-home-logo:hover img {
+  filter: drop-shadow(0 4px 22px rgba(242, 140, 40, 0.6));
+  transform: translateY(-1px);
+}
+
+.game-home-logo img {
+  width: clamp(168px, 15vw, 210px);
+}
+
+@media (max-width: 600px) {
+  .atlas-header .explorer-home-logo {
+    width: 172px;
+  }
+
+  .game-home-logo img {
+    width: clamp(120px, 36vw, 150px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atlas-header .explorer-home-logo img,
+  .atlas-logo-globe {
+    transition: none;
+  }
+
+  .atlas-header .explorer-home-logo:hover img {
+    transform: none;
+  }
+}
+
+/* ---------- Typography ---------- */
+h1, h2, h3,
+.type-display, .type-heading,
+.atlas-challenge-card h3,
+.atlas-shape-toolbar h3,
+.explorer-country-identity h2,
+.worldle-intro h1,
+.worldle-panel-heading h2 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+.atlas-primary-nav button,
+.atlas-explore-switch button,
+.atlas-utility-menu > summary,
+.cta,
+.worldle-submit-btn,
+.worldle-share-btn,
+.mode-chip .mode-title,
+.answer-path-btn strong {
+  font-family: var(--font-display);
+}
+
+.atlas-challenge-card h3,
+.atlas-challenge-heading h2,
+.worldle-intro h1,
+.explorer-country-identity h2 {
+  font-weight: 700;
+}
+
+/* Sora is wider than the system face, so the old tight tracking made headings cramped. */
+.game-stage-title,
+.answer-panel-title,
+.atlas-shape-toolbar h3,
+.explorer-stage-heading h2,
+.results-card h2,
+.reveal-name,
+.worldle-panel-heading h2,
+.atlas-challenge-heading h2,
+.explorer-country-identity h2 {
+  letter-spacing: -0.01em;
+}
+
+/* The offline flag fallback does not fit the 82 by 52 hint box; show the icon only. */
+.flag-hint > .asset-fallback {
+  overflow: hidden;
+}
+
+.flag-hint > .asset-fallback > [class*='asset-fallback__'] {
+  display: none;
+}
+
+/* Small caps labels were as small as 9px; keep them legible. */
+.atlas-plate-axis,
+.explorer-country-kicker,
+.explorer-country-facts dt,
+.explorer-more-facts dt,
+.landing-selection-copy > span,
+.mode-chip .mode-desc,
+.atlas-shape-toolbar-eyebrow,
+.worldle-section-kicker,
+.asset-fallback__code {
+  font-size: max(0.7rem, 11px);
+}
+
+.explorer-country-kicker,
+.worldle-section-kicker,
+.atlas-shape-toolbar-eyebrow,
+.landing-setup-kicker,
+.setup-group legend,
+.worldle-history-heading span {
+  color: var(--theme-mint);
+}
+
+.explorer-country-kicker,
+.worldle-section-kicker,
+.atlas-shape-toolbar-eyebrow {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+/* ---------- Navigation ---------- */
+.atlas-primary-nav,
+.atlas-explore-switch {
+  border-color: var(--theme-line);
+  background: var(--color-surface);
+}
+
+:is(.atlas-primary-nav, .atlas-explore-switch) button {
+  color: #c8c8da;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+:is(.atlas-primary-nav, .atlas-explore-switch) button:hover:not(:disabled) {
+  background: var(--color-surface-raised);
+  color: #ffffff;
+}
+
+:is(.atlas-primary-nav, .atlas-explore-switch) button.is-active,
+:is(.atlas-primary-nav, .atlas-explore-switch) button[aria-pressed="true"],
+:is(.atlas-primary-nav, .atlas-explore-switch) button:hover:not(:disabled).is-active,
+:is(.atlas-primary-nav, .atlas-explore-switch) button:hover:not(:disabled)[aria-pressed="true"] {
+  background: var(--color-primary);
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgba(242, 140, 40, 0.35);
+}
+
+.atlas-utility-menu > summary {
+  border-color: var(--theme-line);
+  background: var(--color-surface);
+  color: #c8c8da;
+  font-weight: 600;
+}
+
+.atlas-utility-menu:not([open]) > summary:hover {
+  border-color: var(--theme-indigo-line);
+  background: var(--color-surface-raised);
+  color: #ffffff;
+}
+
+.atlas-utility-menu[open] > summary {
+  border-color: var(--theme-indigo-line);
+  background: var(--color-surface-raised);
+  color: #ffffff;
+}
+
+.atlas-header {
+  border-color: var(--theme-line);
+}
+
+/* ---------- Primary actions ---------- */
+.cta,
+.know-btn,
+.feedback-next-btn,
+.profile-submit,
+.claim-btn,
+.worldle-submit-btn,
+.worldle-share-btn,
+.atlas-text-action {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #ffffff;
+  box-shadow: 0 8px 26px rgba(242, 140, 40, 0.32);
+}
+
+.cta {
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+
+.cta:hover,
+.know-btn:hover:not(:disabled),
+.feedback-next-btn:hover:not(:disabled),
+.worldle-submit-btn:hover:not(:disabled),
+.worldle-share-btn:hover,
+.atlas-text-action:hover {
+  border-color: var(--color-primary-hover);
+  background: var(--color-primary-hover);
+  color: #ffffff;
+}
+
+.worldle-submit-btn {
+  background: var(--color-primary);
+}
+
+.landing .landing-start-action:hover:not(:disabled) {
+  border-color: var(--color-primary-hover);
+  background: var(--color-primary-hover);
+  color: #ffffff;
+}
+
+/* ---------- Cards and panels ---------- */
+.atlas-challenge-card,
+.worldle-play-panel,
+.explorer-info-panel,
+.answer-interaction-panel,
+.game-stage,
+.results-card {
+  border-color: var(--theme-line);
+  background: var(--color-surface);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+}
+
+.results-card {
+  background:
+    radial-gradient(circle at 50% 0, rgba(242, 140, 40, 0.16), transparent 24rem),
+    var(--color-surface);
+}
+
+
+
+.atlas-challenge-quiz-slot .mode-icon,
+.atlas-menu-setup-slot .mode-icon {
+  color: var(--theme-indigo-text);
+}
+
+.mode-icon {
+  color: var(--theme-indigo-text);
+}
+
+.landing-selection-status {
+  border-color: var(--theme-line);
+  background: var(--color-surface-raised);
+  color: #e8e8f4;
+}
+
+.mode-settings-icon:hover {
+  border-color: var(--theme-indigo-line);
+  background: #25253a;
+  color: #ffffff;
+}
+
+.mode-chip {
+  border-color: var(--theme-line);
+  background: var(--color-page);
+  color: #d8d8e8;
+}
+
+.mode-chip:hover {
+  border-color: var(--theme-indigo-line);
+}
+
+.mode-chip.active,
+.mode-chip[aria-pressed="true"] {
+  border-color: #f28c28;
+  background: rgba(242, 140, 40, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(242, 140, 40, 0.45);
+  color: #ffffff;
+}
+
+.mode-chip .mode-desc {
+  color: #a8a8c0;
+}
+
+.atlas-challenge-hunt .atlas-hunt-preview {
+  filter: drop-shadow(0 8px 28px rgba(242, 140, 40, 0.45));
+}
+
+.atlas-quiz-art {
+  filter: drop-shadow(0 10px 26px rgba(242, 140, 40, 0.6));
+}
+
+/* ---------- Globe and Shapes ---------- */
+.explorer-layout {
+  width: 100%;
+}
+
+.explorer-info-panel {
+  background:
+    radial-gradient(circle at 100% 0, rgba(242, 140, 40, 0.14), transparent 22rem),
+    var(--color-surface);
+}
+
+.explorer-search-input-wrap,
+.explorer-country-search,
+.explorer-globe-controls,
+.explorer-globe-controls button {
+  border-color: var(--theme-line);
+  background: var(--color-surface);
+}
+
+.explorer-country-facts {
+  background: var(--theme-line);
+}
+
+.explorer-country-facts > div {
+  background: var(--color-page);
+}
+
+.explorer-fact {
+  border-color: var(--theme-indigo-line);
+  background: var(--theme-indigo-soft);
+  color: #ececf8;
+}
+
+.explorer-fact::before {
+  background: #f4c542;
+}
+
+.explorer-country-status {
+  border-color: var(--theme-indigo-line);
+  background: var(--theme-indigo-soft);
+  color: #ffe0be;
+}
+
+.atlas-shape-toolbar {
+  border-color: var(--theme-line);
+  background: var(--color-surface);
+}
+
+.atlas-shape-controls button,
+.atlas-shape-controls select {
+  border-color: #50506a;
+  background: var(--color-page);
+  color: #f4f4fa;
+}
+
+.atlas-shape-controls button:hover {
+  border-color: #f4c542;
+  background: var(--color-surface-raised);
+}
+
+.atlas-shapes-workspace .atlas-shape-plate,
+.worldle-silhouette-card,
+.silhouette-box {
+  border-color: var(--theme-line);
+  background:
+    linear-gradient(rgba(242, 140, 40, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(242, 140, 40, 0.06) 1px, transparent 1px),
+    radial-gradient(circle at 50% 46%, rgba(242, 140, 40, 0.34), transparent 56%),
+    var(--color-page);
+  background-size: 28px 28px, 28px 28px, auto, auto;
+}
+
+.atlas-shapes-workspace .atlas-shape-plate::before,
+.worldle-silhouette-card::before,
+.silhouette-box::before {
+  border-color: rgba(27, 77, 62, 0.2);
+}
+
+.atlas-shapes-workspace .atlas-shape-art svg,
+.worldle-silhouette-art svg {
+  filter: brightness(0) invert(1) drop-shadow(0 14px 32px rgba(242, 140, 40, 0.45));
+}
+
+/* The flag hint is meant to sit in the corner; a later rule put it back in the flex flow. */
+.silhouette-box > .flag-hint {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 2;
+}
+
+/* The quiz outline is an inline SVG, so the image rules never sized it. */
+.silhouette-box > svg {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  color: #ffffff;
+  filter: drop-shadow(0 14px 32px rgba(242, 140, 40, 0.45));
+}
+
+.silhouette-box > img {
+  filter: brightness(0) invert(1) drop-shadow(0 14px 32px rgba(242, 140, 40, 0.45));
+}
+
+/* ---------- Daily Puzzle ---------- */
+@media (min-width: 851px) {
+  /* Both columns end together: the guess panel sets the height and the outline card fills the rest. */
+  .worldle-stage {
+    align-items: stretch;
+  }
+
+  .worldle-puzzle {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .worldle-silhouette-card {
+    height: auto;
+    min-height: clamp(300px, 48vh, 440px);
+  }
+
+  .worldle-silhouette-art {
+    contain: size;
+  }
+}
+.worldle-input,
+.worldle-icon-btn,
+.worldle-round-counter {
+  border-color: #50506a;
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.worldle-round-counter {
+  background: rgba(10, 10, 16, 0.85);
+}
+
+.worldle-icon-btn:hover {
+  border-color: #f4c542;
+  background: #25253a;
+}
+
+.worldle-input:focus {
+  border-color: #f4c542;
+  background: var(--color-surface-raised);
+}
+
+.worldle-guess-row {
+  border-color: var(--theme-line);
+  background: var(--color-surface-raised);
+}
+
+.worldle-meter-fill,
+.worldle-meter-bar {
+  background: linear-gradient(90deg, #f4c542, #a7c8ad);
+}
+
+/* ---------- Menu panel ---------- */
+.atlas-utility-panel {
+  border-color: var(--theme-line);
+  background: var(--color-surface);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.6);
+  color: var(--color-text);
+}
+
+.atlas-utility-panel .atlas-menu-setup-slot,
+.atlas-utility-panel .atlas-stats-slot {
+  padding: 0;
+}
+
+.atlas-utility-panel .player-context,
+.atlas-utility-panel .player-context-action,
+.atlas-utility-panel .landing-statistics,
+.explorer-music-toggle,
+.explorer-haptics-toggle {
+  border-color: var(--theme-line);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.explorer-music-toggle[aria-pressed="true"],
+.explorer-haptics-toggle[aria-pressed="true"] {
+  border-color: rgba(27, 77, 62, 0.55);
+  background: rgba(27, 77, 62, 0.1);
+}
+
+.game-setup,
+.game-setup-content {
+  border-color: var(--theme-line);
+  background: var(--color-surface-raised);
+}
+
+.game-setup-chevron {
+  color: var(--theme-indigo-text);
+}
+
+.diff-btn {
+  border-color: var(--theme-line);
+  background: var(--color-page);
+  color: #d8d8e8;
+}
+
+.diff-btn:hover:not(:disabled) {
+  border-color: var(--theme-indigo-line);
+}
+
+#challenge-settings .diff-btn.active,
+#challenge-settings .diff-btn[aria-pressed="true"],
+.diff-btn.active,
+.diff-btn[aria-pressed="true"] {
+  border-color: #f28c28;
+  background: rgba(242, 140, 40, 0.3);
+  color: #ffffff;
+}
+
+/* ---------- Quiz screen ---------- */
+/* The 3x / 1x rewards already sit on the buttons, so the repeated heading line goes. */
+.answer-card-heading .game-card-instruction {
+  display: none;
+}
+
+.silhouette-box {
+  height: clamp(300px, 44vh, 460px);
+}
+
+.answer-path-btn.know-btn,
+.answer-path-btn.options-btn {
+  min-height: 96px;
+}
+
+.answer-path-copy strong {
+  font-size: 1.05rem;
+}
+
+/* ---------- Game screen ---------- */
+.round-pill,
+.score-pill,
+.streak-pill,
+.timer-container,
+.ghost-sm,
+.pill-sm,
+.hint-btn,
+.bail-btn {
+  border-color: var(--theme-line);
+  background: var(--color-surface);
+}
+
+.score-pill {
+  border-color: rgba(27, 77, 62, 0.55);
+  background: rgba(27, 77, 62, 0.08);
+}
+
+.streak-pill {
+  border-color: rgba(255, 209, 102, 0.6);
+  background: rgba(255, 209, 102, 0.08);
+  color: #ffd166;
+}
+
+.timer-container {
+  box-shadow: 0 0 0 1px rgba(244, 197, 66, 0.4), inset 0 0 20px rgba(242, 140, 40, 0.16);
+}
+
+.answer-path-btn.know-btn {
+  border-color: #f28c28;
+  background: linear-gradient(135deg, #ffac59, #f28c28);
+  color: #ffffff;
+  box-shadow: 0 14px 34px rgba(242, 140, 40, 0.35);
+}
+
+.answer-path-btn.know-btn :is(strong, span, small, em),
+.answer-path-btn.know-btn .answer-path-icon {
+  color: var(--color-on-primary);
+}
+
+#btn-show-options.answer-path-btn,
+.answer-interaction-panel .answer-path-btn.options-btn,
+.answer-path-btn.options-btn {
+  border-color: var(--theme-line);
+  background: var(--color-surface-raised);
+}
+
+.result-stat {
+  border-color: var(--theme-line);
+  background: var(--color-page);
+}
+
+.results-status {
+  color: var(--theme-mint);
+}
+
+@media (max-width: 600px) {
+  .atlas-utility-panel {
+    padding: 12px;
+  }
+
+  /* Sora is taller than the system face; keep both launch buttons on one screen. */
+  .atlas-challenge-panel {
+    gap: 10px;
+  }
+
+  .atlas-challenge-card {
+    padding: 13px;
+  }
+
+  .atlas-challenge-heading h2 {
+    font-size: 1.25rem;
+  }
+}
+
+/* ---------- Less decoration ---------- */
+/* Grid textures, inset frames, crosshairs, glows and repeated labels added noise
+   without helping anyone play, so they are switched off. */
+.atlas-challenge-stage,
+.atlas-shapes-workspace .atlas-shape-plate,
+.worldle-silhouette-card,
+.silhouette-box {
+  background:
+    radial-gradient(circle at 50% 48%, rgba(242, 140, 40, 0.28), transparent 62%),
+    var(--color-page);
+  background-size: auto;
+}
+
+.atlas-shapes-workspace .atlas-shape-plate::before,
+.atlas-shapes-workspace .atlas-shape-plate::after,
+.worldle-silhouette-card::before,
+.silhouette-box::before,
+.silhouette-box::after {
+  display: none;
+}
+
+.atlas-plate-heading,
+.atlas-plate-axis,
+#explorer-country-kicker {
+  display: none;
+}
+
+.cta,
+.know-btn,
+.feedback-next-btn,
+.profile-submit,
+.claim-btn,
+.worldle-submit-btn,
+.worldle-share-btn,
+.atlas-text-action,
+.answer-path-btn.know-btn,
+:is(.atlas-primary-nav, .atlas-explore-switch) button.is-active,
+:is(.atlas-primary-nav, .atlas-explore-switch) button[aria-pressed="true"],
+:is(.atlas-primary-nav, .atlas-explore-switch) button:hover:not(:disabled).is-active,
+:is(.atlas-primary-nav, .atlas-explore-switch) button:hover:not(:disabled)[aria-pressed="true"] {
+  box-shadow: none;
+}
+
+.atlas-header .explorer-home-logo img,
+.atlas-logo-globe,
+.atlas-header .explorer-home-logo:hover img {
+  filter: none;
+}
+
+.atlas-challenge-card,
+.worldle-play-panel,
+.explorer-info-panel,
+.answer-interaction-panel,
+.game-stage,
+.results-card {
+  box-shadow: none;
+}

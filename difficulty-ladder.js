@@ -18,7 +18,7 @@
   const LEVELS = Object.freeze({
     cadet: Object.freeze({
       id: 'cadet',
-      name: 'Cadet',
+      name: 'Easy',
       recommendation: 'Start with familiar countries, multiple-choice answers and helpful clues.',
       description: 'Start with familiar countries, multiple-choice answers and helpful clues.',
       answerFormat: '4-choice multiple choice',
@@ -42,7 +42,7 @@
     }),
     explorer: Object.freeze({
       id: 'explorer',
-      name: 'Explorer',
+      name: 'Medium',
       recommendation: 'Explore more of the world with fewer clues.',
       description: 'Explore more of the world with fewer clues.',
       answerFormat: '4-choice multiple choice',
@@ -66,7 +66,7 @@
     }),
     earthling: Object.freeze({
       id: 'earthling',
-      name: 'Earthling',
+      name: 'Hard',
       recommendation: 'No labels. Name the country from its shape.',
       description: 'No labels. Name the country from its shape.',
       answerFormat: 'Typed answer or current advanced mechanic',
@@ -90,7 +90,7 @@
     }),
     expert: Object.freeze({
       id: 'expert',
-      name: 'Expert Verification',
+      name: 'Expert',
       recommendation: 'Hard countries. No clues. One mistake can end the run.',
       description: 'Hard countries. No clues. One mistake can end the run.',
       answerFormat: 'Typed answer only',

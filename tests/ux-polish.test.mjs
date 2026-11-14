@@ -14,34 +14,34 @@ test('EARTHLING uses the dedicated SVG lockup on landing and as an in-game home 
   const app = read('app.js');
   const explorer = read('globe-explorer.js');
 
-  assert.match(logo, /<svg[\s\S]*viewBox="0 0 276 64"/);
+  assert.match(logo, /<svg[\s\S]*viewBox="0 0 287 56"/);
   assert.match(logo, /<title id="title">EARTHLING<\/title>/);
-  assert.match(logo, /WORLD SHAPE GAME/);
+  assert.doesNotMatch(logo, /<text\b/, 'the wordmark is outlined so it renders without any font');
   assert.match(html, /id="btn-landing-home" class="brand-lockup" type="button" aria-label="Return to the EARTHLING home page"/);
   assert.match(html, /class="brand-logo" src="assets\/geowars-logo\.svg" alt="EARTHLING"/);
-  assert.match(html, /class="explorer-home-logo" type="button" data-explorer-home aria-label="Return to the EARTHLING home page"/);
+  assert.match(html, /class="explorer-home-logo"[\s\S]*src="assets\/geowars-logo\.svg" alt="EARTHLING"/);
   assert.match(html, /id="btn-game-home"[\s\S]*aria-label="Return to the EARTHLING home page"/);
-  assert.match(app, /\$landingHomeLogo\.addEventListener\('click', \(\) => showScreen\(\$landing\)\)/);
+  assert.match(app, /\$landingHomeLogo\.addEventListener\('click', showExplorerFirstLanding\)/);
   assert.match(app, /\$gameHomeLogo\.addEventListener\('click'/);
-  assert.match(app, /showScreen\(\$landing\)/);
+  assert.match(app, /showExplorerFirstLanding\(\)/);
   assert.match(explorer, /homeButtons\.forEach\(button => button\.addEventListener\('click', returnHome\)\)/);
 });
 
-test('globe selection is repeated in persistent, live, and ready-to-play surfaces', () => {
+test('Explorer preview stays lightweight while shape settings retain region state', () => {
   const html = read('index.html');
   const app = read('app.js');
   const globe = read('interactive-globe.js');
   const styles = read('ux-polish.css');
 
-  assert.match(html, /class="globe-scope-switch" role="group" aria-label="Challenge scope"/);
+  assert.match(html, /class="landing-globe-legacy-controls" hidden aria-hidden="true"/);
   assert.match(html, /id="btn-globe-region-mode"[\s\S]*aria-pressed="false"/);
   assert.match(html, /id="globe-region-toggle-label">Regions</);
-  assert.match(html, /id="btn-globe-worldwide"[\s\S]*195 countries/);
-  assert.match(html, /id="globe-selection-card" class="globe-selection-card" aria-live="polite"/);
+  assert.match(html, /id="btn-globe-worldwide"[\s\S]*Worldwide/);
+  assert.match(html, /id="globe-selection-card"/);
   assert.match(html, /id="globe-selection-label">Worldwide</);
-  assert.match(html, /class="globe-selection-applied">Selected</);
   assert.match(app, /\$globeSelectionLabel\.textContent = continentLabel/);
-  assert.match(app, /Sprint · 60 seconds · \$\{diffLabel\} · \$\{continentLabel\}/);
+  assert.doesNotMatch(html, /id="mode-summary"/);
+  assert.match(html, /id="btn-change-settings"/);
   assert.match(globe, /selected\./);
   assert.match(globe, /confirmSelection\(\)/);
   assert.match(globe, /regionModeButton\.setAttribute\('aria-pressed'/);
@@ -51,52 +51,59 @@ test('globe selection is repeated in persistent, live, and ready-to-play surface
   assert.match(styles, /\.globe-scope-worldwide\.is-active/);
 });
 
-test('landing copy leads with Explorer and keeps the shape game concise', () => {
+test('homepage copy leads with educational Explorer value and labels the shape game advanced', () => {
   const html = read('index.html');
   const app = read('app.js');
   const fallbacks = read('asset-fallbacks.js');
 
-  assert.match(html, /Interactive world atlas/);
-  assert.match(html, /Explore the world\./);
-  assert.match(html, /Discover 195 countries\. Then race to find them\./);
-  assert.match(html, /Name countries from their shapes\./);
-  assert.match(html, /Country shape game/);
+  assert.match(html, /id="explorer-stage-title"[\s\S]*Explore the world/);
+  assert.match(html, /id="explorer-globe-canvas"/);
+  assert.match(html, /id="explorer-country-card"/);
+  assert.match(app, /function composeExplorerHomepage\(\)/);
+  assert.match(html, /Border Outline <em>Advanced<\/em>/);
   assert.doesNotMatch(html, /Country silhouette challenge/);
   assert.doesNotMatch(html, /Recognize country shapes in a 60-second sprint/);
   assert.doesNotMatch(html, /Pick a pace, then jump straight into the world/);
-  assert.match(app, /Sprint · 60 seconds · \$\{diffLabel\} · \$\{continentLabel\}/);
+  assert.doesNotMatch(html, /class="atlas-stage-summary"/);
+  assert.match(app, /isSprint \? 'Start sprint' : 'Start practice'/);
   assert.match(fallbacks, /title: 'Shape unavailable'/);
 });
 
-test('the mobile shape preview is a Demo disclosure with a dedicated explanation label', () => {
+test('the sample-round shape preview is a standalone always-on card', () => {
   const html = read('index.html');
   const styles = read('ux-polish.css');
   const app = read('app.js');
 
   assert.match(html, /<details id="landing-shape-preview" class="landing-shape-preview"/);
-  assert.match(html, /<summary class="landing-shape-preview-toggle">Demo<\/summary>/);
+  assert.match(html, /<summary class="landing-shape-preview-toggle">See a sample round<\/summary>/);
   assert.match(html, /landing-shape-preview-kicker-desktop">Sample round</);
   assert.match(html, /landing-shape-preview-kicker-mobile">How it works</);
-  assert.match(app, /function syncLandingShapePreviewDisclosure\(\)[\s\S]*\$landingShapePreview\.open = landingShapePreviewDesktopQuery\.matches;/);
-  assert.match(app, /landingShapePreviewDesktopQuery\?\.addEventListener\?\.\('change', syncLandingShapePreviewDisclosure\)/);
+  // The sample-round card is now standalone and always visible, so the
+  // disclosure just keeps it open regardless of viewport/panel state.
+  assert.match(app, /function syncLandingShapePreviewDisclosure\(\)[\s\S]*\$landingShapePreview\.open = true;/);
   assert.match(styles, /@media \(min-width: 1024px\)[\s\S]*\.landing-shape-preview-stage\s*\{[\s\S]*minmax\(350px, 1fr\)[\s\S]*min-height: 470px;/);
   assert.match(styles, /@media \(min-width: 1024px\)[\s\S]*\.landing-shape-preview-art svg\s*\{[\s\S]*width: 300px;[\s\S]*max-height: none;/);
-  assert.match(styles, /@media \(max-width: 767px\)[\s\S]*\.landing-shape-preview-toggle\s*\{[\s\S]*display: flex;/);
-  assert.match(styles, /@media \(max-width: 767px\)[\s\S]*\.landing-shape-preview-kicker-mobile\s*\{[\s\S]*display: block;/);
+  // On mobile the collapse toggle is hidden (always-on card) and the desktop
+  // "Sample round" kicker is shown instead of the "How it works" accordion label.
+  assert.match(styles, /@media \(max-width: 767px\)[\s\S]*\.landing-shape-preview-toggle\s*\{[\s\S]*display: none;/);
+  assert.match(styles, /@media \(max-width: 767px\)[\s\S]*\.landing-shape-preview-kicker-desktop\s*\{[\s\S]*display: block;/);
 });
 
-test('desktop landing has a dedicated Explorer launch composition without changing mobile rules', () => {
-  const styles = read('ux-polish.css');
-  const explorerStyles = read('globe-explorer.css');
+test('landing preview timers stop when navigating away from the landing screen', () => {
+  const app = read('app.js');
 
-  assert.match(styles, /@media \(min-width: 1024px\)[\s\S]*\.landing-proposition\s*\{[\s\S]*min-height: 600px;/);
-  assert.match(styles, /@media \(min-width: 1024px\)[\s\S]*\.landing-explore-feature\s*\{[\s\S]*min-height: 214px;/);
-  assert.match(styles, /@media \(min-width: 1024px\)[\s\S]*\.landing-explore-actions\s*\{[\s\S]*grid-template-columns: minmax\(0, 1\.15fr\) minmax\(0, 0\.85fr\);/);
-  assert.match(explorerStyles, /@media \(min-width: 1024px\)[\s\S]*\.landing-explore-feature\s*\{[\s\S]*min-height: 214px;/);
-  assert.match(explorerStyles, /@media \(min-width: 1024px\)[\s\S]*\.landing-explore-actions[^}]*grid-template-columns: minmax\(0, 1\.15fr\) minmax\(0, 0\.85fr\);/);
-  assert.match(styles, /@media \(min-width: 1024px\)[\s\S]*\.landing-statistics\s*\{[\s\S]*min-height: 0;/);
-  assert.match(styles, /@media \(min-width: 1024px\)[\s\S]*\.landing\[data-selected-game='explorer'\] \.landing-setup-panel\s*\{[\s\S]*min-height: clamp\(600px, 70vh, 640px\);/);
-  assert.match(styles, /@media \(min-width: 1024px\)[\s\S]*\.landing\[data-selected-game='explorer'\] \.landing-explore-actions\s*\{[\s\S]*align-self: end;/);
+  assert.match(app, /function showScreen\(screen\)[\s\S]*if \(screen !== \$landing\) \{[\s\S]*stopLandingShowcase\(\);[\s\S]*stopLandingShapePreview\(\);/);
+  assert.match(app, /function stopLandingShapePreview\(\)[\s\S]*window\.clearInterval\(landingShapePreviewTimer\)/);
+});
+
+test('desktop homepage gives Explorer a dominant split and stacks on smaller screens', () => {
+  const styles = read('globe-explorer.css');
+
+  assert.match(styles, /\.explorer-layout\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1\.1fr\) minmax\(340px, 0\.9fr\)/);
+  assert.match(styles, /\.explorer-globe-frame\s*\{[\s\S]*width:\s*min\(100%, 540px\)/);
+  assert.match(styles, /\.explorer-info-panel\s*\{[\s\S]*border:\s*1px solid/);
+  assert.match(styles, /\.explorer-secondary-content \.landing-challenges\s*\{/);
+  assert.match(styles, /@media \(max-width: 900px\)[\s\S]*\.explorer-layout\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/);
 });
 
 test('landing statistics are available through a subtle collapsed disclosure', () => {

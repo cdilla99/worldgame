@@ -8,10 +8,15 @@
  * landing globe's region-selection responsibility.
  */
 (function installGlobeExplorer(root) {
-  const geometryUrl = 'assets/globe-countries.js?v=20260730-territories3';
+  const geometryUrl = 'assets/globe-countries.js?v=20260831-cy-ps197';
   const territoryGeometryUrl = 'assets/globe-territories.js?v=20260730-guidance1';
   const MIN_ZOOM = 1;
-  const MAX_ZOOM = 9;
+  const DEFAULT_VIEW = Object.freeze({ longitude: -16, latitude: 12, zoom: MIN_ZOOM });
+  // Zoom 9 stopped well short of small island and microstate outlines. At 60 the
+  // globe renders roughly 180 px per degree, which resolves Malta, Singapore,
+  // and Bahrain as real shapes; true microstates keep their marker dot.
+  const MAX_ZOOM = 60;
+  const ZOOM_STEP = 1.35;
   const GEOMETRY_TIMEOUT_MS = 10000;
   const LANDMARK_WIKIPEDIA_CANDIDATES = Object.freeze({
     'Chichen Itza pyramid': Object.freeze(['Chichen Itza']),
@@ -67,13 +72,16 @@
     const neighbors = document.getElementById('explorer-country-neighbors');
     const landmark = document.getElementById('explorer-country-landmark');
     const fact = document.getElementById('explorer-country-fact');
-    const practiceButton = document.getElementById('btn-explorer-practice');
     const details = document.getElementById('explorer-more-details');
+    const focusCountryButton = document.getElementById('btn-explorer-focus-country');
     const landmarkMedia = document.getElementById('explorer-landmark-media');
     const landmarkMediaImage = document.getElementById('explorer-landmark-media-image');
     const landmarkMediaToggle = document.getElementById('explorer-landmark-media-toggle');
     const landmarkLearnMore = document.getElementById('explorer-landmark-learn-more');
     const landmarkMediaSource = document.getElementById('explorer-landmark-media-source');
+    const landmarkPlaceholder = document.getElementById('explorer-landmark-placeholder');
+    const landmarkPlaceholderLink = document.getElementById('explorer-landmark-placeholder-link');
+    const landmarkStatus = document.getElementById('explorer-landmark-status');
     const zoomInButton = document.getElementById('btn-explorer-zoom-in');
     const zoomOutButton = document.getElementById('btn-explorer-zoom-out');
     const resetButton = document.getElementById('btn-explorer-reset');
@@ -113,6 +121,7 @@
     const huntCelebrationCountry = document.getElementById('explorer-hunt-celebration-country');
     const huntSummary = document.getElementById('explorer-hunt-summary');
     const huntFinalScore = document.getElementById('explorer-hunt-final-score');
+    const huntAvgGuesses = document.getElementById('explorer-hunt-avg-guesses');
     const huntAgainButton = document.getElementById('btn-explorer-hunt-again');
     const huntFreeButton = document.getElementById('btn-explorer-hunt-free');
     const stageTitle = document.getElementById('explorer-stage-title');
@@ -152,11 +161,13 @@
     let size = 560;
     let center = 280;
     let baseRadius = 252;
-    let longitude = -16;
-    let latitude = 12;
-    let zoom = 1;
+    let longitude = DEFAULT_VIEW.longitude;
+    let latitude = DEFAULT_VIEW.latitude;
+    let zoom = DEFAULT_VIEW.zoom;
     let hoveredCountryId = null;
     let selectedCountryId = null;
+    // Guards the one-time default country selection (Canada) applied on first open.
+    let defaultSelectionApplied = false;
     let centeredCountryId = null;
     let dragging = false;
     let primaryPointerId = null;
@@ -168,6 +179,7 @@
     let pinchDistance = 0;
     let pinchZoom = 1;
     let animationFrame = 0;
+    let interactionFrame = 0;
     let resizeFrame = 0;
     let searchMatches = [];
     let activeSearchIndex = -1;
@@ -175,6 +187,7 @@
     let huntActive = false;
     let huntTimeLeft = 60;
     let huntScore = 0;
+    let huntGuesses = 0;
     let huntTargetId = null;
     let lastHuntTargetId = null;
     let huntDeadline = 0;
@@ -183,6 +196,8 @@
     let huntAdvanceTimeout = 0;
     let huntSessionId = 0;
     let landmarkMediaRequestId = 0;
+    let pendingLandmarkCountry = null;
+    let landmarkImageObserver = null;
     const huntPauseReasons = new Set();
 
     function getRadius() {
@@ -193,16 +208,68 @@
       return cardsById.get(id)?.name || 'Country';
     }
 
+    // Hit-test ids are encoded as colours in an offscreen buffer. Packing the id
+    // straight into RGB puts every id (1..255) in the red channel alone, so
+    // neighbouring countries differ by a single unit in one channel. Canvas
+    // anti-aliasing then blends adjacent fills into intermediate reds that decode
+    // to a *different valid* id — the cause of clicks near a border snapping to a
+    // far-away country (e.g. taps near Russia landing on Vietnam=26 / Singapore=29).
+    //
+    // Spreading the bits across all three channels makes adjacent ids differ in
+    // several channels at once, so a blended edge pixel almost never lands on
+    // another valid id. The transform is a reversible bit interleave.
+    // Ids span 1..197 for countries and 1001..1013 for territories, so the
+    // encoding must cover the full 0..2047 (11-bit) range. Bits are interleaved
+    // across R/G/B (4/4/3 bits) so neighbouring ids differ in several channels,
+    // then each channel is scaled by HIT_STEP so its quantised levels sit far
+    // apart on the 0..255 scale. Max channel value: 15 * 16 = 240 (in range).
+    const HIT_BITS = 11;
+    const HIT_STEP = 16;
+
+    function encodeHitId(id) {
+      let r = 0, g = 0, b = 0;
+      for (let bit = 0; bit < HIT_BITS; bit++) {
+        const value = (id >> bit) & 1;
+        const channel = bit % 3;
+        const shift = Math.floor(bit / 3);
+        if (channel === 0) r |= value << shift;
+        else if (channel === 1) g |= value << shift;
+        else b |= value << shift;
+      }
+      return [r * HIT_STEP, g * HIT_STEP, b * HIT_STEP];
+    }
+
+    function decodeHitId(pixel) {
+      const r = Math.round(pixel[0] / HIT_STEP);
+      const g = Math.round(pixel[1] / HIT_STEP);
+      const b = Math.round(pixel[2] / HIT_STEP);
+      let id = 0;
+      for (let bit = 0; bit < HIT_BITS; bit++) {
+        const channel = bit % 3;
+        const shift = Math.floor(bit / 3);
+        const source = channel === 0 ? r : channel === 1 ? g : b;
+        id |= ((source >> shift) & 1) << bit;
+      }
+      return id;
+    }
+
     function colorForId(id) {
-      return [
-        id & 255,
-        (id >> 8) & 255,
-        (id >> 16) & 255
-      ];
+      return encodeHitId(id);
     }
 
     function idForColor(pixel) {
-      const id = pixel[0] | (pixel[1] << 8) | (pixel[2] << 16);
+      // Reject anti-aliased edge pixels: a channel value far from a clean
+      // multiple of HIT_STEP is a blend of two countries, not a solid fill.
+      // Canvas solid fills render at exact multiples of HIT_STEP (0, 16, 32, ...).
+      // Anti-aliasing blends adjacent fills into intermediate values that can
+      // decode to ghost IDs. We only accept pixels within ±1 of a clean multiple
+      // to allow for minor canvas rendering quantization while rejecting blends.
+      const tolerance = 1;
+      for (let i = 0; i < 3; i++) {
+        const remainder = pixel[i] % HIT_STEP;
+        if (remainder > tolerance && remainder < HIT_STEP - tolerance) return null;
+      }
+      const id = decodeHitId(pixel);
       return cardsById.has(id) ? id : null;
     }
 
@@ -310,11 +377,15 @@
         targetContext.fill('evenodd');
         targetContext.stroke();
       } else {
+        // Clamp the gradient to the visible frame. At deep zoom the sphere radius
+        // reaches tens of thousands of pixels, and spanning it per country per
+        // frame is expensive for no visible benefit.
+        const gradientSpan = Math.min(radius, size);
         const land = targetContext.createLinearGradient(
-          center - radius,
-          center - radius,
-          center + radius,
-          center + radius
+          center - gradientSpan,
+          center - gradientSpan,
+          center + gradientSpan,
+          center + gradientSpan
         );
         if (selected) {
           land.addColorStop(0, '#effff6');
@@ -376,8 +447,25 @@
         if (!projected.visible) return;
         const selected = country.i === selectedCountryId;
         const hovered = country.i === hoveredCountryId;
+        // Approximate the country's real on-screen radius in pixels from its
+        // angular extent and the current sphere radius. When the actual outline
+        // is already big enough to click, an overlapping stand-in dot only
+        // steals pointer hits from neighbouring countries — the root cause of
+        // clicks selecting a far-away small country. So the dot is drawn only
+        // while the real shape is still too small to reliably target.
+        const angularRadius = getCountryAngularRadius(country);
+        const screenRadius = getRadius() * Math.sin(toRadians(Math.max(angularRadius, 0.01)));
+        const REAL_SHAPE_CLICKABLE_PX = 7;
+        const shapeIsClickable = screenRadius >= REAL_SHAPE_CLICKABLE_PX;
+        // Past this altitude the real outline is legible, so a stand-in dot on
+        // top of it is just noise. The hit marker also disappears once the real
+        // shape is large enough to be its own hit target.
+        if (!hitTarget && !selected && !hovered && (zoom >= 24 || shapeIsClickable)) return;
+        if (hitTarget && shapeIsClickable && !selected && !hovered) return;
+        // A tighter hit dot (min 5px radius) keeps microstates tappable without
+        // spilling far over their neighbours at low zoom.
         const markerRadius = hitTarget
-          ? Math.max(8, 11 / Math.sqrt(zoom))
+          ? Math.max(5, 8 / Math.sqrt(zoom))
           : selected ? 5.4 : hovered ? 4.7 : zoom >= 1.15 ? 2.7 : 2.25;
         targetContext.save();
         targetContext.beginPath();
@@ -453,12 +541,12 @@
     }
 
     function draw() {
+      if (interactionFrame) root.cancelAnimationFrame(interactionFrame);
+      interactionFrame = 0;
       if (!countries.length) return;
       const devicePixelRatio = Math.min(root.devicePixelRatio || 1, 2);
       context.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
       context.clearRect(0, 0, size, size);
-      hitContext.setTransform(1, 0, 0, 1, 0, 0);
-      hitContext.clearRect(0, 0, size, size);
 
       context.save();
       context.beginPath();
@@ -480,13 +568,19 @@
       drawAtmosphere(context);
       context.restore();
 
-      hitContext.save();
-      hitContext.beginPath();
-      hitContext.rect(0, 0, size, size);
-      hitContext.clip();
-      drawOrder.forEach(country => drawCountry(hitContext, country, true));
-      drawSmallCountryMarkers(hitContext, true);
-      hitContext.restore();
+      // Picking is only used after a gesture ends. Avoid projecting and painting
+      // every country a second time while a finger is rotating or pinching.
+      if (!dragging || dragDistance < 7) {
+        hitContext.setTransform(1, 0, 0, 1, 0, 0);
+        hitContext.clearRect(0, 0, size, size);
+        hitContext.save();
+        hitContext.beginPath();
+        hitContext.rect(0, 0, size, size);
+        hitContext.clip();
+        drawOrder.forEach(country => drawCountry(hitContext, country, true));
+        drawSmallCountryMarkers(hitContext, true);
+        hitContext.restore();
+      }
 
       updateCenteredCountry();
       syncGlobeControls();
@@ -495,7 +589,9 @@
     function resize() {
       const rect = globeFrame.getBoundingClientRect();
       if (!rect.width) return;
-      size = Math.max(220, Math.round(Math.min(rect.width, rect.height || rect.width)));
+      // Match the frame's content box, including short iPhone viewports. A
+      // 220px minimum cropped the globe and its hit map inside smaller frames.
+      size = Math.max(1, Math.min(globeFrame.clientWidth, globeFrame.clientHeight || globeFrame.clientWidth));
       center = size / 2;
       baseRadius = size * 0.45;
       const devicePixelRatio = Math.min(root.devicePixelRatio || 1, 2);
@@ -510,6 +606,12 @@
 
     function setStatus(message) {
       status.textContent = message;
+    }
+
+    function resetGlobeView() {
+      longitude = DEFAULT_VIEW.longitude;
+      latitude = DEFAULT_VIEW.latitude;
+      zoom = DEFAULT_VIEW.zoom;
     }
 
     function syncGlobeControls() {
@@ -652,18 +754,59 @@
       const x = Math.floor((clientX - rect.left) * size / rect.width);
       const y = Math.floor((clientY - rect.top) * size / rect.height);
       if (x < 0 || y < 0 || x >= size || y >= size) return null;
-      return idForColor(hitContext.getImageData(x, y, 1, 1).data);
+
+      // Sample a small window instead of a single pixel. Anti-aliased seam
+      // pixels are discarded by idForColor, so we tally the solid-fill pixels
+      // and take the id with the clearest majority. This keeps taps landing on
+      // the country actually under the cursor even right next to a border,
+      // instead of snapping to a blended-edge id from a neighbour.
+      const halfWindow = 3;
+      const left = Math.max(0, x - halfWindow);
+      const top = Math.max(0, y - halfWindow);
+      const width = Math.min(size, x + halfWindow + 1) - left;
+      const height = Math.min(size, y + halfWindow + 1) - top;
+      const { data } = hitContext.getImageData(left, top, width, height);
+
+      const counts = new Map();
+      const centerX = x - left;
+      const centerY = y - top;
+      let bestId = null;
+      let bestScore = -Infinity;
+      for (let py = 0; py < height; py++) {
+        for (let px = 0; px < width; px++) {
+          const offset = (py * width + px) * 4;
+          const id = idForColor([data[offset], data[offset + 1], data[offset + 2]]);
+          if (id === null) continue;
+          // Weight samples by closeness to the exact click point so the pixel
+          // under the cursor dominates ties.
+          const distance = Math.abs(px - centerX) + Math.abs(py - centerY);
+          const weight = (halfWindow * 2 + 2) - distance;
+          const score = (counts.get(id) || 0) + weight;
+          counts.set(id, score);
+          if (score > bestScore) {
+            bestScore = score;
+            bestId = id;
+          }
+        }
+      }
+      return bestId;
     }
 
-    function setRotation(nextLongitude, nextLatitude) {
+    function scheduleInteractionDraw() {
+      if (!interactionFrame) interactionFrame = root.requestAnimationFrame(draw);
+    }
+
+    function setRotation(nextLongitude, nextLatitude, deferDraw = false) {
       longitude = normalizeLongitude(nextLongitude);
       latitude = clamp(nextLatitude, -70, 72);
-      draw();
+      if (deferDraw) scheduleInteractionDraw();
+      else draw();
     }
 
-    function setZoom(nextZoom) {
+    function setZoom(nextZoom, deferDraw = false) {
       zoom = clamp(nextZoom, MIN_ZOOM, MAX_ZOOM);
-      draw();
+      if (deferDraw) scheduleInteractionDraw();
+      else draw();
     }
 
     function stopAnimation() {
@@ -671,12 +814,67 @@
       animationFrame = 0;
     }
 
+    // Angular "radius" of a country in degrees: the farthest any polygon vertex
+    // sits from its centroid, corrected for longitude convergence toward the
+    // poles. Cached on the geometry record since polygons never change.
+    function getCountryAngularRadius(geometry) {
+      if (typeof geometry._ar === 'number' && geometry._ar > 0) return geometry._ar;
+      const centerLon = geometry.x;
+      const centerLat = geometry.y;
+      const cosLat = Math.max(0.12, Math.cos(toRadians(centerLat)));
+      let maxDegrees = 0;
+      (Array.isArray(geometry.p) ? geometry.p : []).forEach(polygon => {
+        polygon.forEach(ring => {
+          ring.forEach(point => {
+            const deltaLon = normalizeLongitude(point[0] - centerLon) * cosLat;
+            const deltaLat = point[1] - centerLat;
+            const degrees = Math.hypot(deltaLon, deltaLat);
+            if (degrees > maxDegrees) maxDegrees = degrees;
+          });
+        });
+      });
+      // Only cache a real measurement. Caching a 0 from a placeholder/partial
+      // geometry would be sticky and permanently mis-frame the country.
+      if (maxDegrees > 0) geometry._ar = maxDegrees;
+      return maxDegrees;
+    }
+
+    // Choose a zoom that frames the selected country: fit its angular extent to
+    // a comfortable fraction of the visible disc. Replaces the old binary
+    // small-flag jump so mid-sized countries no longer slam to a deep zoom, and
+    // it can ease back OUT when a large country is selected after a small one.
+    function fitZoomForCountry(geometry) {
+      // The visible hemisphere spans ~90° from center to limb; aim for the
+      // country's radius to occupy ~14% of the on-screen radius at zoom 1 so
+      // its outline AND several neighboring countries stay in frame — the shape
+      // in geographic context is the teaching point, not a disc-filling
+      // close-up. At 0.26 a medium country like Tanzania filled the whole globe
+      // and lost all surrounding borders; 0.14 keeps the neighbors visible.
+      const targetFraction = 0.14;
+      // Cap auto-fit well below the manual MAX_ZOOM. Without this, small
+      // countries (San Marino) and territories (Svalbard) slam to zoom 60 and
+      // the outline fills the entire disc, losing all geographic context.
+      // Users can still pinch/+ in to MAX_ZOOM manually if they want detail.
+      const AUTO_FIT_MAX_ZOOM = 8;
+      const angularRadius = getCountryAngularRadius(geometry);
+      // If the polygon is missing at call time (placeholder/partial load), fall
+      // back to a modest medium-country framing rather than Math.max(zoom, 6),
+      // which used to magnify to a near-blank close-up and then ratchet upward
+      // on every subsequent selection.
+      if (!(angularRadius > 0)) return clamp((90 * targetFraction) / 8, 1.05, AUTO_FIT_MAX_ZOOM);
+      const desired = (90 * targetFraction) / angularRadius;
+      return clamp(desired, 1.05, AUTO_FIT_MAX_ZOOM);
+    }
+
     function animateToCountry(country) {
       const geometry = geometryById.get(country.id);
       if (!geometry) return;
       stopAnimation();
       const targetLatitude = clamp(geometry.y, -62, 66);
-      const targetZoom = geometry.s ? Math.max(zoom, 5.4) : Math.max(zoom, 1.12);
+      // Frame the country by its actual extent rather than a binary size flag,
+      // and allow easing back out (no Math.max ratchet) when switching from a
+      // small country to a large one.
+      const targetZoom = fitZoomForCountry(geometry);
       if (prefersReducedMotion.matches) {
         longitude = geometry.x;
         latitude = targetLatitude;
@@ -705,10 +903,12 @@
     }
 
     function setDetailValue(element, value) {
-      if (element) element.textContent = value || '—';
+      if (element) element.textContent = String(value || '—').replace(/\b(?:about|around)\s+(?=\d)/gi, '~');
     }
 
     function clearLandmarkMedia() {
+      landmarkImageObserver?.disconnect();
+      landmarkImageObserver = null;
       landmarkMedia?.classList.add('hidden');
       landmarkMedia?.classList.remove('is-expanded');
       if (landmarkMediaImage) {
@@ -720,13 +920,14 @@
       landmarkMediaToggle?.setAttribute('aria-expanded', 'false');
       landmarkMediaToggle?.removeAttribute('aria-label');
       landmarkLearnMore?.removeAttribute('href');
-      if (landmarkLearnMore) landmarkLearnMore.textContent = 'Learn about this landmark';
+      if (landmarkLearnMore) landmarkLearnMore.textContent = 'Wikipedia';
       landmarkMediaSource?.removeAttribute('href');
     }
 
     function hideLandmarkMedia() {
       landmarkMediaRequestId += 1;
       clearLandmarkMedia();
+      landmarkPlaceholder?.classList.add('hidden');
     }
 
     function getApprovedLandmarkCandidates(landmarkName) {
@@ -764,6 +965,15 @@
         || (requireResponseTitle && !responseTitle)
         || typeof resolvedTitle !== 'string' || !resolvedTitle) return null;
 
+      // API text is untrusted. Only use Wikimedia images and English Wikipedia links.
+      try {
+        const image = new URL(imageUrl);
+        const source = new URL(sourceUrl);
+        if (image.protocol !== 'https:' || image.hostname !== 'upload.wikimedia.org'
+          || source.protocol !== 'https:' || source.hostname !== 'en.wikipedia.org'
+          || image.username || image.password || source.username || source.password) return null;
+      } catch (_) { return null; }
+
       return Object.freeze({ imageUrl, sourceUrl, resolvedTitle });
     }
 
@@ -794,6 +1004,17 @@
         .find(candidate => typeof candidate === 'string' && candidate.trim())?.trim();
       hideLandmarkMedia();
       if (!landmarkName || !root.fetch || !landmarkMedia || !landmarkMediaImage) return;
+      landmarkPlaceholder?.classList.remove('hidden');
+      if (landmarkStatus) landmarkStatus.textContent = 'Loading photo…';
+      if (landmarkPlaceholderLink) {
+        landmarkPlaceholderLink.textContent = landmarkName;
+        landmarkPlaceholderLink.href = 'https://en.wikipedia.org/w/index.php?search=' + encodeURIComponent(`${landmarkName} ${country.name}`);
+      }
+      const showUnavailable = () => {
+        clearLandmarkMedia();
+        if (landmarkStatus) landmarkStatus.textContent = 'Photo unavailable · Wikipedia';
+        landmarkPlaceholder?.classList.remove('hidden');
+      };
 
       const requestId = landmarkMediaRequestId;
       const candidates = getLandmarkDirectCandidates(country);
@@ -804,7 +1025,10 @@
       const displayMedia = (media, isCurrentAttempt, onImageError) => {
         clearLandmarkMedia();
         landmarkMediaImage.onload = () => {
-          if (isCurrentAttempt()) landmarkMedia.classList.remove('hidden');
+          if (isCurrentAttempt()) {
+            landmarkMedia.classList.remove('hidden');
+            landmarkPlaceholder?.classList.add('hidden');
+          }
         };
         landmarkMediaImage.onerror = () => {
           if (isCurrentAttempt()) onImageError();
@@ -813,10 +1037,25 @@
         landmarkMediaToggle?.setAttribute('aria-label', `Expand image of ${media.resolvedTitle}`);
         if (landmarkLearnMore) {
           landmarkLearnMore.href = media.sourceUrl;
-          landmarkLearnMore.textContent = `Learn about ${media.resolvedTitle}`;
+          landmarkLearnMore.textContent = media.resolvedTitle;
         }
         if (landmarkMediaSource) landmarkMediaSource.href = media.sourceUrl;
-        landmarkMediaImage.src = media.imageUrl;
+        const loadImage = () => {
+          if (!isCurrentAttempt()) return;
+          // The image stays hidden until loaded. Start its request only when
+          // the reserved placeholder approaches the viewport.
+          landmarkMediaImage.loading = 'eager';
+          landmarkMediaImage.src = media.imageUrl;
+        };
+        if (root.IntersectionObserver && landmarkPlaceholder) {
+          landmarkImageObserver = new root.IntersectionObserver(entries => {
+            if (!isCurrentAttempt() || !entries.some(entry => entry.isIntersecting)) return;
+            landmarkImageObserver?.disconnect();
+            landmarkImageObserver = null;
+            loadImage();
+          }, { rootMargin: '160px' });
+          landmarkImageObserver.observe(landmarkPlaceholder);
+        } else loadImage();
       };
 
       const beginFallback = () => {
@@ -841,7 +1080,7 @@
               if (requestId !== landmarkMediaRequestId) return;
               const media = fallbackCandidates[fallbackCandidateIndex++];
               if (!media) {
-                clearLandmarkMedia();
+                showUnavailable();
                 return;
               }
 
@@ -853,7 +1092,7 @@
             tryNextFallbackCandidate();
           })
           .catch(() => {
-            if (isCurrentSearchAttempt()) clearLandmarkMedia();
+            if (isCurrentSearchAttempt()) showUnavailable();
           });
       };
 
@@ -908,21 +1147,38 @@
       } catch (audioError) {}
     }
 
+    function isNonRectFlag(country) {
+      const code = root.AssetFallbacks?.getCountryCode?.(country);
+      return code === 'NP';
+    }
+
+    // Regional-indicator flag emoji have no glyphs on Windows and most Linux
+    // builds, where they render as bare ISO letters. Every flag slot therefore
+    // renders an image and degrades to an explicit code chip, never to emoji.
+    function renderFlagCodeInto(element, country) {
+      const code = root.AssetFallbacks?.getCountryCode?.(country);
+      element.replaceChildren();
+      element.classList.add('is-flag-code');
+      element.textContent = code || '\u2014';
+    }
+
     function renderFlagInto(element, country) {
       if (!element || !country) return;
       element.replaceChildren();
+      element.classList.remove('is-flag-code');
+      if (!root.AssetFallbacks?.prepareImage) {
+        renderFlagCodeInto(element, country);
+        return;
+      }
       const flagImage = document.createElement('img');
       flagImage.alt = '';
+      if (isNonRectFlag(country)) flagImage.classList.add('is-nonrect-flag');
       element.appendChild(flagImage);
-      if (root.AssetFallbacks?.prepareImage) {
-        root.AssetFallbacks.prepareImage(flagImage, 'flag', country, {
-          countryName: country.name,
-          alt: ''
-        });
-      } else {
-        flagImage.remove();
-        element.textContent = country.flag;
-      }
+      root.AssetFallbacks.prepareImage(flagImage, 'flag', country, {
+        countryName: country.name,
+        alt: '',
+        variant: 'compact'
+      });
     }
 
     function resetHuntFeedback() {
@@ -994,9 +1250,9 @@
       huntSelectionCard?.classList.remove('is-correct', 'is-wrong');
       huntSelectionCard?.classList.add('is-empty');
       if (huntSelectedFlag) huntSelectedFlag.replaceChildren();
-      if (huntSelectionLabel) huntSelectionLabel.textContent = 'Waiting for your choice';
+      if (huntSelectionLabel) huntSelectionLabel.textContent = 'Selected';
       if (huntSelectedCountry) huntSelectedCountry.textContent = 'Tap a country';
-      if (huntSelectionFeedback) huntSelectionFeedback.textContent = 'Your selection will appear here.';
+      if (huntSelectionFeedback) huntSelectionFeedback.textContent = '';
       hideHuntGuidance();
       resetHuntFeedback();
     }
@@ -1024,7 +1280,7 @@
         huntSelectionFeedback.textContent = correct
           ? `You found ${target.name}. Next country coming up.`
           : hint
-            ? `${target.name} is about ${hint.displayDistance} ${hint.directionLabel}. Keep looking.`
+            ? `${target.name} is ~${hint.displayDistance} ${hint.directionLabel}. Keep looking.`
             : `${country.name} is not ${target.name}. Keep looking.`;
       }
       return hint;
@@ -1038,14 +1294,13 @@
       void huntCelebration.offsetWidth;
       huntCelebration.classList.add('is-active');
       root.Particles?.burst?.(globeFrame, { count: 30, duration: 1700 });
-      root.CelebrationText?.show?.(globeFrame);
     }
 
     function hideHuntCelebration() {
       huntCelebration?.classList.add('hidden');
       huntCelebration?.classList.remove('is-active');
     }
-    function renderCountryCard(country) {
+    function renderCountryCard(country, options = {}) {
       if (!country) return;
       emptyCard.classList.add('hidden');
       countryCard.classList.remove('hidden');
@@ -1057,23 +1312,25 @@
         territoryStatus.classList.toggle('hidden', !isTerritory);
       }
       const detailsSummary = details?.querySelector('summary');
-      if (detailsSummary) detailsSummary.textContent = isTerritory ? 'More territory details' : 'More country details';
+      if (detailsSummary) detailsSummary.textContent = 'Details';
       flag.replaceChildren();
-      const flagImage = document.createElement('img');
-      flagImage.alt = `${country.name} flag`;
-      flag.appendChild(flagImage);
+      flag.classList.remove('is-flag-code');
+      flag.setAttribute('aria-label', `${country.name} flag`);
       if (root.AssetFallbacks?.prepareImage) {
+        const flagImage = document.createElement('img');
+        flagImage.alt = `${country.name} flag`;
+        if (isNonRectFlag(country)) flagImage.classList.add('is-nonrect-flag');
+        flag.appendChild(flagImage);
         root.AssetFallbacks.prepareImage(flagImage, 'flag', country, {
           countryName: country.name,
-          alt: flagImage.alt
+          alt: flagImage.alt,
+          variant: 'compact'
         });
       } else {
-        flagImage.remove();
-        flag.textContent = country.flag;
-        flag.setAttribute('aria-label', `${country.name} flag`);
+        renderFlagCodeInto(flag, country);
       }
       name.textContent = country.name;
-      region.textContent = `${country.continent} · ${country.subregion}`;
+      region.textContent = [country.continent, country.subregion].filter((value, index, values) => value && values.indexOf(value) === index).join(' · ');
       setDetailValue(capital, country.capital);
       setDetailValue(population, country.population_hint);
       setDetailValue(languages, country.main_languages?.join(', '));
@@ -1085,12 +1342,41 @@
       );
       setDetailValue(landmark, country.landmarks?.[0]);
       setDetailValue(fact, country.fun_facts?.[0] || country.built_in_clue);
+      hideLandmarkMedia();
+      pendingLandmarkCountry = options.landmarkMedia === false ? null : country;
+      details.open = false;
+    }
+
+    details?.addEventListener('toggle', () => {
+      if (!details.open || !pendingLandmarkCountry) return;
+      const country = pendingLandmarkCountry;
+      pendingLandmarkCountry = null;
       loadLandmarkMedia(country);
-      details.open = !huntActive;
-      const practiceRegion = country.continent === 'South America'
-        ? 'Americas'
-        : country.continent;
-      practiceButton.textContent = `Practice ${practiceRegion}`;
+    });
+
+    // Hunt lifecycle signal for the Atlas mode controller. Guarded so harnesses
+    // without event support keep working.
+    function emitModeChange(mode, summary) {
+      if (typeof root.dispatchEvent !== 'function' || typeof CustomEvent !== 'function') return;
+      root.dispatchEvent(new CustomEvent('geowars:explorer-mode', {
+        detail: { mode, summary: Boolean(summary) }
+      }));
+    }
+
+    function dispatchCountryEvent(country, source) {
+      root.dispatchEvent(new CustomEvent('geowars:explorer-country', {
+        detail: { countryId: country.id, placeId: country.id, kind: country.kind || 'country', source }
+      }));
+    }
+
+    // Render the shared facts card without changing Explorer selection state.
+    // The country event is retained for economics rendering, but this path does
+    // not touch the camera, search, sound, or live-region selection feedback.
+    function renderCountry(countryId, options = {}) {
+      const country = cardsById.get(Number(countryId));
+      if (!country) return;
+      renderCountryCard(country);
+      dispatchCountryEvent(country, options.source || 'render');
     }
 
     function selectCountry(countryId, options = {}) {
@@ -1102,17 +1388,43 @@
       renderCountryCard(country);
       dismissSearch();
       searchInput.value = country.name;
-      setStatus(`${country.name} ${country.kind === 'territory' ? 'territory' : 'country'} selected.`);
-      live.textContent = `${country.name} selected. Capital: ${country.capital}.`;
-      if (options.animate !== false) animateToCountry(country);
+      setStatus(`${country.name} ${country.kind === 'territory' ? 'territory' : 'country'} selected. Use Zoom to country to center and magnify it.`);
+      live.textContent = `${country.name} selected. Capital: ${country.capital}. Activate Zoom to country to center and magnify it.`;
+      // Selection no longer moves the camera by default. Exploratory taps keep
+      // the current view (and neighbours) in frame; centering + auto-zoom is an
+      // explicit action via focusSelectedCountry() (card button, second tap on
+      // the selected country, or a second keyboard activation).
+      if (options.animate === true) animateToCountry(country);
       else draw();
-      root.dispatchEvent(new CustomEvent('geowars:explorer-country', {
-        detail: { countryId: country.id, placeId: country.id, kind: country.kind || 'country', source: options.source || 'globe' }
-      }));
+      syncFocusControl();
+      dispatchCountryEvent(country, options.source || 'globe');
+    }
+
+    // Explicit "center + auto-zoom on the selected country" action. Kept
+    // separate from selectCountry so exploratory selection stays calm; this is
+    // reached via the card button, a second tap on the already-selected
+    // country, or a second keyboard activation. No-op during a hunt (the hunt
+    // flow owns its own camera behaviour).
+    function focusSelectedCountry() {
+      if (huntActive || !selectedCountryId) return;
+      const country = cardsById.get(selectedCountryId);
+      if (!country) return;
+      animateToCountry(country);
+      setStatus(`Centered on ${country.name}.`);
+      live.textContent = `Centered and zoomed to ${country.name}.`;
+    }
+
+    // The card focus button only makes sense once a country is selected and we
+    // are not mid-hunt.
+    function syncFocusControl() {
+      if (!focusCountryButton) return;
+      const available = !huntActive && Boolean(selectedCountryId);
+      focusCountryButton.disabled = !available;
     }
 
     function setExplorerMode(mode) {
       const isHunt = mode === 'hunt';
+      syncFocusControl();
       freeModeButton?.classList.toggle('is-active', !isHunt);
       huntModeButton?.classList.toggle('is-active', isHunt);
       freeModeButton?.setAttribute('aria-pressed', String(!isHunt));
@@ -1171,8 +1483,13 @@
 
     function chooseNextHuntTarget() {
       if (!huntActive || !cards.length) return;
-      const candidates = cards.filter(country => country.id !== lastHuntTargetId);
-      const next = candidates[Math.floor(Math.random() * candidates.length)] || cards[0];
+      const options = root.GeoWars?.activities?.getHuntOptions?.();
+      const filtered = options && root.GeoWarsDifficulty
+        ? root.GeoWarsDifficulty.buildLevelDeck(options.level, cards, options.continent)
+        : cards;
+      const pool = filtered.length ? filtered : cards;
+      const candidates = pool.filter(country => country.id !== lastHuntTargetId);
+      const next = candidates[Math.floor(Math.random() * candidates.length)] || pool[0];
       huntTargetId = next.id;
       lastHuntTargetId = next.id;
       selectedCountryId = null;
@@ -1203,15 +1520,14 @@
       clearHuntTimers();
       const sessionId = ++huntSessionId;
       stopAnimation();
-      longitude = -16;
-      latitude = 12;
-      zoom = MIN_ZOOM;
+      resetGlobeView();
       centeredCountryId = null;
       huntActive = true;
       huntDeadline = 0;
       resetHuntPauseState();
       huntTimeLeft = 60;
       huntScore = 0;
+      huntGuesses = 0;
       huntTargetId = null;
       lastHuntTargetId = null;
       selectedCountryId = null;
@@ -1236,6 +1552,7 @@
         huntInterval = root.setInterval(updateHuntClock, 250);
         canvas.focus({ preventScroll: true });
       });
+      emitModeChange('hunt', false);
     }
 
     function endHunt(showSummary = true) {
@@ -1254,34 +1571,61 @@
         countryCard.classList.add('hidden');
         huntSummary?.classList.remove('hidden');
         if (huntFinalScore) huntFinalScore.textContent = String(completedScore);
+        if (huntAvgGuesses) {
+          if (completedScore > 0) {
+            const avg = (huntGuesses / completedScore).toFixed(1);
+            huntAvgGuesses.textContent = `Avg ${avg} ${avg === '1.0' ? 'guess' : 'guesses'} per country.`;
+            huntAvgGuesses.classList.remove('hidden');
+          } else {
+            huntAvgGuesses.classList.add('hidden');
+          }
+        }
         setStatus(`Country Hunt complete. ${completedScore} ${completedScore === 1 ? 'country' : 'countries'} found.`);
         live.textContent = `Time. You found ${completedScore} ${completedScore === 1 ? 'country' : 'countries'}.`;
         playExplorerSound('playGameEnd');
       }
       draw();
+      emitModeChange('free', showSummary);
     }
 
     function showFreeExplorer() {
       endHunt(false);
-      huntSummary?.classList.add('hidden');
-      huntCompare?.classList.add('hidden');
-      if (selectedCountryId) {
-        renderCountryCard(cardsById.get(selectedCountryId));
-      } else {
-        emptyCard.classList.remove('hidden');
-        countryCard.classList.add('hidden');
-        if (emptyCardTitle) emptyCardTitle.textContent = 'Select a country or territory';
-        if (emptyCardCopy) emptyCardCopy.textContent = 'Its flag, capital, status, and essential facts will appear here.';
-      }
+      dismissHuntSummary();
       setStatus(geometryState === 'partial'
         ? 'Country globe ready. Territory outlines are temporarily unavailable.'
         : 'Drag to explore. Select a country or territory to learn more.');
       canvas.focus({ preventScroll: true });
     }
 
+    // Hide the Country Hunt summary and restore the free-explore card without
+    // changing status text, focus, or camera. No-op while a hunt is running.
+    function dismissHuntSummary() {
+      if (huntActive) return false;
+      huntSummary?.classList.add('hidden');
+      huntCompare?.classList.add('hidden');
+      if (selectedCountryId) {
+        renderCountryCard(cardsById.get(selectedCountryId));
+      } else {
+        // Show the "select a country" placeholder before a selection. On
+        // narrow/mobile layouts the globe leads the experience instead, so
+        // CSS hides .explorer-empty-card below the mobile breakpoint.
+        emptyCard.classList.remove('hidden');
+        countryCard.classList.add('hidden');
+      }
+      syncFocusControl();
+      return true;
+    }
+
     function handleCountryActivation(countryId, options = {}) {
       if (!huntActive) {
-        selectCountry(countryId, options);
+        // Activating the already-selected country is the "confirm" gesture that
+        // centers and zooms — the deliberate second step after an exploratory
+        // first selection. A different country just selects (no camera move).
+        if (Number(countryId) === selectedCountryId) {
+          focusSelectedCountry();
+        } else {
+          selectCountry(countryId, options);
+        }
         return;
       }
       const country = cardsById.get(Number(countryId));
@@ -1293,6 +1637,7 @@
       }
       selectedCountryId = country.id;
       hoveredCountryId = country.id;
+      huntGuesses += 1;
       if (country.id === target.id) {
         huntScore += 1;
         pauseHuntClock('answer-feedback');
@@ -1331,7 +1676,8 @@
     function chooseSearchResult(index) {
       const country = searchMatches[index];
       if (!country) return;
-      selectCountry(country.id, { source: 'search' });
+      selectCountry(country.id, { source: 'search', animate: false });
+      animateToCountry(country, 0);
       searchInput.focus({ preventScroll: true });
     }
 
@@ -1370,7 +1716,17 @@
           const resultType = country.kind === 'territory'
             ? `Territory · ${country.parentName || country.subregion}`
             : country.continent;
-          option.innerHTML = `<span aria-hidden="true">${country.flag}</span><strong>${country.name}</strong><small>${resultType}</small>`;
+          const flag = document.createElement('span');
+          flag.className = 'explorer-search-option-flag';
+          flag.setAttribute('aria-hidden', 'true');
+          const name = document.createElement('strong');
+          name.textContent = country.name;
+          const context = document.createElement('small');
+          context.textContent = resultType;
+          option.appendChild(flag);
+          option.appendChild(name);
+          option.appendChild(context);
+          renderFlagInto(flag, country);
           option.addEventListener('pointerdown', event => {
             event.preventDefault();
             chooseSearchResult(index);
@@ -1507,10 +1863,28 @@
     function openExplorer() {
       opened = true;
       try { root.AudioEngine?.init?.(); } catch (audioError) {}
-      startExplorerMusic();
+      renderMusicControl(false);
       navigation?.showExplorer?.();
-      setStatus('Drag to explore. Select a country or territory to learn more.');
-      loadGeometry().then(() => requestAnimationFrame(() => {
+      // Default the globe to Canada on the first open (mirrors the Shapes view's
+      // default outline) so the experience leads with a real country card rather
+      // than the empty placeholder. Only applies once and never during a hunt;
+      // returning home still clears back to the unselected state.
+      if (!defaultSelectionApplied && !huntActive && selectedCountryId === null) {
+        defaultSelectionApplied = true;
+        const defaultCountry = cardsById.get(2); // Canada
+        if (defaultCountry) {
+          selectedCountryId = defaultCountry.id;
+          hoveredCountryId = defaultCountry.id;
+          renderCountryCard(defaultCountry);
+        }
+      }
+      // Establish the focus button's disabled state on open: with no country
+      // selected (and no hunt running) "Zoom to country" has nothing to act on.
+      syncFocusControl();
+      setStatus(selectedCountryId
+        ? `${getCountryName(selectedCountryId)} selected. Use Zoom to country to center and magnify it.`
+        : 'Drag to explore. Select a country or territory to learn more.');
+      loadGeometry().then(() => root.requestAnimationFrame(() => {
         resize();
         if (selectedCountryId) animateToCountry(cardsById.get(selectedCountryId));
       }));
@@ -1519,29 +1893,29 @@
     function returnHome() {
       stopAnimation();
       endHunt(false);
+      // Explorer is the app's home screen, so navigating "home" from within it
+      // must reset selection/view state itself: showScreen() is a no-op when
+      // Explorer is already visible, and openExplorer() would otherwise
+      // re-center on a still-selected country instead of returning to the
+      // default, unselected view.
+      selectedCountryId = null;
+      hoveredCountryId = null;
+      centeredCountryId = null;
+      syncFocusControl();
+      resetGlobeView();
       try { root.BackgroundMusic?.stop?.(); } catch (musicError) {}
       renderMusicControl(false);
+      showFreeExplorer();
+      live.textContent = status.textContent;
       navigation?.showHome?.();
     }
 
-    function startRegionalPractice() {
-      endHunt(false);
-      const country = cardsById.get(selectedCountryId);
-      if (!country) return;
-      const continentValue = country.continent === 'South America'
-        ? 'North America'
-        : country.continent;
-      const regionButton = document.querySelector(
-        `#continent-row [data-continent="${continentValue}"]`
-      );
-      const practiceMode = document.getElementById('btn-showoff');
-      const startButton = document.getElementById('btn-start-game');
-      regionButton?.click();
-      practiceMode?.click();
-      startButton?.click();
-    }
-
     openButton.addEventListener('click', () => {
+      openExplorer();
+      showFreeExplorer();
+    });
+    const landingGlobeShell = document.getElementById('landing-globe-shell');
+    landingGlobeShell?.addEventListener('click', () => {
       openExplorer();
       showFreeExplorer();
     });
@@ -1556,8 +1930,8 @@
     huntExitButton?.addEventListener('click', () => endHunt(true));
     huntAgainButton?.addEventListener('click', startHunt);
     huntFreeButton?.addEventListener('click', showFreeExplorer);
+    focusCountryButton?.addEventListener('click', focusSelectedCountry);
     homeButtons.forEach(button => button.addEventListener('click', returnHome));
-    practiceButton.addEventListener('click', startRegionalPractice);
     musicButton?.addEventListener('click', toggleExplorerMusic);
     hapticsButton?.addEventListener('click', toggleExplorerHaptics);
     geometryRetryButton?.addEventListener('click', retryGeometry);
@@ -1569,13 +1943,13 @@
     });
     root.addEventListener('online', refreshGeometryErrorCopy);
     root.addEventListener('offline', refreshGeometryErrorCopy);
-    zoomInButton.addEventListener('click', () => setZoom(zoom + (zoom >= 4 ? 0.9 : 0.6)));
-    zoomOutButton.addEventListener('click', () => setZoom(zoom - (zoom > 4 ? 0.75 : 0.4)));
+    // Multiplicative steps keep the full 1-60 range reachable in a dozen taps and
+    // feel constant at every altitude, unlike the previous fixed increments.
+    zoomInButton.addEventListener('click', () => setZoom(zoom * ZOOM_STEP));
+    zoomOutButton.addEventListener('click', () => setZoom(zoom / ZOOM_STEP));
     resetButton.addEventListener('click', () => {
       stopAnimation();
-      longitude = -16;
-      latitude = 12;
-      zoom = 1;
+      resetGlobeView();
       hoveredCountryId = null;
       setStatus(huntActive
         ? `Find ${getCountryName(huntTargetId)}.`
@@ -1636,7 +2010,7 @@
       if (pointers.size >= 2) {
         const [first, second] = [...pointers.values()];
         const nextDistance = Math.hypot(second.x - first.x, second.y - first.y);
-        if (pinchDistance > 0) setZoom(pinchZoom * nextDistance / pinchDistance);
+        if (pinchDistance > 0) setZoom(pinchZoom * nextDistance / pinchDistance, true);
         dragDistance = Math.max(dragDistance, 12);
         return;
       }
@@ -1651,7 +2025,8 @@
         const dragScale = Math.sqrt(zoom);
         setRotation(
           longitude - deltaX * 0.38 / dragScale,
-          latitude + deltaY * 0.28 / dragScale
+          latitude + deltaY * 0.28 / dragScale,
+          true
         );
         lastX = event.clientX;
         lastY = event.clientY;
@@ -1691,6 +2066,8 @@
 
       if (!pointers.size) {
         dragging = false;
+        // Flush the final view and restore its hit map before the next tap.
+        draw();
         primaryPointerId = null;
         pinchDistance = 0;
         globeFrame.classList.remove('is-dragging');
@@ -1727,7 +2104,7 @@
     canvas.addEventListener('wheel', event => {
       if (!countries.length) return;
       event.preventDefault();
-      setZoom(zoom * (event.deltaY < 0 ? 1.14 : 1 / 1.14));
+      setZoom(zoom * (event.deltaY < 0 ? 1.14 : 1 / 1.14), true);
     }, { passive: false });
     canvas.addEventListener('keydown', event => {
       const rotation = {
@@ -1746,14 +2123,16 @@
         setStatus(huntActive
           ? `Find ${getCountryName(huntTargetId)}. Press Enter to choose the centered country.`
           : centeredCountryId
-            ? `${getCountryName(centeredCountryId)} centered. Press Enter to select.`
+            ? centeredCountryId === selectedCountryId
+              ? `${getCountryName(centeredCountryId)} selected. Press Enter again to zoom in.`
+              : `${getCountryName(centeredCountryId)} centered. Press Enter to select.`
             : 'Use arrow keys to explore.');
       } else if (event.key === '+' || event.key === '=') {
         event.preventDefault();
-        setZoom(zoom + (zoom >= 4 ? 0.9 : 0.6));
+        setZoom(zoom * ZOOM_STEP);
       } else if (event.key === '-' || event.key === '_') {
         event.preventDefault();
-        setZoom(zoom - (zoom > 4 ? 0.75 : 0.4));
+        setZoom(zoom / ZOOM_STEP);
       } else if (event.key === 'Home') {
         event.preventDefault();
         resetButton.click();
@@ -1774,9 +2153,14 @@
     root.GeoWars.explorer = {
       open: openExplorer,
       close: returnHome,
+      renderCountry,
       selectCountry,
+      focusSelectedCountry,
       startHunt,
       endHunt,
+      dismissHuntSummary,
+      pauseHunt: pauseHuntClock,
+      resumeHunt: resumeHuntClock,
       submitCountry: handleCountryActivation,
       getState: () => ({
         opened,
@@ -1789,6 +2173,7 @@
         huntActive,
         huntTimeLeft,
         huntScore,
+        huntGuesses,
         huntTargetId,
         huntPaused: huntPauseReasons.size > 0,
         geometryState,
@@ -1796,6 +2181,14 @@
         territoryGeometryReady
       })
     };
+
+    // The country Explorer is the app's home experience. The controller is
+    // initialized after app.js, so open it once the DOM and data hooks exist.
+    if (
+      !screen.classList.contains('hidden') &&
+      typeof root.requestAnimationFrame === 'function' &&
+      typeof document.head?.appendChild === 'function'
+    ) openExplorer();
   }
 
   if (document.readyState === 'loading') {

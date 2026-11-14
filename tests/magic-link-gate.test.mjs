@@ -57,7 +57,8 @@ assert.match((await empty.db.sendPlayerMagicLink('   ')).error, /Enter an email/
 // Normal path: guest session available.
 const healthy = loadClient({ anonymousFails: false });
 await healthy.db.init();
-assert.equal(healthy.db.isOnline(), true);
+assert.equal(healthy.db.isOnline(), false, 'local guests never need a cloud session');
 assert.equal(healthy.db.isReady(), true);
+assert.equal(healthy.calls.includes('anon'), false, 'opening the game must not create anonymous accounts');
 
 console.log('magic link gate tests passed');

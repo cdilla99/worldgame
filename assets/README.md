@@ -1,8 +1,12 @@
 # EARTHLING visual assets
 
 - `geowars-icons.svg` is the local EARTHLING interface icon sprite.
-- `geowars-logo.svg` is the responsive EARTHLING globe-orbit lockup used on the
-  landing page and as the in-game home control.
+- `geowars-logo.svg` is the responsive EARTHLING lockup (indigo globe, mint
+  continents, orbiting satellite, outlined Sora wordmark) used on the landing
+  page and as the in-game home control.
+- `earthling-icon.svg` is the square globe tile used for the favicon, touch icon
+  and web app manifest.
+- `fonts/` bundles Sora and Inter (SIL Open Font License; licences alongside).
 - `landing-globe.svg` is the static fallback shown when the interactive canvas
   cannot initialize.
 - `globe-data.js` contains simplified continent geometry derived from Natural
@@ -20,5 +24,5 @@ bundled locally so the page makes no runtime map-data request.
 - Rebuild it with
   `node scripts/build-globe-country-data.mjs <path-to-ne_50m_admin_0_countries.geojson>`.
 - The generator joins geometry to the canonical EARTHLING records through the
-  ISO alpha-2 code encoded in each flag. All 195 game countries are covered,
+  ISO alpha-2 code encoded in each flag. All 197 game countries are covered,
   including visible markers and larger hit targets for small countries.

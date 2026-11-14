@@ -37,6 +37,19 @@ test('country content contains no common UTF-8 mojibake sequences', () => {
   });
 });
 
+test('every canonical country flag uses exactly two regional indicator symbols', () => {
+  const source = `${fs.readFileSync(path.join(root, 'data', 'countries.js'), 'utf8')}
+this.__cards = countryCards;`;
+  const context = {};
+  vm.createContext(context);
+  vm.runInContext(source, context);
+  const flagPattern = /^[\u{1F1E6}-\u{1F1FF}]{2}$/u;
+
+  context.__cards.forEach(card => {
+    assert.match(card.flag, flagPattern, `${card.name} has an invalid flag encoding`);
+  });
+});
+
 test('canonical Samoa copy and accented country details render correctly', () => {
   const source = `${fs.readFileSync(path.join(root, 'data', 'countries.js'), 'utf8')}
 this.__cards = countryCards;`;
@@ -49,7 +62,7 @@ this.__cards = countryCards;`;
   const colombia = context.__cards.find(card => card.name === 'Colombia');
   const moldova = context.__cards.find(card => card.name === 'Moldova');
 
-  assert.equal(samoa.fun_facts[0], "Fa'a Samoa — the Samoan way — governs village life");
+  assert.equal(samoa.fun_facts[0], "To Sua Ocean Trench here is a natural 100-foot deep seawater swimming hole formed by a collapsed lava tube");
   assert.equal(brazil.capital, 'Brasília');
   assert.equal(colombia.capital, 'Bogotá');
   assert.equal(moldova.capital, 'Chișinău');
@@ -58,15 +71,16 @@ this.__cards = countryCards;`;
 
 test('World Explorer is a prominent landing feature with independent music controls', () => {
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-  const styles = fs.readFileSync(path.join(root, 'globe-explorer.css'), 'utf8');
+  const styles = fs.readFileSync(path.join(root, 'ux-polish.css'), 'utf8');
+  const explorerStyles = fs.readFileSync(path.join(root, 'globe-explorer.css'), 'utf8');
   const explorer = fs.readFileSync(path.join(root, 'globe-explorer.js'), 'utf8');
   const music = fs.readFileSync(path.join(root, 'background-music.js'), 'utf8');
 
-  assert.match(html, /class="[^"]*landing-explore-feature[^"]*"[\s\S]*id="btn-open-explorer"/);
+  assert.match(html, /class="[^"]*landing-explorer-showcase[^"]*"[\s\S]*id="btn-open-explorer"/);
   assert.match(html, /World Explorer[\s\S]*Country Hunt/);
   assert.match(html, /id="btn-explorer-music"[\s\S]*Start music/);
-  assert.match(styles, /\.landing-explore-feature[\s\S]*grid-template-columns/);
-  assert.match(styles, /\.explorer-globe-controls[\s\S]*position: absolute/);
+  assert.match(styles, /\.landing-explorer-showcase[\s\S]*grid-template-columns/);
+  assert.match(explorerStyles, /\.explorer-globe-controls[\s\S]*position: absolute/);
   assert.match(explorer, /startExplorerMusic/);
   assert.match(explorer, /toggleExplorerMusic/);
   assert.match(music, /isMuted: isMuted/);

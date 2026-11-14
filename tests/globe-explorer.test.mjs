@@ -15,7 +15,7 @@ function flagToIso2(flag) {
     .join('');
 }
 
-test('country globe geometry covers the canonical 195-country dataset', () => {
+test('country globe geometry covers the canonical 197-country dataset', () => {
   const geometrySource = read('assets/globe-countries.js');
   const dataSource = `${read('data/countries.js')}\nthis.__cards = countryCards;`;
   const geometryContext = { window: {} };
@@ -28,13 +28,13 @@ test('country globe geometry covers the canonical 195-country dataset', () => {
 
   const geometry = geometryContext.window.GeoWarsGlobeCountries;
   const cards = dataContext.__cards;
-  assert.equal(geometry.length, 195);
-  assert.equal(cards.length, 195);
-  assert.equal(new Set(geometry.map(country => country.i)).size, 195);
-  assert.equal(new Set(geometry.map(country => country.c)).size, 195);
+  assert.equal(geometry.length, 197);
+  assert.equal(cards.length, 197);
+  assert.equal(new Set(geometry.map(country => country.i)).size, 197);
+  assert.equal(new Set(geometry.map(country => country.c)).size, 197);
   assert.deepEqual(
     Array.from(geometry, country => country.i).sort((a, b) => a - b),
-    Array.from({ length: 195 }, (_, index) => index + 1)
+    Array.from({ length: 197 }, (_, index) => index + 1)
   );
   assert.deepEqual(
     Array.from(geometry, country => country.c).sort(),
@@ -56,19 +56,20 @@ test('country globe geometry covers the canonical 195-country dataset', () => {
   assert.ok(geometrySource.length < 450000, 'country geometry should remain a compact lazy-loaded asset');
 });
 
-test('explorer markup exposes search, globe controls, facts, and home navigation', () => {
+test('explorer markup exposes the homepage promise, search, globe controls, and facts', () => {
   const html = read('index.html');
   const explorerScript = html.indexOf('globe-explorer.js?v=');
   const gameScript = html.indexOf('app.js?v=');
 
   assert.match(html, /World Explorer[\s\S]*id="btn-open-explorer"[\s\S]*id="btn-open-explorer-hunt"/);
-  assert.match(html, /id="explorer" class="screen hidden explorer-screen"/);
+  assert.match(html, /id="explorer" class="screen explorer-screen atlas-shell"/);
+  assert.match(html, /id="explorer-stage-title"[\s\S]*Explore the world/);
   assert.match(html, /id="explorer-globe-canvas"[\s\S]*tabindex="0"/);
   assert.match(html, /id="explorer-country-search"[\s\S]*role="combobox"/);
   assert.match(html, /id="explorer-search-results"[\s\S]*role="listbox"/);
   assert.match(html, /id="explorer-country-card"[\s\S]*id="explorer-country-capital"/);
   assert.match(html, /id="btn-explorer-zoom-out"[\s\S]*id="btn-explorer-reset"[\s\S]*id="btn-explorer-zoom-in"/);
-  assert.ok((html.match(/data-explorer-home/g) || []).length >= 2);
+  assert.doesNotMatch(html, /Back to home/);
   assert.ok(gameScript > -1 && explorerScript > gameScript);
 });
 
@@ -89,11 +90,12 @@ test('More country details has unique ordered content sections with economics fi
     return `.${className}`;
   });
   assert.deepEqual(directContentOrder, [
-    '.explorer-more-facts',
     '#explorer-landmark-media',
+    '.explorer-more-facts',
     '#explorer-economics-callout'
   ]);
   assert.equal(directContentOrder.at(-1), '#explorer-economics-callout', 'no direct content section may follow economics');
+  assert.ok(detailsBody.includes('id="explorer-landmark-media"'), 'landmark photos belong inside the optional details disclosure');
 });
 
 test('explorer controller lazy-loads geometry and supports pointer, touch, keyboard, and search', () => {
@@ -109,14 +111,16 @@ test('explorer controller lazy-loads geometry and supports pointer, touch, keybo
   assert.match(script, /option\.addEventListener\('pointerdown'/);
   assert.match(script, /prefers-reduced-motion: reduce/);
   assert.match(script, /root\.GeoWars\.explorer/);
-  assert.match(script, /startRegionalPractice/);
+  assert.match(script, /function showFreeExplorer\(\)/);
 });
 
-test('free exploration opens selected-country details by default', () => {
+test('free exploration keeps secondary details closed and loads photos on expansion', () => {
   const script = read('globe-explorer.js');
 
-  assert.match(script, /details\.open = !huntActive;/);
+  assert.match(script, /details\.open = false;/);
+  assert.match(script, /details\?\.addEventListener\('toggle',[\s\S]*loadLandmarkMedia\(country\)/);
   assert.match(script, /function showFreeExplorer\(\)[\s\S]*renderCountryCard\(cardsById\.get\(selectedCountryId\)\)/);
+  assert.match(script, /function renderCountry\(countryId, options = \{\}\)[\s\S]*renderCountryCard\(country\)/);
 });
 
 test('Explorer loads an optional expandable landmark image with information and source links', () => {
@@ -126,7 +130,7 @@ test('Explorer loads an optional expandable landmark image with information and 
 
   assert.match(html, /id="explorer-landmark-media" class="explorer-landmark-media hidden"/);
   assert.match(html, /id="explorer-landmark-media-toggle" class="explorer-landmark-media-toggle" type="button" aria-expanded="false"/);
-  assert.match(html, /id="explorer-landmark-learn-more"[\s\S]*Learn about this landmark/);
+  assert.match(html, /id="explorer-landmark-learn-more"[\s\S]*Wikipedia/);
   assert.match(html, /id="explorer-landmark-media-source"[\s\S]*Wikipedia/);
   assert.match(script, /https:\/\/en\.wikipedia\.org\/w\/api\.php/);
   assert.match(script, /const LANDMARK_WIKIPEDIA_CANDIDATES = Object\.freeze\(/);
