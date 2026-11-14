@@ -91,6 +91,12 @@ test('Shape Quiz challenge puts difficulty in the game header and applies or can
   await expect(page.locator('#btn-game-difficulty')).toHaveText('Difficulty: Expert');
   await expect(page.locator('#activity-settings-dialog')).toBeHidden();
   await expect(page.locator('#choices')).toBeHidden();
+  await page.locator('#btn-i-know').click();
+  await expect(page.locator('#answer-input')).toBeVisible();
+  await expect(page.locator('#btn-bail')).toBeHidden();
+  // Even a stale UI dispatch must not discard the only available answer path.
+  await page.locator('#btn-bail').dispatchEvent('click');
+  await expect(page.locator('#answer-input')).toBeVisible();
   await page.screenshot({ path: 'test-results/activity-game-desktop.png', fullPage: true });
 });
 
