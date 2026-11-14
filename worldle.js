@@ -30,6 +30,40 @@
     let active = false;
     let outcomeTimer = null;
     let openSequence = 0;
+    let suggestionFrame = null;
+
+    function positionSuggestions(ensureVisible = false) {
+      if (!suggestionsList || suggestionsList.classList.contains('hidden')) return;
+      const viewport = root.visualViewport;
+      const top = (viewport?.offsetTop || 0) + 10;
+      let bottom = (viewport?.offsetTop || 0) + (viewport?.height || root.innerHeight) - 10;
+      const nav = document.querySelector('.atlas-primary-nav');
+      if (nav && getComputedStyle(nav).position === 'fixed' && getComputedStyle(nav).visibility !== 'hidden') {
+        bottom = Math.min(bottom, nav.getBoundingClientRect().top - 10);
+      }
+      let rect = input.getBoundingClientRect();
+      if (ensureVisible && (rect.top < top || rect.bottom > bottom || Math.max(rect.top - top, bottom - rect.bottom) < 60)) {
+        root.scrollBy({ top: rect.top - (top + Math.max(0, (bottom - top - rect.height) / 2)), behavior: 'instant' });
+        rect = input.getBoundingClientRect();
+      }
+      const above = Math.max(0, rect.top - top - 6);
+      const below = Math.max(0, bottom - rect.bottom - 6);
+      const opensAbove = below < Math.min(180, suggestionsList.scrollHeight) && above > below;
+      suggestionsList.style.left = `${rect.left}px`;
+      suggestionsList.style.right = 'auto';
+      suggestionsList.style.width = `${rect.width}px`;
+      suggestionsList.style.maxHeight = `${Math.min(252, opensAbove ? above : below)}px`;
+      const height = suggestionsList.getBoundingClientRect().height;
+      suggestionsList.style.top = `${opensAbove ? rect.top - height - 6 : rect.bottom + 6}px`;
+    }
+
+    function scheduleSuggestionPosition() {
+      if (suggestionFrame !== null) return;
+      suggestionFrame = root.requestAnimationFrame(() => {
+        suggestionFrame = null;
+        positionSuggestions();
+      });
+    }
 
     function scheduleOutcome(game, delay) {
       clearTimeout(outcomeTimer);
@@ -57,7 +91,7 @@
       image.alt = '';
       if (source.code === 'NP') image.classList.add('is-nonrect-flag');
       container.appendChild(image);
-      const urls = [...source.urls].reverse();
+      const urls = source.code === 'NP' ? [...source.urls] : [...source.urls].reverse();
       assets.bindImageFallback(image, 'flag', {
         sources: urls.slice(1), code: source.code, countryName: card.name, variant: 'compact'
       });
@@ -69,7 +103,7 @@
         return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>';
       }
       const angles = { N: 0, NE: 45, E: 90, SE: 135, S: 180, SW: 225, W: 270, NW: 315 };
-      const angle = angles[guess.direction] ?? 0;
+      const angle = Number.isFinite(angles[guess.direction]) ? angles[guess.direction] : 0;
       return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: rotate(${angle}deg)"><path d="M12 19V5m-6 6 6-6 6 6"/></svg>`;
     }
 
@@ -114,19 +148,23 @@
         row.className = 'worldle-guess-row';
 
           if (guess.correct) row.classList.add('is-correct');
-          const pct = guess.proximityPercent || 0;
+          const pct = Math.max(0, Math.min(100, Number(guess.proximityPercent) || 0));
           row.innerHTML = `
             <div class="worldle-guess-country">
               <span class="worldle-guess-flag"></span>
-              <span class="worldle-guess-name">${guess.card.name}</span>
+              <span class="worldle-guess-name"></span>
             </div>
-            <span class="worldle-guess-distance">${guess.displayDistance}</span>
-            <div class="worldle-guess-direction" role="img" aria-label="${guess.directionLabel || ''}" title="${guess.directionLabel || ''}">${directionIcon(guess)}</div>
+            <span class="worldle-guess-distance"></span>
+            <div class="worldle-guess-direction" role="img">${directionIcon(guess)}</div>
             <div class="worldle-proximity-meter">
               <div class="worldle-meter-track"><div class="worldle-meter-fill" style="width: ${pct}%"></div></div>
               <span class="worldle-proximity-label">${pct}%</span>
             </div>
           `;
+          row.querySelector('.worldle-guess-name').textContent = guess.card.name;
+          row.querySelector('.worldle-guess-distance').textContent = guess.displayDistance;
+          row.querySelector('.worldle-guess-direction').setAttribute('aria-label', guess.directionLabel || '');
+          row.querySelector('.worldle-guess-direction').title = guess.directionLabel || '';
           renderFlag(row.querySelector('.worldle-guess-flag'), guess.card);
 
         guessesContainer.appendChild(row);
@@ -144,11 +182,11 @@
       if (game.completed) {
         input.disabled = true;
         submitBtn.disabled = true;
-        input.placeholder = game.won ? 'Solved! Great job.' : `Game over. It was ${game.target ? game.target.name : ''}`;
+        input.placeholder = game.won ? 'Solved' : 'Complete';
       } else {
         input.disabled = false;
         submitBtn.disabled = false;
-        input.placeholder = 'Country name…';
+        input.placeholder = 'Country';
       }
     }
 
@@ -164,7 +202,7 @@
       const history = document.getElementById('worldle-history-heading');
       const hint = document.getElementById('worldle-direction-hint');
       const dayLabel = document.getElementById('worldle-day-label');
-      if (dayLabel) dayLabel.textContent = `Daily discovery #${game.dayNumber} · A new country every day`;
+      if (dayLabel) dayLabel.textContent = `#${game.dayNumber}`;
       if (history) history.hidden = guesses.length === 0;
       if (hint) hint.hidden = guesses.length === 0;
       if (copy) copy.hidden = !latest;
@@ -173,8 +211,8 @@
 
       if (!latest) {
         panel.dataset.state = 'ready';
-        kicker.textContent = 'Trust your first instinct';
-        title.textContent = 'Your adventure starts here.';
+        kicker.textContent = 'How to play';
+        title.textContent = 'Each guess shows distance and direction.';
         if (needle) needle.style.transform = 'rotate(-35deg)';
         return;
       }
@@ -184,24 +222,24 @@
       const previousBest = previous.length ? Math.min(...previous.map(guess => guess.distanceKm)) : null;
       panel.dataset.state = game.won ? 'solved' : game.completed ? 'complete' : 'searching';
       if (game.won) {
-        kicker.textContent = 'Destination discovered';
-        title.textContent = `You found ${game.target.name}!`;
-        copy.textContent = `Solved in ${guesses.length} of ${game.maxGuesses || 6} guesses. Come back tomorrow for a new adventure.`;
+        kicker.textContent = 'Solved';
+        title.textContent = game.target.name;
+        copy.textContent = `${guesses.length}/${game.maxGuesses || 6} guesses`;
       } else if (game.completed) {
-        kicker.textContent = 'The journey continues tomorrow';
-        title.textContent = `Today's destination: ${game.target.name}`;
-        copy.textContent = 'One more corner of the world to remember. Explore it, then try a new shape tomorrow.';
+        kicker.textContent = 'Puzzle complete';
+        title.textContent = game.target.name;
+        copy.textContent = 'Next puzzle tomorrow.';
       } else {
         const warmer = previousBest !== null && latest.distanceKm < previousBest;
         const colder = previousBest !== null && latest.distanceKm > previous.at(-1).distanceKm;
         kicker.textContent = warmer ? 'Getting warmer' : colder ? 'A different direction' : 'Your next bearing';
-        title.textContent = warmer ? "You're closing in." : previous.length ? 'Follow the compass.' : 'You have your first clue.';
+        title.textContent = warmer ? 'Closer' : colder ? 'Farther' : 'Direction';
         const direction = String(latest.directionLabel || latest.direction || '').toLowerCase();
-        copy.textContent = `${latest.displayDistance} ${direction} of ${latest.card.name}. Where could that take you?`;
+        copy.textContent = `${latest.displayDistance} ${direction} of ${latest.card.name}.`;
       }
       if (needle) needle.style.transform = `rotate(${Number(latest.bearingDegrees) || 0}deg)`;
       const bestLabel = document.getElementById('worldle-closest-label');
-      if (bestLabel) bestLabel.textContent = `${best.displayDistance} away`;
+      if (bestLabel) bestLabel.textContent = best.displayDistance;
       const bestFill = document.getElementById('worldle-closest-fill');
       if (bestFill) bestFill.style.width = `${Math.max(0, Math.min(100, best.proximityPercent || 0))}%`;
     }
@@ -232,12 +270,13 @@
       const maxStreakEl = document.getElementById('worldle-stat-max-streak');
 
       if (kicker) kicker.textContent = !game.completed ? 'STATISTICS' : game.won ? 'VICTORY' : 'NICE TRY';
-      if (title) title.textContent = !game.completed ? 'Daily Statistics' : game.won ? 'Target Identified!' : 'Better Luck Tomorrow!';
+      if (title) title.textContent = !game.completed ? 'Statistics' : game.won ? 'Solved' : 'Not solved';
+      modal.querySelector('.worldle-revealed-country')?.classList.toggle('hidden', !game.completed);
 
       if (target && game.completed) {
         renderFlag(flagEl, target);
         if (nameEl) nameEl.textContent = target.name;
-        if (regionEl) regionEl.textContent = `${target.continent || ''} · ${target.subregion || ''}`;
+        if (regionEl) regionEl.textContent = [target.continent, target.subregion].filter((value, index, values) => value && values.indexOf(value) === index).join(' · ');
       } else {
         renderFlag(flagEl, null);
         if (nameEl) nameEl.textContent = 'Mystery country';
@@ -309,8 +348,9 @@
         item.setAttribute('role', 'option');
         item.innerHTML = `
           <span class="worldle-autocomplete-flag"></span>
-          <span>${c.name}</span>
+          <span class="worldle-autocomplete-name"></span>
         `;
+        item.querySelector('.worldle-autocomplete-name').textContent = c.name;
         renderFlag(item.querySelector('.worldle-autocomplete-flag'), c);
         item.addEventListener('click', () => {
           input.value = c.name;
@@ -322,6 +362,8 @@
 
       suggestionsList.classList.remove('hidden');
       input.setAttribute('aria-expanded', 'true');
+      positionSuggestions(true);
+      root.requestAnimationFrame(() => positionSuggestions(true));
     }
 
     async function submitCurrentGuess() {
@@ -341,7 +383,7 @@
         await loadGuidance();
       } catch (error) {
         console.error('Daily Puzzle guidance failed to load:', error);
-        showMessage('Could not load geographic guidance. Please try again.');
+        showMessage('Hints unavailable. Retry.');
         submitting = false;
         submitBtn.disabled = false;
         return;
@@ -371,7 +413,7 @@
       }
 
       updateGuessesView(withCorrectedGuesses(res.game));
-      if (root.matchMedia?.('(max-width: 767px)').matches) input.blur();
+      if (root.matchMedia?.('(max-width: 767px), (max-width: 960px) and (max-height: 500px) and (pointer: coarse)').matches) input.blur();
 
       if (res.justCompleted && active && sequence === openSequence) {
         scheduleOutcome(res.game, 800);
@@ -379,6 +421,18 @@
     }
 
     // Event listeners
+    function scrollSuggestionIntoView(item) {
+      const listBounds = suggestionsList.getBoundingClientRect();
+      const itemBounds = item.getBoundingClientRect();
+      const top = listBounds.top + suggestionsList.clientTop + 1;
+      const bottom = listBounds.top + suggestionsList.clientTop + suggestionsList.clientHeight - 1;
+      if (itemBounds.top < top) {
+        suggestionsList.scrollTop -= Math.ceil(top - itemBounds.top);
+      } else if (itemBounds.bottom > bottom) {
+        suggestionsList.scrollTop += Math.ceil(itemBounds.bottom - bottom);
+      }
+    }
+
     input.addEventListener('input', handleInput);
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
@@ -396,6 +450,7 @@
         if (items.length) {
           activeSuggestionIdx = (activeSuggestionIdx + 1) % items.length;
           items.forEach((it, i) => it.setAttribute('aria-selected', String(i === activeSuggestionIdx)));
+          scrollSuggestionIntoView(items[activeSuggestionIdx]);
         }
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
@@ -403,6 +458,7 @@
         if (items.length) {
           activeSuggestionIdx = (activeSuggestionIdx - 1 + items.length) % items.length;
           items.forEach((it, i) => it.setAttribute('aria-selected', String(i === activeSuggestionIdx)));
+          scrollSuggestionIntoView(items[activeSuggestionIdx]);
         }
       } else if (e.key === 'Escape') {
         dismissSuggestions();
@@ -410,6 +466,10 @@
     });
 
     submitBtn.addEventListener('click', submitCurrentGuess);
+    root.addEventListener('scroll', scheduleSuggestionPosition, { passive: true });
+    root.addEventListener('resize', () => positionSuggestions(true));
+    root.visualViewport?.addEventListener('resize', () => positionSuggestions(true));
+    root.visualViewport?.addEventListener('scroll', scheduleSuggestionPosition, { passive: true });
 
     if (statsBtn) {
       statsBtn.addEventListener('click', () => {
@@ -440,7 +500,7 @@
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(text).then(() => {
             if (toast) {
-              toast.textContent = 'Results copied to clipboard!';
+              toast.textContent = 'Copied';
               setTimeout(() => { toast.textContent = ''; }, 3000);
             }
           });

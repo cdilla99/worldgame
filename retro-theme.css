@@ -1,0 +1,105 @@
+/* Retro-futurist display type; body copy stays readable at phone sizes. */
+@font-face {
+  font-family: 'Orbitron';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('assets/fonts/orbitron-wght.woff2') format('woff2');
+}
+
+:root {
+  --palette-mandarin: #f28c28;
+  --palette-forest: #1b4d3e;
+  --palette-crest: #f4c542;
+  --font-display: 'Orbitron', 'Sora', sans-serif;
+  --font-console: 'Inter', ui-monospace, monospace;
+  --color-primary: var(--palette-mandarin);
+  --color-primary-hover: #ffac59;
+  --color-on-primary: #171b14;
+  --color-brand: var(--palette-mandarin);
+  --color-focus: var(--palette-crest);
+  --color-warning: var(--palette-crest);
+  --color-success: #a7c8ad;
+  --color-page: #0c1210;
+  --color-surface: #141d18;
+  --color-surface-raised: #1e2c23;
+  --color-text: #f6f3e9;
+  --color-muted: #b4bdb1;
+  --color-border: #3d5144;
+  --app-panel: var(--color-surface);
+  --app-raised: var(--color-surface-raised);
+  --app-line: var(--color-border);
+  --app-mint: var(--color-success);
+  --app-lilac: var(--palette-mandarin);
+  --app-amber: var(--palette-crest);
+  --theme-line: var(--color-border);
+  --theme-indigo: var(--palette-mandarin);
+  --theme-indigo-text: #ffc584;
+  --theme-mint: var(--color-success);
+  --gw-blue: var(--palette-crest);
+  --gw-green: var(--color-success);
+}
+
+body.activity-navigation #atlas-challenge-panel .atlas-challenge-card h3 {
+  font-family: var(--font-display); font-size: clamp(1.05rem, 2.05vw, 1.9rem);
+  font-weight: 650; line-height: 1.3; letter-spacing: .045em; text-transform: uppercase;
+}
+body.activity-navigation .atlas-header .explorer-home-logo { width: clamp(220px, 29vw, 400px); }
+body.activity-navigation .atlas-logo-globe { filter: none; }
+body.activity-navigation .activity-action-label,
+body.activity-navigation .activity-signin,
+body.activity-navigation .atlas-utility-menu > summary {
+  font-family: var(--font-console); font-weight: 600; letter-spacing: .075em; text-transform: uppercase;
+}
+body.activity-navigation .activity-action-label { font-size: .875rem; }
+body.activity-navigation #atlas-challenge-panel .activity-paths { width: min(100%, 288px); }
+body.activity-navigation #atlas-challenge-panel .activity-paths button { padding-inline: 10px; }
+body.activity-navigation #atlas-challenge-panel .activity-explore-path {
+  background: var(--palette-forest); border-color: #648873; color: #f6f3e9;
+}
+body.activity-navigation #atlas-challenge-panel .activity-paths .cta {
+  background: var(--palette-mandarin); border-color: var(--palette-mandarin); color: var(--color-on-primary);
+}
+body.activity-navigation .activity-daily {
+  background: #f4c5420a; border-color: #f4c54266; color: var(--palette-crest);
+}
+body.activity-navigation .activity-daily:hover { background: #f4c54218; border-color: var(--palette-crest); }
+body.activity-navigation #atlas-challenge-panel .atlas-challenge-card { border-color: #f28c2840; }
+body.activity-navigation #atlas-challenge-panel .atlas-challenge-hunt { border-color: #64887366; }
+body.activity-navigation .atlas-quiz-art { filter: drop-shadow(0 10px 26px #f28c282e); }
+body.activity-navigation :is(.cta, .know-btn, .feedback-next-btn, .profile-submit, .claim-btn, .worldle-submit-btn, .worldle-share-btn, .atlas-text-action) {
+  color: var(--color-on-primary);
+}
+body.activity-navigation :is(.cta, .know-btn, .feedback-next-btn, .profile-submit, .claim-btn, .worldle-submit-btn, .worldle-share-btn, .atlas-text-action):hover {
+  color: var(--color-on-primary);
+}
+body.activity-navigation .answer-path-btn.know-btn {
+  background: var(--palette-mandarin);
+  border-color: var(--palette-mandarin);
+  color: var(--color-on-primary);
+}
+body.activity-navigation .answer-path-btn.know-btn:hover {
+  background: var(--color-primary-hover);
+}
+body.activity-navigation :is(.explorer-country-identity h2, .feedback-country-name, .atlas-quiz-answer-name) {
+  font-family: var(--font-body);
+}
+body.activity-navigation .atlas-shapes-workspace .atlas-shape-plate,
+body.activity-navigation .worldle-silhouette-card { background-color: var(--color-page); }
+body.activity-navigation :is(.explorer-country-search, #answer-input, .worldle-input, .worldle-input-wrapper) { background-color: var(--color-page); }
+body.activity-navigation .activity-section-actions button[aria-pressed='true'] { color: var(--palette-crest); }
+
+@media (hover: hover) {
+  body.activity-navigation #atlas-challenge-panel .activity-explore-path:hover { background: #28604b; border-color: #a7c8ad; }
+  body.activity-navigation #atlas-challenge-panel .activity-paths .cta:hover { background: #ffac59; border-color: #ffac59; }
+}
+@media (max-width: 767px) {
+  body.activity-navigation .atlas-header .explorer-home-logo { width: clamp(145px, 44vw, 210px); }
+  body.activity-navigation .activity-signin { font-size: .7rem; letter-spacing: .02em; padding-inline: 6px; }
+  body.activity-navigation #atlas-challenge-panel .atlas-challenge-card h3 { font-size: clamp(1rem, 4.7vw, 1.4rem); }
+  body.activity-navigation .activity-action-label { font-size: .8rem; letter-spacing: .05em; }
+}
+@media (max-height: 500px) and (min-width: 600px) {
+  body.activity-navigation #atlas-challenge-panel .atlas-challenge-card h3 { font-size: 1rem; }
+  body.activity-navigation .atlas-header .explorer-home-logo { width: 210px; }
+}

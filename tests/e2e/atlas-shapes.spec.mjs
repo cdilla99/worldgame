@@ -1,35 +1,18 @@
 import { expect, test } from '@playwright/test';
 
-test('quiz setup replaces Explore and launches practice on mobile', async ({ page }) => {
+test('Shape Quiz Explore enters the library and Challenge launches timed play on mobile', async ({ page }) => {
   await blockExternalRequests(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await openShapes(page);
 
-  // Challenge_Control shows #shape-challenge-panel inside #atlas-challenge-panel.
-  await page.locator('#btn-mode-challenge').click();
-  const challengePanel = page.locator('#atlas-challenge-panel');
-  const shapeChallengePanel = page.locator('#shape-challenge-panel');
-  await expect(challengePanel).toBeVisible();
-  await expect(shapeChallengePanel).toBeVisible();
-  await expect(page.locator('#btn-mode-challenge')).toHaveAttribute('aria-pressed', 'true');
-
-  // Phone quiz settings sit beside Start instead of inside the utility menu.
-  await expect(page.locator('#shape-challenge-panel #btn-showoff')).toBeVisible();
-  await expect(page.locator('#shape-challenge-panel .diff-btn[data-level="cadet"]')).toBeVisible();
-  await expect(page.locator('#atlas-utility-menu')).toHaveJSProperty('open', false);
-
-  // Explore_Control restores Shapes
-  await page.locator('#btn-mode-explore').click();
-  await expect(page.locator('#btn-mode-explore')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#atlas-shapes-workspace')).toBeVisible();
   await expect(page.locator('#atlas-shape-toolbar')).toBeVisible();
   await expect(page.locator('.atlas-shape-study')).toBeVisible();
 
-  // Challenge, Practice, Start leads to #game
-  await page.locator('#btn-mode-challenge').click();
-  await page.locator('#btn-showoff').click();
-  await page.locator('#btn-start-game').click();
+  await page.locator('#btn-activity-challenge').click();
   await expect(page.locator('#game')).toBeVisible();
+  await expect(page.locator('#btn-game-difficulty')).toBeVisible();
+  await expect(page.locator('#timer-container')).toBeVisible();
 });
 
 async function blockExternalRequests(page) {
@@ -38,8 +21,7 @@ async function blockExternalRequests(page) {
 
 async function openShapes(page) {
   await page.goto('/');
-  await page.locator('#btn-mode-explore').click();
-  await page.locator('#btn-atlas-shapes').click();
+  await page.locator('#btn-explore-shapes').click();
   await expect(page.locator('#atlas-shapes-workspace')).toBeVisible();
   await expect(page.locator('#explorer-country-card')).toBeVisible();
   await expect(page.locator('#explorer-country-name')).not.toHaveText('');
@@ -109,29 +91,13 @@ test('Shapes keeps shared facts synchronized through the real explorer API', asy
   await expect(capital).toHaveText('Tokyo');
   await expect(outline).toHaveAttribute('aria-label', 'Japan border outline');
 
-  const selectedShapesBackground = await page.locator('#btn-atlas-shapes').evaluate(element => getComputedStyle(element).backgroundColor);
-  await page.locator('#btn-atlas-shapes').focus();
-  await page.locator('#btn-atlas-shapes').hover();
-  await expect.poll(() => page.locator('#btn-atlas-shapes').evaluate(element => getComputedStyle(element).backgroundColor)).toBe(selectedShapesBackground);
-  await expect(page.locator('#btn-atlas-shapes')).toBeFocused();
-  expect(await page.locator('#btn-atlas-shapes').evaluate(element => getComputedStyle(element).color)).toBe('rgb(255, 255, 255)');
-
-  const unselectedGlobe = page.locator('#btn-atlas-globe');
-  await unselectedGlobe.hover();
-  await expect.poll(() => unselectedGlobe.evaluate(element => getComputedStyle(element).backgroundColor)).toBe('rgb(28, 28, 41)');
-
-  await unselectedGlobe.click();
+  await page.locator('#btn-activity-home').click();
+  await page.locator('#btn-explore-hunt').click();
   await expect(page.locator('#btn-mode-explore')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#atlas-globe-workspace')).toBeVisible();
-  await expect.poll(() => unselectedGlobe.evaluate(element => getComputedStyle(element).backgroundColor)).toBe('rgb(108, 59, 255)');
-  await unselectedGlobe.hover();
-  await expect.poll(() => unselectedGlobe.evaluate(element => getComputedStyle(element).backgroundColor)).toBe('rgb(108, 59, 255)');
-  expect(await unselectedGlobe.evaluate(element => getComputedStyle(element).color)).toBe('rgb(255, 255, 255)');
   expect(await page.locator('.explorer-info-panel').evaluate(element => element.parentElement.classList.contains('explorer-layout'))).toBe(true);
-  await unselectedGlobe.focus();
-  await expect(unselectedGlobe).toBeFocused();
-
-  await page.locator('#btn-atlas-shapes').click();
+  await page.locator('#btn-activity-home').click();
+  await page.locator('#btn-explore-shapes').click();
   await expect(page.locator('#btn-mode-explore')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#explorer-country-card')).toBeVisible();
   expect(await page.locator('.explorer-info-panel').evaluate(element => element.parentElement.id)).toBe('atlas-shape-info-slot');
@@ -151,14 +117,14 @@ test('Shapes keeps shared facts synchronized through the real explorer API', asy
   await page.reload();
   await openShapes(page);
   await expect(page.locator('#btn-mode-explore')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('#btn-atlas-shapes')).toBeVisible();
+  await expect(page.locator('#activity-section-title')).toHaveText('Shape Quiz');
   await page.screenshot({ path: '.scratch/task-01-shapes-390x844.png', fullPage: true });
 });
 
-test('Shapes navigation remains readable when disabled', async ({ page }) => {
+test('Shape Quiz Explore control remains readable when disabled', async ({ page }) => {
   await blockExternalRequests(page);
   await page.goto('/');
-  const shapes = page.locator('#btn-atlas-shapes');
+  const shapes = page.locator('#btn-explore-shapes');
   await shapes.evaluate(element => {
     element.disabled = true;
     element.setAttribute('aria-disabled', 'true');

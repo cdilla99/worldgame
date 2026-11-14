@@ -156,13 +156,12 @@ function loadEntry(economicsByIso2) {
   };
 }
 function detailsOrderSnapshot() {
-  const details = html.match(/<details id="explorer-more-details"[\s\S]*?<\/details>/)?.[0] ?? '';
   const positions = [
-    ['more-facts', details.indexOf('class="explorer-more-facts"')],
-    ['economics-callout', details.indexOf('id="explorer-economics-callout"')],
-    ['landmark-media', details.indexOf('id="explorer-landmark-media"')]
+    ['more-facts', html.indexOf('class="explorer-more-facts"')],
+    ['economics-callout', html.indexOf('id="explorer-economics-callout"')],
+    ['landmark-media', html.indexOf('id="explorer-landmark-media"')]
   ];
-  assert.ok(positions.every(([, position]) => position >= 0), 'all More Details content nodes must exist');
+  assert.ok(positions.every(([, position]) => position >= 0), 'all country card content nodes must exist');
   return positions.sort((left, right) => left[1] - right[1]).map(([name]) => name);
 }
 
@@ -238,7 +237,7 @@ function landmarkSnapshot(outcome, latestSelection) {
 const observedMarkup = markupSnapshot();
 const UNFIXED_MARKUP_BASELINE = {
   calloutCount: 1,
-  heading: 'Economic comparison',
+  heading: 'Economy',
   source: '2026 · USD',
   labels: ['Avg annual gross salary', 'Big Mac', 'Coke · 330 ml'],
   siblingOrder: ['more-facts', 'economics-callout', 'landmark-media']

@@ -1,8 +1,7 @@
 /* ============================================================
-   EARTHLING THEME: Onyx, Electric Indigo, Tropical Mint
-   Loaded after every feature stylesheet. Indigo is the single loud action
-   colour; mint is reserved for success, progress and small highlights; onyx
-   surfaces stay quiet so the globe and country outlines carry the colour.
+   EARTHLING THEME: Mandarin Orange, Forest Green, Crest Yellow
+   Shared component styles. retro-theme.css supplies the final palette and
+   display typography; country flags and map artwork retain their own colours.
    ============================================================ */
 
 @font-face {
@@ -28,41 +27,41 @@
   --color-page: #0a0a10;
   --color-surface: #13131c;
   --color-surface-raised: #1c1c29;
-  --color-primary: #6c3bff;
-  --color-primary-hover: #7a4dff;
+  --color-primary: #f28c28;
+  --color-primary-hover: #ffac59;
   --color-on-primary: #ffffff;
   --color-text: #f4f4fa;
   --color-muted: #b4b4c8;
-  --color-success: #3df2b5;
+  --color-success: #a7c8ad;
   --color-error: #ff7d8f;
   --color-warning: #ffd166;
-  --color-focus: #b9a4ff;
+  --color-focus: #f4c542;
   --color-border: #34344a;
   --color-border-strong: #6a6a88;
-  --color-brand: #6c3bff;
+  --color-brand: #f28c28;
 
   --gw-page: #0a0a10;
   --gw-panel: #13131c;
   --gw-panel-deep: #0e0e15;
   --gw-line: rgba(180, 180, 210, 0.22);
-  --gw-line-strong: rgba(185, 164, 255, 0.5);
-  --gw-blue: #b9a4ff;
-  --gw-green: #3df2b5;
-  --gw-green-deep: #25d49a;
+  --gw-line-strong: rgba(244, 197, 66, 0.5);
+  --gw-blue: #f4c542;
+  --gw-green: #a7c8ad;
+  --gw-green-deep: #80ae8c;
   --gw-red: #ff7d8f;
 
-  --theme-indigo: #6c3bff;
-  --theme-indigo-soft: rgba(108, 59, 255, 0.16);
-  --theme-indigo-line: rgba(167, 139, 255, 0.42);
-  --theme-indigo-text: #c4b5ff;
-  --theme-mint: #3df2b5;
+  --theme-indigo: #f28c28;
+  --theme-indigo-soft: rgba(242, 140, 40, 0.16);
+  --theme-indigo-line: rgba(242, 140, 40, 0.42);
+  --theme-indigo-text: #ffc584;
+  --theme-mint: #a7c8ad;
   --theme-line: #34344a;
 }
 
 body {
   background:
-    radial-gradient(circle at 12% -10%, rgba(108, 59, 255, 0.2), transparent 34rem),
-    radial-gradient(circle at 94% 106%, rgba(61, 242, 181, 0.08), transparent 30rem),
+    radial-gradient(circle at 12% -10%, rgba(242, 140, 40, 0.2), transparent 34rem),
+    radial-gradient(circle at 94% 106%, rgba(27, 77, 62, 0.08), transparent 30rem),
     var(--color-page);
   font-family: var(--font-body);
 }
@@ -79,8 +78,8 @@ html {
 body.is-explorer-active,
 body.is-explorer-active[data-atlas-view='shapes'] {
   background:
-    radial-gradient(circle at 12% -10%, rgba(108, 59, 255, 0.2), transparent 34rem),
-    radial-gradient(circle at 94% 106%, rgba(61, 242, 181, 0.08), transparent 30rem),
+    radial-gradient(circle at 12% -10%, rgba(242, 140, 40, 0.2), transparent 34rem),
+    radial-gradient(circle at 94% 106%, rgba(27, 77, 62, 0.08), transparent 30rem),
     var(--color-page);
 }
 
@@ -95,8 +94,8 @@ body.is-explorer-active[data-atlas-view='shapes'] {
 .atlas-shell[data-atlas-view='shapes'] {
   --atlas-paper: #13131c;
   --atlas-paper-raised: #0a0a10;
-  --atlas-accent: #6c3bff;
-  --atlas-accent-dark: #7a4dff;
+  --atlas-accent: #f28c28;
+  --atlas-accent-dark: #ffac59;
 }
 
 /* ---------- Logo ---------- */
@@ -107,12 +106,12 @@ body.is-explorer-active[data-atlas-view='shapes'] {
 
 .atlas-header .explorer-home-logo img,
 .atlas-logo-globe {
-  filter: drop-shadow(0 4px 18px rgba(108, 59, 255, 0.35));
+  filter: drop-shadow(0 4px 18px rgba(242, 140, 40, 0.35));
   transition: filter 160ms ease, transform 160ms ease;
 }
 
 .atlas-header .explorer-home-logo:hover img {
-  filter: drop-shadow(0 4px 22px rgba(108, 59, 255, 0.6));
+  filter: drop-shadow(0 4px 22px rgba(242, 140, 40, 0.6));
   transform: translateY(-1px);
 }
 
@@ -247,7 +246,7 @@ h1, h2, h3,
 :is(.atlas-primary-nav, .atlas-explore-switch) button:hover:not(:disabled)[aria-pressed="true"] {
   background: var(--color-primary);
   color: #ffffff;
-  box-shadow: 0 6px 20px rgba(108, 59, 255, 0.35);
+  box-shadow: 0 6px 20px rgba(242, 140, 40, 0.35);
 }
 
 .atlas-utility-menu > summary {
@@ -285,7 +284,7 @@ h1, h2, h3,
   border-color: var(--color-primary);
   background: var(--color-primary);
   color: #ffffff;
-  box-shadow: 0 8px 26px rgba(108, 59, 255, 0.32);
+  box-shadow: 0 8px 26px rgba(242, 140, 40, 0.32);
 }
 
 .cta {
@@ -328,7 +327,7 @@ h1, h2, h3,
 
 .results-card {
   background:
-    radial-gradient(circle at 50% 0, rgba(108, 59, 255, 0.16), transparent 24rem),
+    radial-gradient(circle at 50% 0, rgba(242, 140, 40, 0.16), transparent 24rem),
     var(--color-surface);
 }
 
@@ -367,9 +366,9 @@ h1, h2, h3,
 
 .mode-chip.active,
 .mode-chip[aria-pressed="true"] {
-  border-color: #8f6bff;
-  background: rgba(108, 59, 255, 0.28);
-  box-shadow: inset 0 0 0 1px rgba(143, 107, 255, 0.45);
+  border-color: #f28c28;
+  background: rgba(242, 140, 40, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(242, 140, 40, 0.45);
   color: #ffffff;
 }
 
@@ -378,11 +377,11 @@ h1, h2, h3,
 }
 
 .atlas-challenge-hunt .atlas-hunt-preview {
-  filter: drop-shadow(0 8px 28px rgba(108, 59, 255, 0.45));
+  filter: drop-shadow(0 8px 28px rgba(242, 140, 40, 0.45));
 }
 
 .atlas-quiz-art {
-  filter: drop-shadow(0 10px 26px rgba(124, 82, 255, 0.6));
+  filter: drop-shadow(0 10px 26px rgba(242, 140, 40, 0.6));
 }
 
 /* ---------- Globe and Shapes ---------- */
@@ -392,7 +391,7 @@ h1, h2, h3,
 
 .explorer-info-panel {
   background:
-    radial-gradient(circle at 100% 0, rgba(108, 59, 255, 0.14), transparent 22rem),
+    radial-gradient(circle at 100% 0, rgba(242, 140, 40, 0.14), transparent 22rem),
     var(--color-surface);
 }
 
@@ -419,13 +418,13 @@ h1, h2, h3,
 }
 
 .explorer-fact::before {
-  background: #a78bff;
+  background: #f4c542;
 }
 
 .explorer-country-status {
   border-color: var(--theme-indigo-line);
   background: var(--theme-indigo-soft);
-  color: #dcd3ff;
+  color: #ffe0be;
 }
 
 .atlas-shape-toolbar {
@@ -441,7 +440,7 @@ h1, h2, h3,
 }
 
 .atlas-shape-controls button:hover {
-  border-color: #a78bff;
+  border-color: #f4c542;
   background: var(--color-surface-raised);
 }
 
@@ -450,9 +449,9 @@ h1, h2, h3,
 .silhouette-box {
   border-color: var(--theme-line);
   background:
-    linear-gradient(rgba(167, 139, 255, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(167, 139, 255, 0.06) 1px, transparent 1px),
-    radial-gradient(circle at 50% 46%, rgba(108, 59, 255, 0.34), transparent 56%),
+    linear-gradient(rgba(242, 140, 40, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(242, 140, 40, 0.06) 1px, transparent 1px),
+    radial-gradient(circle at 50% 46%, rgba(242, 140, 40, 0.34), transparent 56%),
     var(--color-page);
   background-size: 28px 28px, 28px 28px, auto, auto;
 }
@@ -460,12 +459,12 @@ h1, h2, h3,
 .atlas-shapes-workspace .atlas-shape-plate::before,
 .worldle-silhouette-card::before,
 .silhouette-box::before {
-  border-color: rgba(61, 242, 181, 0.2);
+  border-color: rgba(27, 77, 62, 0.2);
 }
 
 .atlas-shapes-workspace .atlas-shape-art svg,
 .worldle-silhouette-art svg {
-  filter: brightness(0) invert(1) drop-shadow(0 14px 32px rgba(124, 82, 255, 0.45));
+  filter: brightness(0) invert(1) drop-shadow(0 14px 32px rgba(242, 140, 40, 0.45));
 }
 
 /* The flag hint is meant to sit in the corner; a later rule put it back in the flex flow. */
@@ -484,11 +483,11 @@ h1, h2, h3,
   height: 100%;
   min-height: 0;
   color: #ffffff;
-  filter: drop-shadow(0 14px 32px rgba(124, 82, 255, 0.45));
+  filter: drop-shadow(0 14px 32px rgba(242, 140, 40, 0.45));
 }
 
 .silhouette-box > img {
-  filter: brightness(0) invert(1) drop-shadow(0 14px 32px rgba(124, 82, 255, 0.45));
+  filter: brightness(0) invert(1) drop-shadow(0 14px 32px rgba(242, 140, 40, 0.45));
 }
 
 /* ---------- Daily Puzzle ---------- */
@@ -524,12 +523,12 @@ h1, h2, h3,
 }
 
 .worldle-icon-btn:hover {
-  border-color: #a78bff;
+  border-color: #f4c542;
   background: #25253a;
 }
 
 .worldle-input:focus {
-  border-color: #a78bff;
+  border-color: #f4c542;
   background: var(--color-surface-raised);
 }
 
@@ -540,7 +539,7 @@ h1, h2, h3,
 
 .worldle-meter-fill,
 .worldle-meter-bar {
-  background: linear-gradient(90deg, #a78bff, #3df2b5);
+  background: linear-gradient(90deg, #f4c542, #a7c8ad);
 }
 
 /* ---------- Menu panel ---------- */
@@ -568,8 +567,8 @@ h1, h2, h3,
 
 .explorer-music-toggle[aria-pressed="true"],
 .explorer-haptics-toggle[aria-pressed="true"] {
-  border-color: rgba(61, 242, 181, 0.55);
-  background: rgba(61, 242, 181, 0.1);
+  border-color: rgba(27, 77, 62, 0.55);
+  background: rgba(27, 77, 62, 0.1);
 }
 
 .game-setup,
@@ -596,8 +595,8 @@ h1, h2, h3,
 #challenge-settings .diff-btn[aria-pressed="true"],
 .diff-btn.active,
 .diff-btn[aria-pressed="true"] {
-  border-color: #8f6bff;
-  background: rgba(108, 59, 255, 0.3);
+  border-color: #f28c28;
+  background: rgba(242, 140, 40, 0.3);
   color: #ffffff;
 }
 
@@ -634,8 +633,8 @@ h1, h2, h3,
 }
 
 .score-pill {
-  border-color: rgba(61, 242, 181, 0.55);
-  background: rgba(61, 242, 181, 0.08);
+  border-color: rgba(27, 77, 62, 0.55);
+  background: rgba(27, 77, 62, 0.08);
 }
 
 .streak-pill {
@@ -645,19 +644,19 @@ h1, h2, h3,
 }
 
 .timer-container {
-  box-shadow: 0 0 0 1px rgba(185, 164, 255, 0.4), inset 0 0 20px rgba(108, 59, 255, 0.16);
+  box-shadow: 0 0 0 1px rgba(244, 197, 66, 0.4), inset 0 0 20px rgba(242, 140, 40, 0.16);
 }
 
 .answer-path-btn.know-btn {
-  border-color: #8f6bff;
-  background: linear-gradient(135deg, #7a4dff, #5b2ef0);
+  border-color: #f28c28;
+  background: linear-gradient(135deg, #ffac59, #f28c28);
   color: #ffffff;
-  box-shadow: 0 14px 34px rgba(108, 59, 255, 0.35);
+  box-shadow: 0 14px 34px rgba(242, 140, 40, 0.35);
 }
 
 .answer-path-btn.know-btn :is(strong, span, small, em),
 .answer-path-btn.know-btn .answer-path-icon {
-  color: #ffffff;
+  color: var(--color-on-primary);
 }
 
 #btn-show-options.answer-path-btn,
@@ -703,7 +702,7 @@ h1, h2, h3,
 .worldle-silhouette-card,
 .silhouette-box {
   background:
-    radial-gradient(circle at 50% 48%, rgba(108, 59, 255, 0.28), transparent 62%),
+    radial-gradient(circle at 50% 48%, rgba(242, 140, 40, 0.28), transparent 62%),
     var(--color-page);
   background-size: auto;
 }

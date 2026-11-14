@@ -40,7 +40,7 @@ test('Your Best reset is confirmed, device-only, and never mutates Supabase', ()
   const clientSource = read('supabase-client.js');
 
   assert.match(html, /id="btn-reset-stats"[\s\S]*aria-haspopup="dialog"/);
-  assert.match(html, /id="stats-reset-dialog"[\s\S]*Supabase and signed-in profile records will not change/);
+  assert.match(html, /id="stats-reset-dialog"[\s\S]*Clears guest stats on this device/);
   assert.match(app, /async function resetDeviceStats\(\)/);
   assert.match(app, /GeoWarsDB\.resetLocalStats\(\)/);
   assert.match(app, /canResetDeviceStats = hasRecords && !identity\.claimed/);
@@ -69,5 +69,5 @@ test('local stats reset removes only the device record', () => {
   vm.runInContext(source, context);
 
   assert.equal(context.window.GeoWarsDB.resetLocalStats(), true);
-  assert.deepEqual(calls, [['removeItem', 'geowars-stats']]);
+  assert.deepEqual(calls, [['removeItem', 'geowars-stats'], ['removeItem', 'geowars-session-queue']]);
 });

@@ -127,7 +127,7 @@ test('Explore_View_Switch is a named group outside Mode_Nav controlling each wor
   assert.equal(group.attributes['aria-label'], 'Explore views');
 
   const headerClose = html.indexOf('</header>', html.indexOf('class="explorer-utility atlas-header"'));
-  assert.match(html.slice(headerClose), /^<\/header>\s*<div id="atlas-explore-switch"/);
+  assert.ok(html.indexOf('id="atlas-explore-switch"') > headerClose, 'legacy view switch stays outside the utility header');
 
   const buttons = childButtons(group.inner);
   assert.deepEqual(buttons.map(button => button.attributes.id), ['btn-atlas-globe', 'btn-atlas-shapes']);
@@ -174,7 +174,7 @@ test('Challenge_Panel starts hidden with a Country Hunt card and a Shape Quiz ca
 
   const title = elementById(panel.outer, 'atlas-challenge-title');
   assert.equal(title.attributes.tabindex, '-1');
-  assert.equal(title.inner.trim(), 'Your next discovery.');
+  assert.equal(title.inner.trim(), 'Activities');
 
   // Sits between the Explore view switch and the globe workspace.
   const switchIndex = html.indexOf('id="atlas-explore-switch"');
@@ -204,7 +204,7 @@ test('Challenge_Panel starts hidden with a Country Hunt card and a Shape Quiz ca
   assert.equal(slot.inner.trim(), '', 'quiz slot starts empty; app.js moves the setup panel in');
 });
 
-test('classic script order is unchanged and every asset is local', () => {
+test('classic engines retain their order and the activity controller loads last', () => {
   const scripts = [...html.matchAll(/<script\b[^>]*\ssrc="([^"]+)"[^>]*>/g)]
     .map(match => match[1].replace(/\?v=[^"]*$/, ''));
   assert.deepEqual(scripts, [
@@ -212,11 +212,13 @@ test('classic script order is unchanged and every asset is local', () => {
     'data/territories.js',
     'difficulty-ladder.js',
     'ladder-progress.js',
+    'player-profiles.js',
     'learning-progress.js',
     'daily-challenge.js',
     'daily-worldle.js',
     'anthems.js',
     'supabase-client.js',
+    'google-signin.js',
     'audio-engine.js',
     'haptics.js',
     'particles.js',
@@ -232,7 +234,8 @@ test('classic script order is unchanged and every asset is local', () => {
     'atlas.js',
     'worldle.js',
     'challenge-previews.js',
-    'mobile-experience.js'
+    'mobile-experience.js',
+    'activities.js'
   ]);
 
   const scriptSources = [...html.matchAll(/<script\b[^>]*\ssrc="([^"]+)"/g)].map(match => match[1]);

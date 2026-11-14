@@ -576,7 +576,7 @@ summary.game-setup-summary::-moz-list-bullet { list-style-type: none; }
   transition: opacity 0.3s ease;
 }
 
-/* Flag hint (small, corner, blurred by default) */
+/* Flag hint: the neutral cover conceals colours and symbols until revealed. */
 .flag-hint {
   position: absolute;
   bottom: 12px;
@@ -590,7 +590,17 @@ summary.game-setup-summary::-moz-list-bullet { list-style-type: none; }
 }
 
 .flag-hint img { width: 100%; height: 100%; object-fit: cover; filter: none; }
-.flag-blurred img { filter: blur(6px) saturate(0.3); }
+.flag-blurred > * { visibility: hidden; }
+.flag-blurred::after {
+  content: '?';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: repeating-linear-gradient(135deg, #211e2d 0 7px, #191722 7px 14px);
+  color: #b8b2cb;
+  font: 700 22px/1 var(--font-body);
+}
 .flag-revealed img { filter: none; }
 
 /* Round info */

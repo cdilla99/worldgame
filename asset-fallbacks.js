@@ -6,7 +6,7 @@
   var SVG_NS = 'http://www.w3.org/2000/svg';
   var ICON_IDS = Object.freeze([
     'geowars-mark', 'mode-sprint', 'mode-practice', 'timer', 'score', 'streak',
-    'flag', 'region', 'sound', 'sound-muted', 'quit', 'next', 'retry'
+    'flag', 'region', 'compass', 'learn', 'game', 'daily', 'sound', 'sound-muted', 'quit', 'next', 'retry'
   ]);
   var SOURCE_METADATA = Object.freeze({
     silhouette: Object.freeze({
@@ -63,7 +63,10 @@
     var urls = code
       ? templates.map(function (template) { return template.replace('{code}', code.toLowerCase()); })
       : [];
-    return Object.freeze({ type: type, code: code, url: urls[0] || '', urls: Object.freeze(urls), source: metadata.source, documentationUrl: metadata.documentationUrl, aspectRatio: metadata.aspectRatio, fallback: metadata.fallback });
+    // Use Nepal's native pennant, including its transparent cutout and full border.
+    // Standard 4:3 icon variants clip or pad its original proportions.
+    if (type === 'flag' && code === 'NP') urls = ['assets/flags/np.svg', 'https://flagcdn.com/np.svg'];
+    return Object.freeze({ type: type, code: code, url: urls[0] || '', urls: Object.freeze(urls), source: metadata.source, documentationUrl: metadata.documentationUrl, aspectRatio: type === 'flag' && code === 'NP' ? '726 / 885' : metadata.aspectRatio, fallback: metadata.fallback });
   }
 
   function reserveSpace(element, type) {
@@ -177,6 +180,11 @@
     if (!image) return function () {};
     options = options || {};
     reserveSpace(image.parentElement || image, type);
+    if (type === 'flag') {
+      var nonrectangular = options.code === 'NP';
+      image.classList.toggle('is-nonrect-flag', nonrectangular);
+      if (image.parentElement) image.parentElement.classList.toggle('asset-slot--nonrect-flag', nonrectangular);
+    }
     var pending = Array.isArray(options.sources) ? options.sources.slice() : [];
     var handled = false;
     function onError() {

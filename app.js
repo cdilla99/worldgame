@@ -323,7 +323,7 @@ function handleSilhouetteAssetFailure(card) {
   clearTimeout(state.feedbackTimeout);
   state.feedbackTimeout = null;
   if ($assetRecoveryMessage) {
-    $assetRecoveryMessage.textContent = 'The country shape could not be loaded. Retry, move on, or return home. This round will not be saved.';
+    $assetRecoveryMessage.textContent = 'This round will not be scored.';
   }
   setControlDisabled($btnRetrySilhouette, false);
   setAssetRecoveryVisible(true);
@@ -390,6 +390,7 @@ function renderFeedbackFlagAsset(card) {
   assetFallbacks.prepareImage(flag, 'flag', card, {
     countryName: card.name,
     alt: card.name + ' flag',
+    variant: 'compact',
     className: 'feedback-flag-fallback'
   });
 }
@@ -397,7 +398,7 @@ function renderFeedbackFlagAsset(card) {
 function retrySilhouetteRecovery() {
   if (!state.assetFailure || state.assetFailure.type !== 'silhouette' || state.gameOver) return;
   setControlDisabled($btnRetrySilhouette, true);
-  if ($assetRecoveryMessage) $assetRecoveryMessage.textContent = 'Retrying the country shape. This round remains excluded until the image loads.';
+  if ($assetRecoveryMessage) $assetRecoveryMessage.textContent = 'Loading shape. Round not scored.';
   renderSilhouetteAsset(state.currentCard);
 }
 
@@ -837,6 +838,7 @@ function setShapeChallengeExpanded(expanded) {
 }
 
 function showExplorerFirstLanding() {
+  if (window.GeoWars?.activities?.home) return window.GeoWars.activities.home({ focus: false });
   setShapeChallengeExpanded(false);
   window.GeoWars?.atlas?.showGlobe?.({ focus: false, announce: false });
   showScreen($explorer);
@@ -937,39 +939,17 @@ if ($atlasShapeExploreButton) {
   $atlasShapeExploreButton.addEventListener('click', () => setShapeQuizSetupOpen(false));
 }
 
-// "Settings" on the Ready row opens the atlas Menu and reveals the difficulty &
-// region control, so the player can change what the summary describes without
-// hunting for the Menu themselves.
+// Settings remain beside the quiz launcher at every size.
 const $changeSettingsButton = document.getElementById('btn-change-settings');
-let menuOpenedBySettingsButton = false;
 if ($changeSettingsButton) {
   $changeSettingsButton.addEventListener('click', () => {
-    const menu = document.getElementById('atlas-utility-menu');
     const settings = document.getElementById('challenge-settings');
-    if (menu && menu.contains(settings)) {
-      menu.open = true;
-      menuOpenedBySettingsButton = true;
-    }
     if (settings) {
       settings.open = true;
       settings.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       // Focus the first difficulty option so keyboard users land on the control.
       const firstControl = settings.querySelector('.diff-btn, button, select');
       firstControl?.focus?.({ preventScroll: true });
-    }
-  });
-}
-
-// When the atlas Menu closes, if focus is inside it and the Settings button
-// opened it, return focus to the Settings button for keyboard navigation.
-const $atlasUtilityMenu = document.getElementById('atlas-utility-menu');
-if ($atlasUtilityMenu) {
-  $atlasUtilityMenu.addEventListener('toggle', () => {
-    if ($atlasUtilityMenu.open) return;
-    if (!menuOpenedBySettingsButton) return;
-    menuOpenedBySettingsButton = false;
-    if ($atlasUtilityMenu.contains(document.activeElement)) {
-      $changeSettingsButton?.focus?.();
     }
   });
 }
@@ -1194,7 +1174,7 @@ if ($dailyChallengeButton) $dailyChallengeButton.addEventListener('click', () =>
 function restoreQuizPreferences() {
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem('earthling-quiz-preferences') || 'null'); } catch (e) { /* optional */ }
-  const phone = window.matchMedia?.('(max-width: 767px)').matches;
+  const phone = window.matchMedia?.('(max-width: 767px), (max-width: 960px) and (max-height: 500px) and (pointer: coarse)').matches;
   if (!saved && !phone) return;
   const level = $levelButtons.find(button => button.dataset.level === saved?.level)
     || $levelButtons.find(button => button.dataset.level === 'cadet');
@@ -1299,11 +1279,11 @@ function renderLearningProgress() {
   const caption = document.getElementById('learning-progress-barlabel');
   if (caption) {
     if (summary.seen === 0) {
-      caption.textContent = 'Play a round to start tracking what you have learned.';
+      caption.textContent = 'No progress yet.';
     } else if (summary.dueCount > 0) {
-      caption.textContent = `${summary.mastered} learned · ${summary.dueCount} ${summary.dueCount === 1 ? 'country is' : 'countries are'} due for review.`;
+      caption.textContent = `${summary.mastered} learned · ${summary.dueCount} due`;
     } else {
-      caption.textContent = `${summary.mastered} learned · ${summary.learning} in progress · nothing due right now. Nice work.`;
+      caption.textContent = `${summary.mastered} learned · ${summary.learning} in progress`;
     }
   }
 
@@ -1334,15 +1314,19 @@ function renderLearningProgress() {
   const list = document.getElementById('learning-continents');
   if (list) {
     const groups = summary.groups || {};
-    const rows = LEARNING_CONTINENTS.filter((name) => groups[name]).map((name) => {
+    list.replaceChildren();
+    LEARNING_CONTINENTS.filter((name) => groups[name]).forEach((name) => {
       const g = groups[name];
-      const gpct = g.total > 0 ? Math.round((g.mastered / g.total) * 100) : 0;
+      const gpct = g.total > 0 ? Math.max(0, Math.min(100, Math.round((g.mastered / g.total) * 100))) : 0;
       const label = LEARNING_CONTINENT_LABELS[name] || name;
-      return `<div class="learning-continent"><dt>${label}</dt><dd>` +
-        `<span class="learning-continent-track"><span class="learning-continent-fill" style="width:${gpct}%"></span></span>` +
-        `<span class="learning-continent-value">${g.mastered}/${g.total}</span></dd></div>`;
-    }).join('');
-    list.innerHTML = rows;
+      const row = document.createElement('div');
+      row.className = 'learning-continent';
+      row.innerHTML = '<dt></dt><dd><span class="learning-continent-track"><span class="learning-continent-fill"></span></span><span class="learning-continent-value"></span></dd>';
+      row.querySelector('dt').textContent = label;
+      row.querySelector('.learning-continent-fill').style.width = gpct + '%';
+      row.querySelector('.learning-continent-value').textContent = `${g.mastered}/${g.total}`;
+      list.append(row);
+    });
   }
 }
 
@@ -1461,7 +1445,7 @@ function startGame(options) {
     state.sessionKind = options.sessionKind || 'review';
   } else {
     state.deck = shuffle(filterDeck(state.level));
-    const shortPractice = state.mode === 'showoff' && window.matchMedia?.('(max-width: 767px)').matches;
+    const shortPractice = state.mode === 'showoff' && window.matchMedia?.('(max-width: 767px), (max-width: 960px) and (max-height: 500px) and (pointer: coarse)').matches;
     if (shortPractice) state.deck = state.deck.slice(0, 5);
     state.finiteDeck = Boolean(shortPractice);
     state.sessionKind = shortPractice ? 'practice' : 'standard';
@@ -1675,6 +1659,7 @@ function nextRound() {
   // removes the country name or outcome from feedback.
   $flagHint.classList.add('flag-blurred');
   $flagHint.classList.remove('flag-revealed');
+  $flagHint.setAttribute('aria-label', level.showFlagHint ? 'Flag hidden. Use Show flag to reveal it.' : 'Flag hidden until the answer is revealed.');
   renderFlagHintAsset(card);
 
   // Hints
@@ -1723,7 +1708,7 @@ function nextRound() {
   const $btnSkip = document.getElementById('btn-skip');
   if (state.mode === 'sprint') { $btnSkip.classList.remove('hidden'); } else { $btnSkip.classList.add('hidden'); }
   // Easy phone rounds open directly on answer choices, avoiding a redundant tap.
-  if (!level.showTypedAnswer && level.choiceCount && window.matchMedia?.('(max-width: 767px)').matches) {
+  if (!level.showTypedAnswer && level.choiceCount && window.matchMedia?.('(max-width: 767px), (max-width: 960px) and (max-height: 500px) and (pointer: coarse)').matches) {
     $answerSection.classList.add('hidden');
     showChoiceButtons(1, false);
   }
@@ -2084,14 +2069,12 @@ if ($feedbackHome) {
 function showFeedback(correct, isReveal) {
   const card = state.currentCard;
   const points = card.stars * (state.lastMultiplier || 1);
+  const pointLabel = points === 1 ? 'point' : 'points';
   const statusClass = isReveal ? 'feedback-revealed' : (correct ? 'feedback-correct' : 'feedback-wrong');
   const outcome = isReveal ? 'Answer revealed' : (correct ? 'Correct' : 'Incorrect');
-  const scoreBefore = correct && !isReveal ? state.score - points : state.score;
-  const statusMessage = isReveal
-    ? 'Explore the answer, then continue when you are ready.'
-    : correct
-      ? 'You read the shape correctly — ' + points + ' points added.'
-      : 'Not this time — learn the shape and keep going.';
+  const statusMessage = correct && !isReveal
+    ? '+' + points + ' ' + pointLabel + '.'
+    : 'Answer: ' + card.name + '.';
   const fact = card.fun_facts && card.fun_facts.length > 0
     ? card.fun_facts[Math.floor(Math.random() * card.fun_facts.length)]
     : '';
@@ -2107,20 +2090,21 @@ function showFeedback(correct, isReveal) {
   renderFeedbackStatusIcon(correct, isReveal);
   $feedbackScore.replaceChildren();
   $feedbackCountryName.textContent = card.name;
-  $feedbackRegion.textContent = 'Region: ' + card.continent + (card.subregion ? ' · ' + card.subregion : '');
+  $feedbackRegion.textContent = [card.continent, card.subregion].filter((value, index, values) => value && values.indexOf(value) === index).join(' · ');
   $feedbackText.replaceChildren();
   $feedbackFlag.replaceChildren();
 
   if (correct && !isReveal) {
-    appendFeedbackDetail($feedbackScore, 'reveal-points', '+' + points + ' points earned');
-    appendFeedbackDetail($feedbackScore, 'reveal-score-change', 'Total score ' + scoreBefore + ' → ' + state.score);
+    appendFeedbackDetail($feedbackScore, 'reveal-points', '+' + points + ' ' + pointLabel);
   }
   if (assetFallbacks) renderFeedbackFlagAsset(card);
   if (landmark) appendFeedbackDetail($feedbackText, 'reveal-fact', 'Landmark: ' + landmark);
   if (fact) appendFeedbackDetail($feedbackText, 'reveal-fact', 'Fact: ' + fact);
+  const facts = document.getElementById('feedback-facts');
+  if (facts) facts.open = !window.matchMedia?.('(max-width: 767px), (max-width: 960px) and (max-height: 500px) and (pointer: coarse)').matches;
 
   setControlIcon($feedbackNext, 'icon-next');
-  setControlLabel($feedbackNext, state.finiteDeck && !state.deck.length ? 'See your discoveries' : 'Next country');
+  setControlLabel($feedbackNext, state.finiteDeck && !state.deck.length ? 'Results' : 'Next country');
   setControlDisabled($feedbackNext, false);
   $feedbackActions.classList.toggle('hidden', !showPracticeRoutes);
   if ($feedbackContinueHint) $feedbackContinueHint.classList.toggle('hidden', showPracticeRoutes);
@@ -2128,6 +2112,7 @@ function showFeedback(correct, isReveal) {
   // Reveal the flag on the stage as supporting information.
   $flagHint.classList.remove('flag-blurred');
   $flagHint.classList.add('flag-revealed');
+  $flagHint.setAttribute('aria-label', card.name + ' flag');
 }
 
 // ============================================================
@@ -2139,6 +2124,7 @@ $btnShowFlag.addEventListener('click', () => {
   state.flagRevealed = true;
   $flagHint.classList.remove('flag-blurred');
   $flagHint.classList.add('flag-revealed');
+  $flagHint.setAttribute('aria-label', state.currentCard.name + ' flag');
   setControlDisabled($btnShowFlag, true);
   setControlLabel($btnShowFlag, 'Flag revealed');
   $btnShowFlag.setAttribute('aria-pressed', 'true');
@@ -2165,12 +2151,18 @@ function buildReview() {
   const $review = document.getElementById('game-review');
   if (!state.roundHistory.length) { $review.classList.add('hidden'); return; }
   $review.classList.remove('hidden');
-  $review.innerHTML = '<h3 class="review-title">Round Review</h3>' +
-    state.roundHistory.map(r => {
+  $review.innerHTML = '<h3 class="review-title">Answers</h3>';
+  state.roundHistory.forEach(r => {
       const icon = r.revealed ? '•' : r.correct ? '✓' : '✗';
       const cls = r.revealed ? 'review-revealed' : r.correct ? 'review-correct' : 'review-wrong';
-      return `<div class="review-row ${cls}"><span class="review-icon">${icon}</span><span class="review-name">${r.card.name}</span><span class="review-meta">${r.revealed ? 'Revealed · ' : ''}${r.card.continent}</span></div>`;
-    }).join('');
+      const row = document.createElement('div');
+      row.className = 'review-row ' + cls;
+      row.innerHTML = '<span class="review-icon"></span><span class="review-name"></span><span class="review-meta"></span>';
+      row.querySelector('.review-icon').textContent = icon;
+      row.querySelector('.review-name').textContent = r.card.name;
+      row.querySelector('.review-meta').textContent = (r.revealed ? 'Revealed · ' : '') + r.card.continent;
+      $review.append(row);
+    });
 }
 
 function endGame() {
@@ -2207,21 +2199,17 @@ function endGame() {
   }
 
   // Show results. Curated sessions get their own framing.
+  $resultsTitle.textContent = 'Results';
   if (state.sessionKind === 'review') {
-    $resultsTitle.textContent = 'Review complete.';
-    if ($resultsStatus) $resultsStatus.textContent = 'Daily review complete. Your progress has been updated.';
+    if ($resultsStatus) $resultsStatus.textContent = 'Review complete.';
   } else if (state.sessionKind === 'daily') {
-    $resultsTitle.textContent = "Daily challenge complete.";
-    if ($resultsStatus) $resultsStatus.textContent = 'Daily challenge complete. Come back tomorrow for a new one.';
+    if ($resultsStatus) $resultsStatus.textContent = 'Daily challenge complete.';
   } else if (state.sessionKind === 'practice') {
-    $resultsTitle.textContent = `${state.roundHistory.length} ${state.roundHistory.length === 1 ? 'country' : 'countries'}, discovered.`;
-    if ($resultsStatus) $resultsStatus.textContent = `You explored ${state.roundHistory.length} ${state.roundHistory.length === 1 ? 'country' : 'countries'}. Try another round, or find them on the globe.`;
+    if ($resultsStatus) $resultsStatus.textContent = `${state.roundHistory.length} ${state.roundHistory.length === 1 ? 'country' : 'countries'} completed.`;
   } else if (state.mode === 'showoff') {
-    $resultsTitle.textContent = 'Practice complete.';
-    if ($resultsStatus) $resultsStatus.textContent = 'Practice session complete. Review your results or replay.';
+    if ($resultsStatus) $resultsStatus.textContent = 'Practice complete.';
   } else {
-    $resultsTitle.textContent = getLevelConfig(state.level).name + ' run complete.';
-    if ($resultsStatus) $resultsStatus.textContent = 'Sprint complete. Review your results or replay.';
+    if ($resultsStatus) $resultsStatus.textContent = 'Challenge complete.';
   }
   if ($resLevel) $resLevel.textContent = getLevelConfig(state.level).name;
   $resScore.textContent = state.score;
@@ -2355,16 +2343,26 @@ async function renderPlayerContext(identityOverride) {
     } catch (error) {}
   }
 
-  $playerContextName.textContent = identity.displayName || 'Guest';
-  if (!identity.online) {
-    $playerContextDetail.textContent = 'Offline — guest stats are shared on this browser/device and will not sync until you reconnect.';
+  $playerContextName.textContent = (identity.local ? (identity.avatar || '🌍') + ' ' : '') + (identity.displayName || 'Guest');
+  const headerGoogle = document.getElementById('btn-header-google');
+  const headerGoogleLabel = document.getElementById('header-google-label');
+  if (headerGoogle && headerGoogleLabel) {
+    headerGoogle.classList.toggle('is-signed-in', !!identity.claimed);
+    headerGoogleLabel.textContent = identity.claimed ? identity.displayName : 'Sign in';
+    headerGoogle.setAttribute('aria-label', identity.claimed ? 'Manage player ' + identity.displayName : 'Sign in');
+  }
+  document.querySelector('#atlas-utility-menu > summary')?.setAttribute('aria-label', 'Player and preferences for ' + (identity.displayName || 'Guest'));
+  if (identity.signInError) {
+    $playerContextDetail.textContent = identity.signInError;
   } else if (identity.claimed) {
-    $playerContextDetail.textContent = 'Signed in as ' + (identity.email || 'this player') + '. Stats are synced to this profile.';
+    $playerContextDetail.textContent = identity.syncError || 'Synced';
+  } else if (identity.local) {
+    $playerContextDetail.textContent = identity.signInError || 'Saved on this device.';
   } else {
-    $playerContextDetail.textContent = 'Guest stats are shared on this browser/device. Choose a player for a personal saved record.';
+    $playerContextDetail.textContent = 'Saved on this device.';
   }
 
-  $choosePlayerButton.textContent = identity.claimed ? 'Switch player' : 'Choose player';
+  $choosePlayerButton.textContent = identity.claimed || identity.local ? 'Switch player' : 'Choose player';
   $choosePlayerButton.disabled = false;
   $choosePlayerButton.setAttribute('aria-label', identity.claimed ? 'Switch to another player' : 'Choose a player');
 }
@@ -2386,16 +2384,108 @@ function setPlayerProfileStatus(message, isError) {
 
 let playerProfileOnline = false;
 
+function renderDevicePlayers() {
+  const store = window.GeoWarsProfiles;
+  const list = document.getElementById('device-player-list');
+  if (!store || !list) return;
+  list.replaceChildren();
+  const active = store.active();
+  document.getElementById('keep-guest-progress-label')?.classList.toggle('hidden', !!active);
+  const players = [{ id: 'guest', name: 'Guest', avatar: '🌍' }, ...store.list()];
+  players.forEach(player => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'device-player-button';
+    button.textContent = player.avatar + ' ' + player.name + (player.cloudUserId ? ' · account linked' : '');
+    button.setAttribute('aria-pressed', String((active?.id || 'guest') === player.id));
+    button.addEventListener('click', async () => {
+      if ((active?.id || 'guest') === player.id) { closePlayerModal(); return; }
+      button.disabled = true;
+      const result = await GeoWarsDB.switchLocalPlayer(player.id);
+      if (result.error) {
+        document.getElementById('local-player-status').textContent = result.error;
+        button.disabled = false;
+      } else location.reload();
+    });
+    list.append(button);
+  });
+}
+
+let googlePlayerRenderVersion = 0;
+async function startGooglePlayerSignIn() {
+  const button = document.getElementById('btn-player-google');
+  const container = document.getElementById('player-google-button');
+  const status = document.getElementById('player-google-status');
+  if (button.disabled) return;
+  const version = ++googlePlayerRenderVersion;
+  button.disabled = true;
+  status.textContent = 'Loading Google sign-in…';
+  container.inert = false;
+  container.setAttribute('aria-busy', 'true');
+  try {
+    const result = await EarthlingGoogleSignIn.render(container, {
+      onStart() {
+        status.textContent = 'Signing in…';
+        container.inert = true;
+        container.setAttribute('aria-busy', 'true');
+      },
+      onResult(result) {
+        if (version !== googlePlayerRenderVersion) return;
+        container.inert = false;
+        container.setAttribute('aria-busy', 'false');
+        if (result.success) location.reload();
+        else status.textContent = result.error || 'Google sign-in failed. Retry.';
+      }
+    });
+    if (version !== googlePlayerRenderVersion || result.cancelled) return;
+    button.hidden = !!result.success;
+    status.textContent = result.error || '';
+  } catch (_) {
+    if (version === googlePlayerRenderVersion) {
+      status.textContent = 'Google sign-in could not load. Check your connection and retry.';
+      button.hidden = false;
+    }
+  } finally {
+    if (version === googlePlayerRenderVersion) {
+      button.disabled = false;
+      container.setAttribute('aria-busy', 'false');
+    }
+  }
+}
+document.getElementById('btn-player-google')?.addEventListener('click', startGooglePlayerSignIn);
+document.getElementById('btn-save-with-google')?.addEventListener('click', async () => {
+  await openPlayerModal();
+  document.getElementById('player-google-button')?.scrollIntoView({ block: 'center' });
+  document.getElementById('player-google-button')?.focus();
+});
+
+document.getElementById('local-player-form')?.addEventListener('submit', async event => {
+  event.preventDefault();
+  const button = event.currentTarget.querySelector('button[type="submit"]');
+  button.disabled = true;
+  try {
+    const store = window.GeoWarsProfiles;
+    const active = store.active();
+    const result = await GeoWarsDB.switchLocalPlayer(active?.id || 'guest');
+    if (result.error) throw new Error(result.error);
+    store.create(document.getElementById('player-local-name').value,
+      document.getElementById('player-local-avatar').value,
+      !active && document.getElementById('keep-guest-progress').checked);
+    location.reload();
+  } catch (error) {
+    document.getElementById('local-player-status').textContent = error.message;
+    button.disabled = false;
+  }
+});
+
 function setPlayerProfileAvailability(isOnline) {
   playerProfileOnline = !!isOnline;
   if ($playerProfileDescription) {
-    $playerProfileDescription.textContent = playerProfileOnline
-      ? 'Enter an email to create a personal profile or switch to an existing one. Opening the magic link will switch this browser to that player’s saved record.'
-      : 'An internet connection is required to create or switch Supabase profiles. Reconnect to send a magic link.';
+    $playerProfileDescription.textContent = 'Choose a saved player or create one.';
   }
   if ($sendPlayerLinkButton) $sendPlayerLinkButton.disabled = !playerProfileOnline;
   if (!playerProfileOnline) {
-    setPlayerProfileStatus('Internet connection required to create or switch a player profile.', false);
+    setPlayerProfileStatus('Connect to the internet to use email sign-in. Device profiles work offline.', false);
   }
 }
 
@@ -2404,7 +2494,7 @@ function setPlayerProfileBusy(isBusy) {
   if ($playerProfileEmail) $playerProfileEmail.disabled = isBusy;
   if ($sendPlayerLinkButton) {
     $sendPlayerLinkButton.disabled = isBusy || !playerProfileOnline;
-    $sendPlayerLinkButton.textContent = isBusy ? 'Sending…' : 'Send magic link';
+    $sendPlayerLinkButton.textContent = isBusy ? 'Sending…' : 'Send sign-in link';
   }
 }
 
@@ -2426,6 +2516,9 @@ function setPlayerModalInteractive(interactive) {
 
 function closePlayerModal() {
   if (!$playerProfileModal || $playerProfileModal.classList.contains('hidden')) return;
+  ++googlePlayerRenderVersion;
+  window.EarthlingGoogleSignIn?.cancel();
+  document.getElementById('btn-player-google').disabled = false;
   $playerProfileModal.classList.add('hidden');
   setPlayerModalInteractive(false);
   setPlayerProfileBusy(false);
@@ -2436,10 +2529,18 @@ async function openPlayerModal() {
   if (!$playerProfileModal) return;
 
   lastPlayerModalTrigger = document.activeElement;
+  const playerPopover = document.getElementById('atlas-utility-menu');
+  if (playerPopover?.contains(lastPlayerModalTrigger)) {
+    playerPopover.open = false;
+    lastPlayerModalTrigger = playerPopover.querySelector('summary');
+  }
   setPlayerProfileStatus('', false);
   $playerProfileModal.classList.remove('hidden');
   // Must run before any await so the dialog is clickable immediately.
   setPlayerModalInteractive(true);
+  renderDevicePlayers();
+  $playerProfileModal.querySelector('.profile-modal-card').scrollTop = 0;
+  document.getElementById('player-local-name')?.focus({ preventScroll: true });
 
   // Wait for the client so opening the dialog during startup does not leave the
   // submit button permanently disabled.
@@ -2461,7 +2562,9 @@ async function openPlayerModal() {
     if ($playerProfileName) $playerProfileName.value = identity.displayName || '';
     if ($playerProfileEmail) $playerProfileEmail.value = identity.email || '';
   }
-  if ($playerProfileName) $playerProfileName.focus();
+  if (!identity.claimed && identity.local && $playerProfileName) $playerProfileName.value = identity.displayName || '';
+  document.getElementById('player-google-status').textContent = identity.signInError || '';
+  if (!$playerProfileModal.classList.contains('hidden')) void startGooglePlayerSignIn();
 }
 
 function getProfileModalFocusable() {
@@ -2469,10 +2572,10 @@ function getProfileModalFocusable() {
   // Get all focusable elements inside the modal, excluding the backdrop
   const card = $playerProfileModal.querySelector('.profile-modal-card');
   if (!card) return Array.from($playerProfileModal.querySelectorAll('button:not([disabled]), input:not([disabled])'));
-  return Array.from(card.querySelectorAll('button:not([disabled]), input:not([disabled]), a[href]'))
+  return Array.from(card.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), summary, a[href], [tabindex="0"], iframe'))
     .filter(el => {
       const style = getComputedStyle(el);
-      return style.display !== 'none' && style.visibility !== 'hidden';
+      return el.getClientRects().length > 0 && style.display !== 'none' && style.visibility !== 'hidden';
     });
 }
 
@@ -2562,26 +2665,12 @@ if ($claimForm) {
     const email = $claimEmail.value.trim();
     const name = document.getElementById('claim-name').value.trim();
     if (!email) return;
-
-    const btn = $claimForm.querySelector('.claim-btn');
-    btn.disabled = true;
-    btn.textContent = 'Sending...';
-    $claimStatus.classList.add('hidden');
-
-    const result = await GeoWarsDB.claimWithEmail(email, name || 'Player');
-
-    if (result.error) {
-      $claimStatus.textContent = result.error;
-      $claimStatus.className = 'claim-status error';
-      $claimStatus.classList.remove('hidden');
-      btn.disabled = false;
-      btn.textContent = 'Send link';
-    } else {
-      $claimStatus.textContent = result.message;
-      $claimStatus.className = 'claim-status';
-      $claimStatus.classList.remove('hidden');
-      $claimForm.classList.add('hidden');
-    }
+    await openPlayerModal();
+    document.getElementById('player-email-options').open = true;
+    $playerProfileEmail.readOnly = false;
+    $playerProfileEmail.value = email;
+    $playerProfileName.value = name;
+    $playerProfileForm.requestSubmit();
   });
 }
 
@@ -2687,6 +2776,9 @@ function syncFeedbackAccessibility(moveFocus) {
 
   if (feedbackVisible && moveFocus) {
     focusElement($feedbackHeading);
+    if (window.matchMedia?.('(max-width: 767px), (max-width: 960px) and (max-height: 500px) and (pointer: coarse)').matches) {
+      $feedback.scrollIntoView({ block: 'start', behavior: 'instant' });
+    }
   } else if (!feedbackVisible && feedbackHadFocus && isActiveGameScreen()) {
     focusElement($btnIKnow);
   }
@@ -2756,6 +2848,9 @@ function announceOutcome(message, priority) {
 
 const renderScreen = showScreen;
 showScreen = function(screen) {
+  // Startup can finish restoring the current view while the player is typing.
+  // Re-selecting that view must not dismiss the player dialog.
+  if ($playerProfileModal && isVisible($playerProfileModal) && screen === currentScreen) return;
   if ($playerProfileModal && isVisible($playerProfileModal)) {
     $playerProfileModal.classList.add('hidden');
     setAccessibilityAvailability($playerProfileModal, false);

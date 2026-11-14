@@ -3,20 +3,24 @@
   'use strict';
 
   function initializeMobileExperience() {
-    const phone = root.matchMedia('(max-width: 767px)');
+    const phone = root.matchMedia('(max-width: 767px), (max-width: 960px) and (max-height: 500px) and (pointer: coarse)');
     const panel = document.querySelector('.explorer-info-panel');
     const card = document.getElementById('explorer-country-card');
     const toggle = document.getElementById('country-sheet-toggle');
     const label = document.getElementById('country-sheet-label');
+    const placeDetails = document.getElementById('explorer-more-details');
     const setup = document.getElementById('atlas-menu-setup-slot');
-    const menu = document.getElementById('atlas-utility-panel');
-    const setupAnchor = setup?.nextElementSibling;
     const quiz = document.getElementById('shape-challenge-panel');
     const start = document.getElementById('btn-start-game');
     const settings = document.getElementById('challenge-settings');
     const difficulty = settings?.querySelector('fieldset');
-    const difficultyHome = difficulty?.parentElement;
     const settingsTitle = settings?.querySelector('.game-setup-title');
+    const playerMenu = document.getElementById('atlas-utility-menu');
+    const playerButton = playerMenu?.querySelector('summary');
+    document.getElementById('btn-close-player-panel')?.addEventListener('click', () => {
+      if (playerMenu) playerMenu.open = false;
+      playerButton?.focus({ preventScroll: true });
+    });
     let expanded = false;
     let lastMode = '';
     let dragStart = null;
@@ -26,32 +30,29 @@
       expanded = Boolean(value);
       panel?.classList.toggle('is-expanded', expanded);
       toggle?.setAttribute('aria-expanded', String(expanded));
-      if (label) label.textContent = expanded ? 'Back to the globe' : 'More about this place';
+      if (label) label.textContent = expanded ? 'Less' : 'Details';
+      if (placeDetails) placeDetails.open = expanded;
       if (!expanded && panel) panel.scrollTop = 0;
     }
 
     function sync() {
       const mode = document.body.dataset.atlasMode;
       const view = document.body.dataset.atlasView;
-      const eligible = phone.matches && mode === 'explore' && view === 'globe'
+      const eligible = phone.matches && mode === 'explore' && ['globe', 'shapes'].includes(view)
         && card && !card.classList.contains('hidden');
       panel?.classList.toggle('is-country-sheet', Boolean(eligible));
       if (lastMode !== `${mode}:${view}` || !eligible) expandSheet(false);
+      else if (placeDetails && expanded !== placeDetails.open) expandSheet(placeDetails.open);
       lastMode = `${mode}:${view}`;
     }
 
     function syncLayout() {
       // Move the original controls; no parallel state or duplicate element IDs.
-      if (phone.matches && quiz && setup && start) {
+      if (quiz && setup && start && !document.body.classList.contains('activity-navigation')) {
         quiz.insertBefore(setup, start);
         if (difficulty) setup.insertBefore(difficulty, setup.querySelector('.game-setup-wrap'));
         if (settings) settings.open = false;
         if (settingsTitle) settingsTitle.textContent = 'Choose a region';
-      } else if (setup && menu) {
-        if (difficulty && difficultyHome) difficultyHome.prepend(difficulty);
-        menu.insertBefore(setup, setupAnchor);
-        if (settings) settings.open = true;
-        if (settingsTitle) settingsTitle.textContent = 'Difficulty & region';
       }
       const playButton = document.getElementById('btn-mode-challenge');
       playButton?.setAttribute('aria-label', phone.matches ? 'Play, Country Hunt and Shape Quiz' : 'Challenge, Country Hunt and Shape Quiz');
@@ -87,10 +88,23 @@
       }
     });
     root.addEventListener('geowars:explorer-country', event => {
-      if (event.detail?.source !== 'atlas-shapes') expandSheet(false);
+      expandSheet(false);
       sync();
     });
     phone.addEventListener('change', syncLayout);
+    placeDetails?.addEventListener('toggle', () => {
+      if (phone.matches && panel?.classList.contains('is-country-sheet') && expanded !== placeDetails.open) expandSheet(placeDetails.open);
+    });
+    playerMenu?.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && playerMenu.open) {
+        event.preventDefault();
+        playerMenu.open = false;
+        playerButton?.focus();
+      }
+    });
+    document.addEventListener('pointerdown', event => {
+      if (playerMenu?.open && !playerMenu.contains(event.target)) playerMenu.open = false;
+    });
 
     // A real keyboard can cover the viewport without changing the layout size.
     // Keep the guess field and suggestions in view using the visual viewport.

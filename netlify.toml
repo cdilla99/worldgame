@@ -2,6 +2,8 @@
   command = "npm run build"
   publish = "dist"
 
+# Build writes dist/_headers from security-headers.mjs (also used by browser tests).
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

@@ -12,8 +12,8 @@
   // this through window.GeoWarsLearning (guarded — the game runs fine without it)
   // to drive the "Learn all countries" progress panel and daily review deck.
   //
-  // Persistence is device-local (localStorage 'geowars-learning'), matching the
-  // guest-owned stats model. Nothing here touches Supabase or claimed profiles.
+  // The active device profile scopes storage. Verified profiles also sync their
+  // country reviews through GeoWarsDB; guests continue working offline.
 
   const STORAGE_KEY = 'geowars-learning';
   const DAY_MS = 24 * 60 * 60 * 1000;
@@ -41,7 +41,7 @@
     const store = getStore();
     if (!store) return {};
     try {
-      const raw = store.getItem(STORAGE_KEY);
+      const raw = store.getItem(globalThis.GeoWarsProfiles ? GeoWarsProfiles.storageKey(STORAGE_KEY) : STORAGE_KEY);
       if (!raw) return {};
       const parsed = JSON.parse(raw);
       return parsed && typeof parsed === 'object' ? parsed : {};
@@ -54,7 +54,8 @@
     const store = getStore();
     if (!store) return false;
     try {
-      store.setItem(STORAGE_KEY, JSON.stringify(state || {}));
+      store.setItem(globalThis.GeoWarsProfiles ? GeoWarsProfiles.storageKey(STORAGE_KEY) : STORAGE_KEY, JSON.stringify(state || {}));
+      if (globalThis.GeoWarsDB?.syncProgress) GeoWarsDB.syncProgress();
       return true;
     } catch (e) {
       return false;

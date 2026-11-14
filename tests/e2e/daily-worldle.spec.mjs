@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test.beforeEach(async ({ page }) => {
   await page.route(/^https:\/\//, route => route.abort());
   await page.goto('/');
-  await page.locator('#btn-open-worldle').click();
+  await page.locator('#btn-activity-daily').click();
   await expect(page.locator('#worldle-shape-art svg')).toBeVisible();
 });
 
@@ -54,7 +54,7 @@ test('real guesses give geographic hints, survive reload, and complete the puzzl
   await expect(rows.nth(1)).toContainText(countries.wrong[1]);
 
   await page.reload();
-  await page.locator('#btn-open-worldle').click();
+  await page.locator('#btn-activity-daily').click();
   await expect(rows.first().locator('.worldle-guess-distance')).toHaveText(expected.displayDistance);
   await expect(rows.nth(1)).toContainText(countries.wrong[1]);
   await input.fill(countries.target);
@@ -66,24 +66,32 @@ test('real guesses give geographic hints, survive reload, and complete the puzzl
   expect(errors).toEqual([]);
 });
 
-test('Daily Puzzle columns end together on desktop', async ({ page }) => {
+test('Daily opening panel fits its content on desktop', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  const [left, right] = await page.evaluate(() => [
-    document.querySelector('.worldle-silhouette-card').getBoundingClientRect().bottom,
+  const [guidance, panel] = await page.evaluate(() => [
+    document.querySelector('#worldle-guidance').getBoundingClientRect().bottom,
     document.querySelector('.worldle-play-panel').getBoundingClientRect().bottom
   ]);
-  expect(Math.abs(left - right)).toBeLessThanOrEqual(2);
+  expect(panel - guidance).toBeGreaterThan(0);
+  expect(panel - guidance).toBeLessThan(50);
 });
 
-test('Daily opens with a discovery challenge and never renders unsubmitted guesses at any size', async ({ page }) => {
+test('Daily uses the logo to return home and shows geographic guidance without slogans', async ({ page }) => {
   for (const width of [390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await expect(page.locator('.worldle-guess-row')).toHaveCount(0);
     await expect(page.locator('#worldle-guidance')).toHaveAttribute('data-state', 'ready');
-    await expect(page.locator('#worldle-empty-hint')).toBeVisible();
+    await expect(page.locator('#worldle-guidance-title')).toContainText('distance and direction');
     await expect(page.locator('#worldle-history-heading')).toBeHidden();
-    await expect(page.locator('#worldle-play-title')).toBeVisible();
-    await expect(page.locator('#worldle-day-label')).toContainText('Daily discovery #');
+    await expect(page.locator('#worldle-guess-input')).toBeVisible();
+    await expect(page.locator('#worldle-day-label')).toHaveText(/^#\d+$/);
+    await expect(page.locator('#activity-context')).toBeHidden();
+    await expect(page.locator('#btn-explorer-home')).toBeInViewport({ ratio: 1 });
+    expect(await page.locator('#worldle-screen').innerText()).not.toMatch(/Daily discovery|Trust your first instinct|Your adventure starts here/);
+    await page.screenshot({ path: `test-results/daily-home-guidance-${width}.png`, fullPage: true });
+    await page.locator('#btn-explorer-home img').click();
+    await expect(page.locator('body')).toHaveAttribute('data-activity', 'home');
+    await page.locator('#btn-activity-daily').click();
   }
 });
 
@@ -108,17 +116,17 @@ test('real guesses turn the compass, celebrate getting warmer and retain the clo
   expect(needleBearing).toBeCloseTo(route.far.hint.bearingDegrees, 2);
   await input.fill(route.near.card.name);
   await input.press('Enter');
-  await expect(page.locator('#worldle-guidance-kicker')).toHaveText('Getting warmer');
-  await expect(page.locator('#worldle-closest-label')).toHaveText(`${route.near.hint.displayDistance} away`);
+  await expect(page.locator('#worldle-guidance-title')).toHaveText('Closer');
+  await expect(page.locator('#worldle-closest-label')).toHaveText(route.near.hint.displayDistance);
   await input.fill(route.middle.card.name);
   await input.press('Enter');
   await expect(page.locator('#worldle-guidance-kicker')).toHaveText('A different direction');
-  await expect(page.locator('#worldle-closest-label')).toHaveText(`${route.near.hint.displayDistance} away`);
+  await expect(page.locator('#worldle-closest-label')).toHaveText(route.near.hint.displayDistance);
   await expect(page.locator('.worldle-guess-row')).toHaveCount(3);
   await expect(page.locator('.worldle-guess-row.is-empty')).toHaveCount(0);
   await page.reload();
-  await page.locator('#btn-open-worldle').click();
-  await expect(page.locator('#worldle-closest-label')).toHaveText(`${route.near.hint.displayDistance} away`);
+  await page.locator('#btn-activity-daily').click();
+  await expect(page.locator('#worldle-closest-label')).toHaveText(route.near.hint.displayDistance);
   await expect(page.locator('.worldle-guess-row')).toHaveCount(3);
 });
 
@@ -135,7 +143,7 @@ test('puzzle uses SVG controls and flag images with an offline fallback', async 
     await expect(page.locator(`${selector} svg`)).toBeVisible();
   }
   await page.locator('#btn-worldle-stats').click();
-  await expect(page.locator('#worldle-revealed-flag svg')).toBeVisible();
+  await expect(page.locator('.worldle-revealed-country')).toBeHidden();
   await expect(page.locator('#btn-worldle-modal-close svg')).toBeVisible();
   await page.locator('#btn-worldle-modal-close').click();
   await page.locator('#worldle-guess-input').fill(wrong);
@@ -148,7 +156,7 @@ test('puzzle uses SVG controls and flag images with an offline fallback', async 
 
   await page.unroute('https://cdn.jsdelivr.net/**');
   await page.reload();
-  await page.locator('#btn-open-worldle').click();
+  await page.locator('#btn-activity-daily').click();
   const offlineFlag = page.locator('.worldle-guess-row:not(.is-empty) .worldle-guess-flag');
   await expect(offlineFlag.locator('[data-asset-fallback="flag"]')).toBeVisible();
   await expect(offlineFlag.locator('.asset-fallback__code')).toHaveText(/^[A-Z]{2}$/);
@@ -165,7 +173,7 @@ test('previously recorded placeholder hints are corrected without erasing progre
     return card.name;
   });
   await page.reload();
-  await page.locator('#btn-open-worldle').click();
+  await page.locator('#btn-activity-daily').click();
   const first = page.locator('.worldle-guess-row').first();
   await expect(first).toContainText(wrong);
   await expect(first.locator('.worldle-guess-distance')).not.toHaveText('0 km');
@@ -188,7 +196,7 @@ test('six incorrect guesses complete a loss and reveal the answer', async ({ pag
   }
   await expect(page.locator('#worldle-modal')).toBeVisible();
   await expect(page.locator('#worldle-revealed-name')).toHaveText(target);
-  await expect(page.locator('#worldle-modal-title')).toHaveText('Better Luck Tomorrow!');
+  await expect(page.locator('#worldle-modal-title')).toHaveText('Not solved');
   await expect(input).toBeDisabled();
 });
 

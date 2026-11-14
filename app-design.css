@@ -1,0 +1,496 @@
+/* Shared visual language. Feature styles retain their layout and game states. */
+:root {
+  --app-mint: #a7c8ad;
+  --app-lilac: #f28c28;
+  --app-amber: #f4c542;
+  --app-line: #2a3541;
+  --app-soft-line: #ffffff0d;
+  --app-panel: #121922;
+  --app-raised: #1b2531;
+  --color-page: #0b1016;
+  --color-surface: #121922;
+  --color-surface-raised: #1b2531;
+  --color-muted: #aebbc9;
+  --color-text: #eef3f8;
+  --color-border: #2a3541;
+  --color-focus: #f28c28;
+}
+
+body.activity-navigation,
+body.activity-navigation.is-explorer-active,
+body.activity-navigation.is-explorer-active[data-atlas-view='shapes'] {
+  color: var(--color-text);
+  background: radial-gradient(ellipse at 5% 0, #f28c280a, transparent 40rem),
+    radial-gradient(ellipse at 95% 10%, #1b4d3e08, transparent 38rem), var(--color-page);
+}
+body.activity-navigation .app { max-width: 1400px; }
+body.activity-navigation :is(h1, h2, h3) { text-shadow: none; }
+body.activity-navigation :is(button, input, select) { -webkit-tap-highlight-color: transparent; }
+body.activity-navigation :is(.cta, .profile-submit, .feedback-next-btn, .explorer-practice-action, .worldle-share-btn) {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  border-radius: 12px; font-weight: 650; text-transform: none; letter-spacing: 0;
+  box-shadow: none;
+}
+body.activity-navigation .atlas-header { border-color: var(--app-soft-line); padding-bottom: 18px; }
+body.activity-navigation .activity-signin { padding: 8px 12px; border-color: transparent; background: transparent; color: var(--color-muted); font-weight: 550; }
+body.activity-navigation .activity-signin:hover { background: #ffffff08; color: var(--color-text); }
+body.activity-navigation .atlas-utility-menu > summary { color: var(--color-muted); font-weight: 550; }
+
+/* Home: large previews, small labels and compact activity controls. */
+body.activity-navigation #atlas-challenge-panel {
+  --preview-image-height: clamp(264px, calc(32dvh + 24px), 344px);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'daily' 'games'; gap: 18px;
+  align-items: center; padding-top: 0;
+}
+body.activity-navigation #atlas-challenge-panel .atlas-challenge-heading {
+  position: absolute; width: 1px; height: 1px; padding: 0;
+  overflow: hidden; clip-path: inset(50%);
+}
+body.activity-navigation #atlas-challenge-panel .atlas-challenge-grid { grid-area: games; gap: 22px; }
+body.activity-navigation #atlas-challenge-panel .atlas-challenge-card {
+  position: relative; gap: 12px; padding: 24px; border: 1px solid #f28c2824;
+  border-radius: 24px; background: linear-gradient(150deg, #f28c2808, transparent 65%), var(--app-panel);
+  box-shadow: none;
+}
+body.activity-navigation #atlas-challenge-panel .atlas-challenge-hunt {
+  border-color: #a7c8ad26; background: linear-gradient(150deg, #a7c8ad08, transparent 65%), var(--app-panel);
+}
+body.activity-navigation #atlas-challenge-panel .atlas-challenge-card h3 {
+  font-size: 1rem; font-weight: 600; letter-spacing: -0.02em;
+}
+body.activity-navigation #atlas-challenge-panel .atlas-challenge-card-header {
+  display: flex; align-items: center; justify-content: flex-start; gap: 10px;
+}
+body.activity-navigation #atlas-challenge-panel .atlas-challenge-card-header::before {
+  content: none;
+}
+body.activity-navigation #atlas-challenge-panel .atlas-challenge-card > p {
+  color: var(--color-muted); font-size: 0.78rem; line-height: 1.5;
+}
+body.activity-navigation #atlas-challenge-panel .atlas-challenge-stage {
+  height: var(--preview-image-height); padding: 0; border: 0; border-radius: 0;
+  grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr);
+  background: radial-gradient(ellipse, #f28c280e, transparent 65%); overflow: visible;
+}
+body.activity-navigation #atlas-challenge-panel .atlas-challenge-hunt .atlas-challenge-stage {
+  background: radial-gradient(ellipse, #1b4d3e0a, transparent 65%);
+}
+body.activity-navigation #atlas-challenge-panel .atlas-hunt-preview {
+  grid-column: 1; grid-row: 1;
+  width: min(75%, 344px, var(--preview-image-height)); filter: drop-shadow(0 10px 24px #05090c50);
+}
+body.activity-navigation #activity-shape-preview .atlas-quiz-art { grid-column: 1; grid-row: 1; width: min(72%, 344px); height: 100%; }
+body.activity-navigation #activity-shape-preview :is(svg, img) { filter: drop-shadow(0 8px 20px #f28c281a); }
+body.activity-navigation .has-preview-answer .atlas-quiz-shape { bottom: 0; }
+body.activity-navigation .atlas-quiz-answer {
+  position: absolute; inset: 50% auto auto 50%; z-index: 2;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  width: max-content; max-width: calc(100% - 16px); min-width: 180px; min-height: 72px; padding: 14px 16px;
+  border: 1px solid #ffc58440; border-radius: 16px; background: rgba(10, 15, 22, 0.8);
+  box-shadow: 0 10px 36px #0005, 0 0 24px #f28c2814; backdrop-filter: blur(4px);
+  transform: translate(-50%, -50%);
+  opacity: 0; visibility: hidden; pointer-events: none;
+}
+body.activity-navigation [data-preview-phase='answer'] .atlas-quiz-answer { opacity: 1; visibility: visible; }
+body.activity-navigation .atlas-quiz-answer-name {
+  min-width: 0; color: var(--color-text);
+  font: 600 1.125rem/1.25 var(--font-body); text-align: center; overflow-wrap: anywhere;
+}
+body.activity-navigation .atlas-quiz-answer-flag {
+  display: grid; place-items: center; width: 48px; height: 32px; flex: none;
+  border-radius: 3px; overflow: hidden; background: var(--app-raised);
+}
+body.activity-navigation .atlas-quiz-answer-flag img { display: block; width: 100%; height: 100%; object-fit: contain; filter: none; }
+body.activity-navigation .atlas-quiz-answer-flag .asset-fallback { min-height: 0; padding: 0; border: 0; }
+body.activity-navigation #activity-hunt-preview .atlas-hunt-answer {
+  top: 50%; min-width: 164px; min-height: 54px; padding: 10px 14px; gap: 10px;
+  border-color: #a7c8ad4d; box-shadow: 0 8px 24px #0004;
+}
+body.activity-navigation .atlas-hunt-answer .atlas-quiz-answer-name { font-size: 1rem; }
+body.activity-navigation .atlas-hunt-answer .atlas-quiz-answer-flag { width: 36px; height: 24px; }
+body.activity-navigation .atlas-hunt-answer .atlas-quiz-answer-flag {
+  display: flex; align-items: center; justify-content: center;
+}
+body.activity-navigation .atlas-hunt-answer .atlas-quiz-answer-flag img {
+  width: auto; height: auto; max-width: 100%; max-height: 100%;
+  min-width: 0; min-height: 0; flex: none; border-radius: 0;
+}
+/* The pennant's cutout and blue border must not inherit rectangular flag chrome. */
+body.activity-navigation .asset-slot--nonrect-flag:not(.flag-blurred) {
+  overflow: visible; border-color: transparent; border-radius: 0; background: transparent;
+  box-shadow: none;
+}
+body.activity-navigation img.is-nonrect-flag {
+  object-fit: contain !important; border-radius: 0; box-shadow: none;
+}
+body.activity-navigation #atlas-challenge-panel .activity-paths {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  justify-content: center; align-self: center; gap: 10px; width: min(100%, 248px);
+}
+body.activity-navigation #atlas-challenge-panel .activity-paths button {
+  position: relative; width: 100%; min-width: 0; height: 44px; min-height: 44px;
+  display: inline-flex; flex-direction: row; align-items: center; justify-content: center;
+  gap: 8px; padding: 10px 14px; border-radius: 10px;
+}
+body.activity-navigation .activity-action-icon { display: block; width: 20px; height: 20px; flex: none; }
+body.activity-navigation .activity-action-label {
+  display: block; font: 500 .875rem/1.25 var(--font-body); white-space: nowrap;
+}
+body.activity-navigation .activity-explore-path { background: #1b2130; border-color: #f28c282b; color: #e3d9ff; }
+body.activity-navigation .atlas-challenge-hunt .activity-explore-path { background: var(--palette-forest); border-color: #648873; color: #f6f3e9; }
+body.activity-navigation #atlas-challenge-panel .activity-paths .cta {
+  background: var(--palette-mandarin); border-color: var(--palette-mandarin); color: var(--color-on-primary);
+}
+body.activity-navigation #atlas-challenge-panel .atlas-challenge-hunt .activity-paths .cta {
+  background: var(--palette-mandarin); border-color: var(--palette-mandarin); color: var(--color-on-primary);
+}
+@media (hover: hover) {
+  body.activity-navigation #atlas-challenge-panel .activity-paths .cta:hover { background: var(--color-primary-hover); }
+  body.activity-navigation #atlas-challenge-panel .atlas-challenge-hunt .activity-paths .cta:hover { background: var(--color-primary-hover); }
+}
+body.activity-navigation .activity-daily {
+  position: relative; grid-area: daily; justify-self: end;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: auto; min-width: 48px; height: 44px; min-height: 44px; gap: 8px; padding: 10px 14px;
+  border: 1px solid #f4c54224; border-radius: 10px; background: #f4c54206; color: var(--app-amber);
+}
+body.activity-navigation .activity-daily:hover { background: #f4c5420d; border-color: #f4c54260; }
+
+/* Navigation and controls share one quiet treatment across activities. */
+body.activity-navigation .activity-context:not([hidden]) { padding-bottom: 12px; border-bottom: 0; }
+body.activity-navigation .activity-back { color: var(--color-muted); font-weight: 500; }
+body.activity-navigation .activity-section-copy strong { font-size: 1.15rem; font-weight: 650; letter-spacing: -0.025em; }
+body.activity-navigation .activity-section-copy span { color: var(--color-muted); }
+body.activity-navigation .activity-section-actions button {
+  border-color: var(--app-line); background: transparent; border-radius: 10px; font-weight: 550;
+}
+body.activity-navigation .activity-section-actions button[aria-pressed='true'] {
+  color: var(--app-mint); background: #a7c8ad0b; border-color: #a7c8ad32;
+}
+body.activity-navigation[data-activity^='shapes'] .activity-section-actions button[aria-pressed='true'] {
+  color: var(--app-lilac); background: #f28c280b; border-color: #f28c2832;
+}
+body.activity-navigation[data-activity='daily'] .activity-section-copy { display: none; }
+body.activity-navigation :is(.explorer-country-search, #answer-input, .worldle-input, .profile-form input, .profile-form select) {
+  border-color: var(--app-line); border-radius: 12px; background: #0d141d; color: var(--color-text); box-shadow: none;
+}
+
+/* Explore: the globe, outline and country facts supply the visual structure. */
+body.activity-navigation .atlas-globe-workspace .explorer-stage { border: 0; background: transparent; box-shadow: none; }
+body.activity-navigation .explorer-stage-heading h2 { font-weight: 650; letter-spacing: -0.035em; }
+body.activity-navigation :is(.explorer-eyebrow, .explorer-country-kicker) { color: var(--app-mint); }
+body.activity-navigation .explorer-globe-frame { border-color: #a7c8ad18; box-shadow: 0 16px 60px #0002; }
+body.activity-navigation .explorer-globe-controls { gap: 4px; border-color: var(--app-line); background: var(--app-panel); border-radius: 12px; }
+body.activity-navigation .explorer-globe-controls button { border: 0; background: transparent; font-weight: 550; }
+body.activity-navigation .explorer-info-panel { border: 1px solid var(--app-line); border-radius: 20px; background: var(--app-panel); box-shadow: none; }
+body.activity-navigation .explorer-country-identity { border-color: var(--app-soft-line); }
+body.activity-navigation .explorer-country-identity h2 { font-weight: 650; letter-spacing: -0.04em; }
+body.activity-navigation .explorer-country-region { color: var(--color-muted); line-height: 1.5; }
+body.activity-navigation .explorer-country-facts { padding: 0; gap: 0 20px; border: 0; border-radius: 0; background: transparent; }
+body.activity-navigation .explorer-country-facts > div {
+  padding: 12px 0; border: 0; border-bottom: 1px solid var(--app-soft-line); border-radius: 0; background: transparent;
+}
+body.activity-navigation .explorer-country-facts dt { margin-bottom: 5px; color: #99acbc; font-size: 0.63rem; letter-spacing: 0.07em; font-weight: 550; }
+body.activity-navigation .explorer-country-facts dd { color: var(--color-text); font-size: 0.9rem; line-height: 1.5; font-weight: 550; }
+body.activity-navigation .explorer-more-details { border-color: var(--app-soft-line); }
+body.activity-navigation .explorer-more-details > summary { color: var(--app-mint); font-weight: 550; }
+body.activity-navigation :is(.explorer-more-facts, .explorer-extra-fact, .explorer-economics-callout) {
+  border-color: var(--app-soft-line); box-shadow: none;
+}
+body.activity-navigation .explorer-landmark-placeholder { border-color: var(--app-soft-line); background: #a7c8ad07; }
+body.activity-navigation .explorer-landmark-media { border: 0; border-radius: 14px; }
+body.activity-navigation .atlas-shape-toolbar { border-color: var(--app-soft-line); background: transparent; }
+body.activity-navigation .atlas-shape-toolbar h3 { font-weight: 650; letter-spacing: -0.035em; }
+body.activity-navigation .atlas-shapes-workspace .atlas-shape-plate {
+  border: 0; background: radial-gradient(ellipse, #f28c2811, transparent 66%), #10151e;
+  box-shadow: none; border-radius: 20px;
+}
+body.activity-navigation .atlas-shape-controls :is(button, select) { border-color: var(--app-line); background: var(--app-panel); border-radius: 10px; }
+
+/* Quiz: one clear prompt, generous outline, calm answer and hint controls. */
+body.activity-navigation .game-utility { background: transparent; border-color: var(--app-soft-line); }
+body.activity-navigation .game-stage { border-color: var(--app-line); border-radius: 20px; background: var(--app-panel); box-shadow: none; }
+body.activity-navigation .game-stage-title { font-weight: 650; letter-spacing: -0.035em; }
+body.activity-navigation .silhouette-box { border: 0; background: radial-gradient(ellipse, #f28c2810, transparent 68%); box-shadow: none; }
+body.activity-navigation .answer-interaction-panel { border: 0; background: transparent; box-shadow: none; }
+body.activity-navigation .choice-btn:not(.choice-correct):not(.choice-wrong) {
+  border-color: var(--app-line); border-radius: 12px; background: var(--app-panel); font-weight: 550; color: var(--color-text);
+}
+body.activity-navigation .choice-btn:not(.choice-correct):not(.choice-wrong):hover { border-color: #f28c2880; background: #242136; }
+body.activity-navigation :is(.answer-path-btn, .hint-btn, .skip-btn) { border-color: var(--app-line); background: var(--app-panel); border-radius: 12px; }
+body.activity-navigation .feedback { border-color: var(--app-soft-line); background: var(--app-panel); box-shadow: none; }
+body.activity-navigation .feedback-correct { border-color: var(--color-success); }
+body.activity-navigation .feedback-wrong { border-color: var(--color-error); }
+body.activity-navigation .feedback-revealed { border-color: var(--color-focus); }
+body.activity-navigation .feedback-country-name { font-weight: 650; letter-spacing: -0.035em; }
+body.activity-navigation #feedback-flag { width: 80px; max-width: 100%; min-height: 0; justify-self: end; align-self: center; }
+body.activity-navigation #feedback-flag .asset-fallback--compact {
+  height: 40px; min-height: 40px; border: 1px solid var(--app-line); border-radius: 8px;
+}
+body.activity-navigation .feedback-facts { border-color: var(--app-soft-line); }
+body.activity-navigation :is(.feedback-results-btn, .feedback-home-btn, .bail-btn) { font-weight: 500; }
+
+/* Daily: a warm accent and a single unframed input/guess area. */
+body.activity-navigation .worldle-intro h1 { font-size: clamp(1.5rem, 2.3vw, 2rem); font-weight: 650; letter-spacing: -0.04em; }
+body.activity-navigation .worldle-section-kicker { color: var(--app-amber); font-weight: 550; letter-spacing: 0.08em; }
+body.activity-navigation .worldle-silhouette-card {
+  border-color: var(--app-soft-line); background: radial-gradient(ellipse, #f4c54208, transparent 70%), #10151e; box-shadow: none;
+}
+body.activity-navigation .worldle-play-panel { border: 0; background: transparent; box-shadow: none; }
+body.activity-navigation .worldle-silhouette-card { padding-bottom: 20px; }
+body.activity-navigation .worldle-guidance-copy { gap: 6px; }
+body.activity-navigation .worldle-guidance[data-state='ready'] h3 { color: var(--color-muted); font-size: 0.9rem; font-weight: 500; }
+body.activity-navigation .worldle-panel-heading h2 { font-weight: 650; letter-spacing: -0.035em; }
+body.activity-navigation .worldle-round-counter { border-color: var(--app-line); background: #18212b; font-weight: 550; }
+body.activity-navigation .worldle-guidance { border: 0; background: #f4c54208; box-shadow: none; }
+body.activity-navigation .worldle-guidance[data-state='solved'] { background: #a7c8ad12; }
+body.activity-navigation .worldle-guidance h3 { font-weight: 600; }
+body.activity-navigation .worldle-compass { color: var(--app-amber); }
+body.activity-navigation .worldle-guess-row { border-color: var(--app-soft-line); background: var(--app-panel); border-radius: 12px; }
+body.activity-navigation .worldle-input-wrapper { border-color: var(--app-line); background: #0d141d; border-radius: 14px; }
+body.activity-navigation .worldle-icon-btn { border-color: var(--app-line); background: transparent; font-weight: 550; }
+
+/* Results and dialogs: shared surfaces, readable numbers and clear actions. */
+body.activity-navigation :is(.results-card, .worldle-modal-card, .profile-modal-card, .activity-settings-dialog, .quit-confirm-card) {
+  border: 1px solid var(--app-line); border-radius: 24px; background: #141c26; box-shadow: 0 24px 80px #0005;
+}
+body.activity-navigation .results-card { padding: clamp(22px, 3vw, 40px); }
+body.activity-navigation .results-heading h2 { font-weight: 650; letter-spacing: -0.045em; font-size: clamp(1.7rem, 3vw, 2.4rem); }
+body.activity-navigation .results-status { color: var(--app-mint); font-weight: 550; font-size: 0.7rem; line-height: 1.6; letter-spacing: 0.06em; }
+body.activity-navigation .results-summary { padding: 20px 0; }
+body.activity-navigation .results-summary h3 { margin-bottom: 16px; font-size: 0.82rem; color: var(--color-muted); font-weight: 500; }
+body.activity-navigation .results-stats { gap: 0; border-radius: 16px; background: #0e151e; padding: 18px 4px; }
+body.activity-navigation .result-stat { min-height: 90px; padding: 10px; border: 0; border-radius: 0; background: transparent; }
+body.activity-navigation .result-stat + .result-stat { border-left: 1px solid var(--app-soft-line); }
+body.activity-navigation .result-stat strong { font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 650; color: var(--color-text); }
+body.activity-navigation .result-stat:first-child strong { font-size: 1.15rem; color: var(--app-lilac); }
+body.activity-navigation .result-stat:nth-child(2) strong { color: var(--app-mint); }
+body.activity-navigation .result-stat span { color: var(--color-muted); text-transform: none; font-size: 0.72rem; letter-spacing: 0; }
+body.activity-navigation #game-review { border: 0; border-top: 1px solid var(--app-soft-line); background: transparent; border-radius: 0; }
+body.activity-navigation .review-row { border-color: var(--app-soft-line); }
+body.activity-navigation .results-actions .cta { width: 100%; max-width: none; }
+body.activity-navigation .results-actions .ghost-sm {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  border-color: var(--app-line); background: transparent;
+}
+body.activity-navigation :is(.next-difficulty-options button, #activity-settings-slot .diff-btn) {
+  border-color: var(--app-line); border-radius: 10px; background: #101720; font-weight: 550;
+}
+body.activity-navigation :is(.next-difficulty-options button[aria-pressed='true'], #activity-settings-slot .diff-btn.active) {
+  border-color: #f28c2885; background: #f28c2815; color: #ede5ff; box-shadow: none;
+}
+body.activity-navigation .explorer-hunt-summary { border-color: var(--app-line); background: var(--app-panel); box-shadow: none; }
+body.activity-navigation .explorer-hunt-summary-actions :is(.explorer-home-action, .explorer-practice-action) {
+  display: inline-flex; align-items: center; justify-content: center; width: 100%; min-width: 104px; min-height: 44px;
+  padding: 8px 12px; border-radius: 10px; font-size: 0.8125rem;
+}
+body.activity-navigation .worldle-stat-box { background: transparent; border: 0; border-radius: 0; }
+body.activity-navigation .worldle-stat-box + .worldle-stat-box { border-left: 1px solid var(--app-soft-line); }
+body.activity-navigation .worldle-stat-box strong { color: var(--app-mint); font-weight: 650; }
+body.activity-navigation .worldle-modal-title { font-weight: 650; letter-spacing: -0.035em; }
+body.activity-navigation :is(.profile-modal-eyebrow, .worldle-modal-kicker) { color: var(--app-mint); font-weight: 550; }
+body.activity-navigation .profile-modal-card h2 { font-weight: 650; font-size: 1.7rem; letter-spacing: -0.04em; }
+body.activity-navigation .profile-modal-card h2 { margin-top: 0; }
+body.activity-navigation .profile-modal-card h3 { font-size: 1rem; font-weight: 600; }
+body.activity-navigation .device-player-button { border-color: var(--app-line); background: #0f1720; }
+body.activity-navigation .device-player-button[aria-pressed='true'] { border-color: #a7c8ad5c; background: #a7c8ad0d; }
+body.activity-navigation .player-google-options { border-color: var(--app-soft-line); }
+body.activity-navigation .profile-close-slot .profile-modal-close { background: #141c26; border-color: var(--app-line); }
+body.activity-navigation .atlas-utility-panel { border-color: var(--app-line); background: #141c26; border-radius: 18px; box-shadow: 0 20px 60px #0005; }
+body.activity-navigation :is(#activity-settings-description, #player-google-status, #local-player-status):empty { display: none; }
+
+@media (max-width: 767px) {
+  body.activity-navigation .atlas-header { min-height: 64px; padding-bottom: 8px; }
+  body.activity-navigation #atlas-challenge-panel { --preview-image-height: 214px; gap: 14px; }
+  body.activity-navigation #atlas-challenge-panel .atlas-challenge-grid { gap: 16px; }
+  body.activity-navigation #atlas-challenge-panel .atlas-challenge-card { padding: 17px; gap: 8px; border-radius: 20px; }
+  body.activity-navigation #atlas-challenge-panel .atlas-challenge-card > p { font-size: 0.75rem; }
+  body.activity-navigation #atlas-challenge-panel .atlas-hunt-preview { width: var(--preview-image-height); }
+  body.activity-navigation #activity-shape-preview .atlas-quiz-art { width: 90%; }
+  body.activity-navigation .atlas-quiz-answer { min-width: 164px; min-height: 64px; padding: 12px 14px; gap: 10px; }
+  body.activity-navigation .atlas-quiz-answer-name { font-size: 1rem; }
+  body.activity-navigation .atlas-quiz-answer-flag { width: 42px; height: 28px; }
+  body.activity-navigation[data-activity$='-explore'] .activity-section-actions { justify-self: center; gap: 10px; }
+  body.activity-navigation[data-activity$='-explore'] .activity-section-actions button { flex: none; width: 104px; padding: 8px 12px; font-size: 0.8125rem; }
+  body.activity-navigation .activity-section-copy strong { font-size: 1rem; }
+  body.activity-navigation .is-country-sheet .explorer-country-facts { gap: 0 18px; }
+  body.activity-navigation .is-country-sheet .explorer-country-facts > div { padding: 10px 0; }
+  body.activity-navigation .is-country-sheet .explorer-country-facts dd { font-size: 0.82rem; }
+  body.activity-navigation .is-country-sheet .explorer-country-identity h2 { font-size: 1.5rem; }
+  body.activity-navigation .explorer-info-panel.is-country-sheet { border-radius: 20px; }
+  body.activity-navigation .worldle-play-panel { padding: 0; }
+  body.activity-navigation .result-stat { min-height: 75px; }
+  body.activity-navigation .result-stat:nth-child(3) { border-left: 0; }
+  body.activity-navigation .result-stat:nth-child(n+3) { border-top: 1px solid var(--app-soft-line); }
+  body.activity-navigation .results-summary { padding: 16px 0; }
+  body.activity-navigation .results-card { border-radius: 20px; }
+  body.activity-navigation #game:has(.has-feedback) .game-stage:has(> .game-round-progress[hidden]) { display: none; }
+}
+
+@media (max-height: 500px) and (min-width: 600px) {
+  body.activity-navigation .app { padding-top: 8px; }
+  body.activity-navigation .atlas-shell { gap: 10px; }
+  body.activity-navigation .atlas-header { min-height: 44px; padding-bottom: 4px; }
+  body.activity-navigation #atlas-challenge-panel { --preview-image-height: 140px; gap: 10px; padding: 0; }
+  body.activity-navigation #atlas-challenge-panel .atlas-challenge-card { padding: 12px; gap: 6px; }
+  body.activity-navigation #atlas-challenge-panel .atlas-challenge-card h3 { font-size: 0.92rem; }
+  body.activity-navigation #atlas-challenge-panel .atlas-challenge-card > p { font-size: 0.73rem; min-height: 1.5em; }
+  body.activity-navigation #atlas-challenge-panel .atlas-hunt-preview { width: var(--preview-image-height); }
+  body.activity-navigation .atlas-quiz-answer { min-width: 150px; min-height: 54px; padding: 10px 12px; gap: 10px; border-radius: 12px; }
+  body.activity-navigation .atlas-quiz-answer-name { font-size: 0.875rem; }
+  body.activity-navigation .atlas-quiz-answer-flag { width: 36px; height: 24px; }
+  body.activity-navigation #game:has(.has-feedback) .game-stage > :not(.game-round-progress) { display: none; }
+  body.activity-navigation #game:has(.has-feedback) .game-stage { min-height: 0; padding: 10px 16px; }
+  body.activity-navigation #game:has(.has-feedback) .game-stage:has(> .game-round-progress[hidden]) { display: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body.activity-navigation .activity-daily,
+  body.activity-navigation .activity-paths button { transition: background-color 160ms, border-color 160ms, transform 160ms; }
+  body.activity-navigation .activity-paths button:hover { transform: translateY(-1px); }
+  body.activity-navigation [data-preview-phase='answer'] .atlas-quiz-answer { animation: preview-answer-reveal 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+}
+
+@keyframes preview-answer-reveal {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+  70% { opacity: 1; transform: translate(-50%, -50%) scale(1.04); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+body.activity-navigation .app-privacy-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--app-muted, #a3b1c2);
+  font-size: .8125rem;
+  text-underline-offset: 3px;
+}
+body.activity-navigation .app-privacy-link:hover { color: var(--app-mint, #a7c8ad); }
+body.activity-navigation .app-privacy-link:focus-visible { outline: 2px solid var(--app-mint, #a7c8ad); outline-offset: 3px; }
+
+/* Keep the artwork and country essentials together in Safari's short viewport.
+   Leave document scrolling available for expanded details and enlarged text. */
+@media (max-width: 767px), (max-width: 960px) and (max-height: 500px) and (pointer: coarse) {
+  body.activity-navigation { --phone-game-height: calc(100svh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
+  body.activity-navigation:not([data-activity='home']):not([data-activity='daily']) .app {
+    padding: env(safe-area-inset-top, 0px) max(12px, env(safe-area-inset-right, 0px)) max(8px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+  }
+  body.activity-navigation:not([data-activity='home']):not([data-activity='daily']) .atlas-header { min-height: 44px; padding: 0; }
+  body.activity-navigation:not([data-activity='home']):not([data-activity='daily']) .atlas-shell { gap: 8px; }
+  body.activity-navigation .activity-context:not([hidden]) { grid-template-columns: auto minmax(0, 1fr); gap: 0 8px; padding: 0 0 4px; }
+  body.activity-navigation .activity-section-copy { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  body.activity-navigation .activity-back { font-size: 0.7rem; }
+  body.activity-navigation .activity-section-actions { grid-column: 2; grid-row: 1; gap: 6px; justify-self: stretch; }
+  body.activity-navigation:not([data-activity='home']) .activity-section-actions button { flex: 1; width: auto; min-height: 44px; padding: 6px 4px; font-size: 0.7rem; }
+  body.activity-navigation .atlas-globe-workspace .explorer-layout { gap: 8px; }
+  body.activity-navigation .atlas-globe-workspace .explorer-stage { gap: 4px; grid-template-rows: auto; }
+  body.activity-navigation .explorer-globe-wrap { gap: 0; }
+  body.activity-navigation .explorer-globe-frame {
+    width: min(100%, clamp(80px, calc(var(--phone-game-height) - 500px), 320px));
+  }
+  body.activity-navigation .explorer-globe-controls { margin-top: 4px; }
+  body.activity-navigation .explorer-screen.is-hunt-active .explorer-globe-frame {
+    width: min(100%, clamp(120px, calc(var(--phone-game-height) - 370px), 320px));
+  }
+  body.activity-navigation .explorer-stage-footer { display: none; }
+  body.activity-navigation .explorer-info-panel.is-country-sheet { min-height: 0; margin-top: 0; padding: 8px 12px; }
+  body.activity-navigation .is-country-sheet .country-sheet-toggle {
+    position: absolute; inset: 8px 8px auto auto; width: 64px; padding: 4px; border-radius: 8px; touch-action: pan-y; cursor: pointer;
+  }
+  body.activity-navigation .country-sheet-grip { display: none; }
+  body.activity-navigation .is-country-sheet .explorer-country-card { gap: 4px; }
+  body.activity-navigation .is-country-sheet .explorer-country-identity {
+    grid-template-columns: 40px minmax(0, 1fr); gap: 8px; padding: 0 64px 6px 0; min-height: 52px;
+  }
+  body.activity-navigation .is-country-sheet .explorer-country-flag { width: 40px; height: 30px; }
+  body.activity-navigation .is-country-sheet .explorer-country-identity h2 { font-size: 1.125rem; line-height: 1.15; }
+  body.activity-navigation .is-country-sheet .explorer-country-region { font-size: 0.65rem; margin-top: 3px; }
+  body.activity-navigation .is-country-sheet .explorer-country-facts { gap: 0 12px; }
+  body.activity-navigation .is-country-sheet .explorer-country-facts > div { padding: 5px 0; }
+  body.activity-navigation .is-country-sheet .explorer-country-facts dt { font-size: 0.6rem; margin-bottom: 2px; }
+  body.activity-navigation .is-country-sheet .explorer-country-facts dd { font-size: 0.8rem; line-height: 1.3; }
+  body.activity-navigation .is-country-sheet.is-expanded .country-sheet-toggle { position: sticky; margin-left: auto; }
+  body.activity-navigation .atlas-shapes-workspace { gap: 8px; }
+  body.activity-navigation .atlas-shape-toolbar { grid-template-columns: 1fr; padding: 0; margin: 0; }
+  body.activity-navigation .atlas-shape-study { min-height: 0; gap: 8px; }
+  body.activity-navigation .atlas-shapes-workspace .atlas-shape-plate {
+    width: 100%; max-width: none; height: clamp(80px, calc(var(--phone-game-height) - 460px), 320px); min-height: 0; padding: 8px 16px;
+  }
+  body.activity-navigation .atlas-shape-art { min-height: 0; width: 100%; height: auto; margin: 0; aspect-ratio: auto; padding: 4px; }
+  body.activity-navigation .atlas-shape-art svg { max-height: 100%; }
+
+  body.activity-navigation #game { gap: 8px; }
+  body.activity-navigation .game-utility { gap: 4px; padding-bottom: 4px; }
+  body.activity-navigation .game-hud { gap: 4px; }
+  body.activity-navigation .game-utility .timer-container,
+  body.activity-navigation .game-utility .timer-ring { width: 48px; height: 48px; }
+  body.activity-navigation .game-utility .timer-text { font-size: 1.05rem; }
+  body.activity-navigation .game-utility-actions { flex-wrap: nowrap; }
+  body.activity-navigation .game-stage { position: relative; padding: 10px; gap: 6px; }
+  body.activity-navigation .game-stage .game-card-heading { padding-right: 44px; }
+  body.activity-navigation .game-stage .round-info { position: absolute; top: 10px; right: 10px; }
+  body.activity-navigation .silhouette-box {
+    height: clamp(64px, calc(var(--phone-game-height) - 500px), 260px); min-height: 0; padding: 8px;
+  }
+  body.activity-navigation .silhouette-box > img { max-height: 100%; width: auto; max-width: 100%; }
+  body.activity-navigation .silhouette-box > .flag-hint { position: absolute; }
+  body.activity-navigation .answer-interaction-panel { padding: 0; gap: 6px; }
+  body.activity-navigation .answer-interaction-panel:not(.has-feedback) { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+  body.activity-navigation #game :is(.answer-section, .type-answer, .choices, .region-reveal-card) { grid-column: 1 / -1; }
+  body.activity-navigation #game .hint-tools { grid-column: 1; }
+  body.activity-navigation #game :is(#btn-skip, #btn-reveal) { grid-column: 2; margin: 0; }
+  body.activity-navigation .answer-section,
+  body.activity-navigation .choices { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  body.activity-navigation .answer-path-btn { min-height: 52px; padding: 6px; gap: 4px; }
+  body.activity-navigation .choice-btn { min-height: 44px; padding: 6px; font-size: 0.8rem; line-height: 1.25; }
+  body.activity-navigation .answer-interaction-panel .region-reveal-card { min-height: 0; margin: 0; padding: 6px 10px; gap: 8px; }
+  body.activity-navigation .region-reveal-icon { width: 32px; height: 32px; }
+  body.activity-navigation .region-reveal-title { font-size: 1rem; }
+  body.activity-navigation .region-reveal-copy { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 6px; }
+  body.activity-navigation .region-reveal-context { flex-basis: 100%; margin-top: 0; font-size: 0.7rem; }
+  body.activity-navigation .hint-tools { margin: 0; }
+  body.activity-navigation .hint-btn { gap: 4px; font-size: 0.75rem; line-height: 1.2; }
+  body.activity-navigation .hint-btn .icon { width: 16px; height: 16px; flex: none; }
+  body.activity-navigation .hint-btn[aria-disabled='true']::after { content: none; }
+  body.activity-navigation .hint-btn,
+  body.activity-navigation .bail-btn,
+  body.activity-navigation .reveal-btn { min-height: 44px; padding: 6px; }
+}
+
+@media (max-width: 960px) and (max-height: 500px) and (pointer: coarse) {
+  body.activity-navigation .game-utility { display: flex; align-items: center; }
+  body.activity-navigation .game-home-logo { width: 132px; }
+  body.activity-navigation .game-hud { display: flex; flex: 1; justify-content: space-between; }
+  body.activity-navigation .activity-context:not([hidden]) { grid-template-columns: auto 1fr auto; }
+  body.activity-navigation .activity-section-actions { grid-column: 3; grid-row: 1; }
+  body.activity-navigation .atlas-globe-workspace .explorer-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  body.activity-navigation .explorer-globe-frame { width: min(100%, calc(var(--phone-game-height) - 242px)); }
+  body.activity-navigation .atlas-shapes-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  body.activity-navigation .atlas-shape-toolbar { grid-column: 1; grid-row: 1; }
+  body.activity-navigation .atlas-shape-study { display: contents; }
+  body.activity-navigation .atlas-shape-plate { grid-column: 1; grid-row: 2; }
+  body.activity-navigation .atlas-shape-info-slot { grid-column: 2; grid-row: 1 / span 2; }
+  body.activity-navigation .atlas-shapes-workspace .atlas-shape-plate { height: calc(var(--phone-game-height) - 174px); }
+  body.activity-navigation .explorer-screen.is-hunt-active .explorer-layout { grid-template-columns: 1fr; }
+  body.activity-navigation .is-hunt-active .atlas-globe-workspace .explorer-stage {
+    grid-template-areas: 'globe hud' 'globe feedback'; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center;
+  }
+  body.activity-navigation .is-hunt-active .explorer-hunt-hud { grid-area: hud; grid-template-areas: 'timer score exit' 'target target target'; grid-template-columns: auto minmax(0, 1fr) auto; }
+  body.activity-navigation .is-hunt-active .explorer-hunt-timer { grid-area: timer; }
+  body.activity-navigation .is-hunt-active .explorer-hunt-score { grid-area: score; }
+  body.activity-navigation .is-hunt-active #btn-explorer-hunt-exit { grid-area: exit; }
+  body.activity-navigation .is-hunt-active .explorer-hunt-prompt { grid-area: target; border: 0; padding: 0; }
+  body.activity-navigation .is-hunt-active .explorer-hunt-prompt strong { display: block; white-space: normal; overflow: visible; overflow-wrap: anywhere; font-size: 1rem; -webkit-line-clamp: unset; }
+  body.activity-navigation .is-hunt-active .explorer-globe-wrap { grid-area: globe; }
+  body.activity-navigation .is-hunt-active #explorer-hunt-feedback { grid-area: feedback; }
+  body.activity-navigation .explorer-screen.is-hunt-active .explorer-info-panel { display: none; }
+  body.activity-navigation .explorer-screen.is-hunt-active #explorer-hunt-feedback { display: grid; }
+  body.activity-navigation .explorer-screen.is-hunt-active .explorer-globe-frame { width: min(100%, calc(var(--phone-game-height) - 202px)); }
+  body.activity-navigation #game .silhouette-box { height: calc(var(--phone-game-height) - 230px); min-height: 0; }
+  body.activity-navigation #game .game-stage,
+  body.activity-navigation #game .answer-interaction-panel { padding: 8px; }
+  body.activity-navigation #game .answer-interaction-panel:not(.has-feedback) { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+  body.activity-navigation #game :is(.answer-section, .type-answer, .choices, .region-reveal-card) { grid-column: 1 / -1; }
+  body.activity-navigation #game .hint-tools { grid-column: 1; }
+  body.activity-navigation #game :is(#btn-skip, #btn-reveal) { grid-column: 2; margin: 0; }
+}

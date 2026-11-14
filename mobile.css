@@ -1,9 +1,73 @@
 /* Phone experience: one task per surface, quiet chrome, reachable navigation. */
+.profile-modal-card { max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; }
+.profile-close-slot { position: sticky; top: 0; height: 0; z-index: 4; }
+.profile-close-slot .profile-modal-close { top: -12px; right: -8px; background: #181822; }
+.device-player-list { display: grid; gap: 8px; margin-top: 20px; }
+.device-player-button { min-height: 48px; padding: 12px; border: 1px solid #39394a; border-radius: 12px; background: #14141e; color: #eeeef8; text-align: left; overflow-wrap: anywhere; cursor: pointer; }
+.device-player-button[aria-pressed='true'] { border-color: #aca0d9; background: #302a44; }
+.profile-form select { min-height: 44px; padding: 10px; border: 1px solid #49495b; border-radius: 10px; background: #14141e; color: #eeeef8; font: inherit; }
+.profile-form .profile-check { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.profile-form .profile-check input { width: 20px; min-height: 20px; flex: none; }
+.profile-form small, .player-email-options > p { color: #b4b4c8; font-size: 0.8rem; line-height: 1.5; }
+.player-email-options { margin-top: 24px; padding-top: 12px; border-top: 1px solid #39394a; }
+.player-email-options > summary { padding: 12px 0; min-height: 44px; color: #d1c3f5; cursor: pointer; }
+.profile-form input { font-size: 16px; }
+.player-google-options { margin-top: 24px; padding-top: 18px; border-top: 1px solid #39394a; }
+.player-google-options > p { margin: 10px 0 14px; color: #b4b4c8; font-size: 0.85rem; line-height: 1.5; }
+.google-signin-button { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: 48px; background: #fff; border: 1px solid #747775; color: #1f1f1f; }
+.google-signin-button svg { flex: none; }
+.google-signin-button[hidden] { display: none; }
+.google-signin-container { width: 100%; min-width: 0; }
+.google-signin-container:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.google-signin-container[aria-busy='true'] { opacity: 0.65; }
 .mobile-nav-label,
 .mobile-recommendation,
 .mobile-play-eyebrow,
 .mobile-play-description,
 .country-sheet-toggle { display: none; }
+
+/* The phone's direct controls remain beside the quiz as the screen grows. */
+#shape-challenge-panel #atlas-menu-setup-slot { display: grid; gap: 14px; padding-top: 4px; min-width: 0; }
+#shape-challenge-panel .mode-select { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 0; }
+#shape-challenge-panel #mode-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+#shape-challenge-panel .mode-chip { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 6px; min-height: 48px; padding: 8px; border-radius: 10px; }
+#shape-challenge-panel .mode-title { font-size: 0.8rem; }
+#shape-challenge-panel .mode-icon, #shape-challenge-panel .mode-desc, #shape-challenge-panel .diff-btn em, #shape-challenge-panel .filter-summary { display: none; }
+#shape-challenge-panel .setup-group { margin: 0; padding: 0; border: 0; min-width: 0; }
+#shape-challenge-panel legend { font-size: 0.72rem; margin-bottom: 8px; }
+#shape-challenge-panel .difficulty-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+#shape-challenge-panel .diff-btn { min-width: 0; min-height: 44px; padding: 6px 2px; font-size: 0.75rem; border-radius: 8px; }
+#shape-challenge-panel .game-setup { border: 0; border-top: 1px solid #292936; border-radius: 0; background: transparent; }
+#shape-challenge-panel .game-setup-summary { min-height: 44px; padding: 6px 0; }
+#shape-challenge-panel .game-setup-title { font-size: 0.78rem; color: #b4b4c8; }
+#shape-challenge-panel .game-setup-content { padding: 6px 0 12px; border: 0; background: transparent; }
+#shape-challenge-panel .region-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.atlas-quiz-stage #btn-change-settings { display: none; }
+.atlas-utility-menu > summary .player-avatar { flex: none; width: 22px; height: 22px; }
+.atlas-utility-panel .atlas-preference-controls button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; width: 100%; }
+.atlas-utility-panel #btn-explorer-music span, .atlas-utility-panel #btn-explorer-haptics span { display: inline; }
+.atlas-utility-panel .atlas-preference-controls button.hidden { display: none; }
+.atlas-utility-panel #btn-explorer-music, .atlas-utility-panel #btn-explorer-haptics { width: 100%; padding: 8px; }
+
+/* Reserve the same compact space for a pending, missing, or loaded photo. */
+#explorer-landmark-media, .explorer-landmark-placeholder {
+  display: grid; grid-template-columns: 112px minmax(0, 1fr); align-items: center; gap: 12px;
+  min-height: 100px; margin: 0 0 12px; padding: 8px 0;
+}
+#explorer-landmark-media.hidden, .explorer-landmark-placeholder.hidden { display: none; }
+#explorer-landmark-media .explorer-landmark-media-toggle { width: 112px; height: 84px; }
+#explorer-landmark-media img { width: 100%; height: 100%; object-fit: cover; }
+#explorer-landmark-media figcaption { margin: 0; align-self: center; }
+.landmark-placeholder-art { display: grid; place-items: center; width: 112px; height: 84px; border: 1px solid #39394a; border-radius: 10px; background: #13131c; color: #9b8fc1; }
+.landmark-placeholder-art svg { width: 32px; height: 32px; }
+.explorer-landmark-placeholder a { display: inline-block; color: #bce5d6; font-size: 0.75rem; line-height: 1.5; }
+.explorer-landmark-placeholder small { display: block; margin-top: 6px; color: #b4b4c8; font-size: 0.68rem; line-height: 1.5; }
+#explorer-landmark-media.is-expanded { grid-template-columns: 1fr; }
+#explorer-landmark-media.is-expanded .explorer-landmark-media-toggle { width: 100%; height: auto; aspect-ratio: 4 / 3; }
+#explorer-landmark-media.is-expanded img { object-fit: contain; }
+.explorer-country-facts > div:first-child { grid-column: 1 / -1; }
+.explorer-extra-fact { margin: 0 0 16px; }
+.explorer-extra-fact h3 { color: #b4b4c8; font-size: 0.75rem; font-weight: 600; }
 
 .worldle-empty-hint,
 .worldle-revealed-fact { color: var(--color-muted); font-size: 0.9rem; line-height: 1.6; }
@@ -24,7 +88,7 @@
   .atlas-challenge-heading { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767px), (max-width: 960px) and (max-height: 500px) and (pointer: coarse) {
   :root { --phone-nav-height: calc(68px + env(safe-area-inset-bottom, 0px)); }
   html { scroll-padding-bottom: calc(var(--phone-nav-height) + 20px); }
   body,
@@ -57,6 +121,8 @@
     grid-auto-flow: initial;
     align-items: start;
     height: var(--phone-nav-height);
+    width: 100%;
+    max-width: none;
     padding: 6px max(16px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(16px, env(safe-area-inset-left, 0px));
     border: 0;
     border-top: 1px solid #292936;
@@ -147,20 +213,19 @@
   .atlas-challenge-hunt .atlas-challenge-start:hover { background: #302a40; }
 
   /* Explore: the country card stays within reach of the globe. */
-  .atlas-globe-workspace .explorer-layout { gap: 0; }
+  .atlas-globe-workspace .explorer-layout { gap: 16px; }
   .atlas-globe-workspace .explorer-stage { gap: 12px; padding: 0; }
   .explorer-search-input-wrap { min-height: 46px; box-shadow: none; }
   .explorer-country-search { font-size: 16px; min-height: 46px; }
   .explorer-globe-frame { width: min(90vw, 350px, 49svh); height: auto; aspect-ratio: 1; }
   .explorer-globe-controls { margin-top: 10px; box-shadow: none; }
   .is-country-sheet {
-    position: fixed;
-    z-index: 60;
-    inset: auto 12px calc(var(--phone-nav-height) + 10px);
+    position: relative;
+    inset: auto;
     width: auto;
     min-height: 0;
-    max-height: 230px;
-    overflow-y: hidden;
+    max-height: none;
+    overflow: visible;
     padding: 0 16px 14px;
     border: 1px solid #39394a;
     border-radius: 22px;
@@ -172,23 +237,25 @@
   .country-sheet-grip { position: absolute; top: 7px; left: calc(50% - 16px); width: 32px; height: 3px; border-radius: 4px; background: #656579; }
   .country-sheet-toggle svg { width: 14px; height: 14px; }
   .is-expanded .country-sheet-toggle svg { transform: rotate(180deg); }
-  .is-country-sheet .explorer-country-card { gap: 10px; flex: none; }
+  .is-country-sheet .explorer-country-card { gap: 14px; flex: none; }
   .is-country-sheet .explorer-country-card > * { flex-shrink: 0; }
-  .is-country-sheet .explorer-country-identity { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; }
-  .is-country-sheet .explorer-country-flag { width: 44px; height: 32px; font-size: 1.7rem; }
-  .is-country-sheet .explorer-country-identity h2 { font-size: 1.25rem; }
-  .is-country-sheet .explorer-country-region { font-size: 0.68rem; }
-  .is-country-sheet .explorer-country-facts { margin: 0; border: 0; background: transparent; border-radius: 0; }
-  .is-country-sheet:not(.is-expanded) .explorer-country-facts { display: block; }
-  .is-country-sheet:not(.is-expanded) .explorer-country-facts > div:first-child { display: flex; gap: 8px; padding: 0; background: transparent; }
-  .is-country-sheet:not(.is-expanded) .explorer-country-facts > div:not(:first-child),
-  .is-country-sheet:not(.is-expanded) .explorer-more-details,
+  .is-country-sheet .explorer-country-identity { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 12px; padding: 4px 0 14px; border-bottom: 1px solid #39394a; }
+  .is-country-sheet .explorer-country-identity > div { min-width: 0; }
+  .is-country-sheet .explorer-country-flag { width: 48px; height: 36px; border-radius: 8px; font-size: 1.7rem; }
+  .is-country-sheet .explorer-country-identity h2 { font-size: 1.4rem; line-height: 1.15; overflow-wrap: anywhere; }
+  .is-country-sheet .explorer-country-region { margin-top: 5px; font-size: 0.72rem; font-weight: 500; line-height: 1.45; color: #adb8cc; }
+  .is-country-sheet .explorer-country-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; border: 0; background: transparent; border-radius: 0; }
+  .is-country-sheet .explorer-country-facts > div { min-width: 0; padding: 10px 12px; border: 1px solid #30303e; border-radius: 10px; background: #14141e; }
+  .is-country-sheet .explorer-country-facts > div:first-child { grid-column: auto; }
+  /* Area descriptions are prose, so give them a complete readable line. */
+  .is-country-sheet .explorer-country-facts > div:nth-child(3) { grid-column: 1 / -1; }
   .is-country-sheet:not(.is-expanded) .explorer-focus-country { display: none; }
-  .is-country-sheet .explorer-country-facts dt { font-size: 0.68rem; }
-  .is-country-sheet .explorer-country-facts dd { font-size: 0.78rem; }
+  .is-country-sheet:not(.is-expanded) .explorer-more-details { display: none; }
+  .is-country-sheet .explorer-more-details > summary { display: none; }
+  .is-country-sheet .explorer-country-facts dt { margin-bottom: 5px; color: #a5a6bd; font-size: 0.6rem; font-weight: 650; letter-spacing: 0.08em; }
+  .is-country-sheet .explorer-country-facts dd { margin: 0; color: #f2f2f8; font-size: 0.8rem; font-weight: 600; line-height: 1.45; overflow-wrap: break-word; }
   .is-country-sheet .explorer-fact { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; color: #d5dfdc; font-size: 0.8rem; line-height: 1.5; }
   .is-country-sheet .explorer-fact::before { display: none; }
-  .is-country-sheet:not(.is-expanded) .explorer-fact { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .is-country-sheet.is-expanded .explorer-focus-country { grid-column: 1 / -1; min-height: 44px; }
   .is-country-sheet .explorer-country-status { margin: 4px 0; font-size: 0.7rem; }
 
@@ -219,21 +286,67 @@
   .answer-interaction-panel,
   .results-card { box-shadow: none; }
   .game-stage .silhouette-box { height: clamp(200px, 32svh, 290px); filter: none; }
+  /* Feedback replaces the prompt; the next action stays beside the result. */
+  #game:has(.has-feedback) .game-stage > :not(.game-round-progress) { display: none; }
+  #game:has(.has-feedback) .game-stage { min-height: 0; padding: 12px 16px; }
+  .has-feedback .reveal-card { gap: 10px; padding: 12px; }
+  .has-feedback .feedback-country-card { grid-template-columns: minmax(0, 1fr) 56px; min-height: 0; gap: 10px; padding: 10px; }
+  .has-feedback #feedback-flag { width: 56px; min-height: 0; }
+  .has-feedback #feedback-flag .reveal-flag { width: 56px; max-height: 40px; }
+  .has-feedback #feedback-flag .asset-fallback { min-height: 40px; padding: 4px; }
+  .has-feedback #feedback-flag .asset-fallback__detail { display: none; }
+  .has-feedback .feedback-score:empty { display: none; }
+  .has-feedback .feedback-actions { grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 0; }
+  .has-feedback .feedback-next-btn { grid-column: 1 / -1; }
+  .has-feedback .feedback-home-btn { grid-column: auto; }
+  .has-feedback .feedback-facts { padding: 10px; }
+  .feedback-facts > summary { min-height: 24px; cursor: pointer; }
   .choice-btn { min-height: 52px; }
   .feedback-next-btn { min-height: 52px; }
   .feedback-facts .reveal-fact { font-size: 0.88rem; }
   .results-card h2 { font-size: 1.6rem; }
 }
 
-@media (max-width: 767px) and (max-height: 700px) {
+@media (max-width: 767px) and (max-height: 700px), (max-width: 960px) and (max-height: 500px) and (pointer: coarse) {
   .mobile-play-eyebrow { display: none; }
   .atlas-challenge-card .atlas-quiz-stage { display: none; }
   .atlas-challenge-panel { gap: 14px; padding-top: 0; }
 }
 
-@media (max-width: 767px) and (max-height: 620px) {
+@media (max-width: 767px) and (max-height: 620px), (max-width: 960px) and (max-height: 500px) and (pointer: coarse) {
   .mobile-play-description { display: none; }
   .atlas-challenge-card { padding: 16px; }
+}
+
+/* A rotated phone keeps compact navigation and puts the two tasks side by side. */
+@media (min-width: 768px) and (max-width: 960px) and (max-height: 500px) and (pointer: coarse) {
+  :root { --phone-nav-height: calc(58px + env(safe-area-inset-bottom, 0px)); }
+  .atlas-header { min-height: 52px; }
+  .atlas-header .atlas-primary-nav button { flex-direction: row; min-height: 44px; justify-content: center; }
+  .atlas-challenge-heading { display: none; }
+  .atlas-challenge-grid { display: grid; grid-template-columns: 1fr 1fr; align-items: start; }
+  .atlas-challenge-card { padding: 12px; gap: 8px; }
+  .atlas-challenge-card > p { display: none; }
+  #atlas-menu-setup-slot { gap: 6px; padding: 0; }
+  #atlas-menu-setup-slot legend { display: none; }
+  #atlas-menu-setup-slot .game-setup-summary { min-height: 32px; padding: 0; }
+  #atlas-menu-setup-slot .game-setup-wrap { margin: 0; }
+  #atlas-menu-setup-slot .game-setup { margin: 0; border: 0; }
+  #shape-challenge-panel #atlas-menu-setup-slot { gap: 6px; padding-top: 0; }
+  #shape-challenge-panel .game-setup-summary { min-height: 28px; padding: 0; }
+  #shape-challenge-panel .mode-chip { min-height: 44px; }
+  .atlas-challenge-card .cta { min-height: 44px; padding: 8px; }
+  .worldle-stage { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  .worldle-intro > p:last-child, .worldle-intro > .worldle-section-kicker { display: none; }
+  .worldle-puzzle { gap: 8px; }
+  .worldle-silhouette-card { height: 170px; min-height: 0; }
+  .atlas-globe-workspace .explorer-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  .explorer-globe-frame { width: min(29svh, 180px); }
+  .atlas-explore-switch { position: absolute; z-index: 51; top: 5px; left: calc(50% - 110px); }
+  .atlas-globe-workspace .explorer-stage { gap: 6px; }
+  .explorer-globe-wrap { gap: 0; }
+  .explorer-globe-controls { margin-top: 4px; }
+  .explorer-status { display: none; }
 }
 
 @media (max-width: 767px) and (prefers-reduced-motion: reduce) {

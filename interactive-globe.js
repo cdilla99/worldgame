@@ -95,6 +95,7 @@
     let idleRotationFrame = 0;
     let idleRotationActive = !prefersReducedMotion.matches;
     let idleRotationLastTime = 0;
+    let globeVisible = !root.IntersectionObserver;
 
     // Optional showcase marker: a pulsing pin the landing showcase drops on the
     // country it is spotlighting in the side panel. Purely decorative, never
@@ -133,9 +134,9 @@
     }
 
     function startIdleRotation() {
-      if (!idleRotationActive || idleRotationFrame || prefersReducedMotion.matches) return;
+      if (!globeVisible || document.hidden || !idleRotationActive || idleRotationFrame || prefersReducedMotion.matches) return;
       const step = now => {
-        if (!idleRotationActive || prefersReducedMotion.matches) {
+        if (!globeVisible || document.hidden || !idleRotationActive || prefersReducedMotion.matches) {
           idleRotationFrame = 0;
           return;
         }
@@ -156,10 +157,10 @@
     }
 
     function startShowcasePulse() {
-      if (showcasePulseFrame || prefersReducedMotion.matches) return;
+      if (!globeVisible || document.hidden || !showcaseMarker || showcasePulseFrame || prefersReducedMotion.matches) return;
       showcasePulseStart = root.performance.now();
       const step = () => {
-        if (!showcaseMarker || !showcaseMarkerEnabled) {
+        if (!globeVisible || document.hidden || !showcaseMarker || !showcaseMarkerEnabled) {
           showcasePulseFrame = 0;
           return;
         }
@@ -698,6 +699,27 @@
       resizeFrame = root.requestAnimationFrame(resize);
     });
     resizeObserver.observe(globe);
+
+    // Hidden legacy artwork must not compete with the visible activity previews.
+    function syncIdleVisibility() {
+      if (!globeVisible || document.hidden || prefersReducedMotion.matches) {
+        root.cancelAnimationFrame(idleRotationFrame);
+        idleRotationFrame = 0;
+        idleRotationLastTime = 0;
+        stopShowcasePulse();
+      } else {
+        startIdleRotation();
+        startShowcasePulse();
+      }
+    }
+    if (root.IntersectionObserver) {
+      new root.IntersectionObserver(entries => {
+        globeVisible = entries[entries.length - 1].isIntersecting;
+        syncIdleVisibility();
+      }).observe(globe);
+    }
+    document.addEventListener('visibilitychange', syncIdleVisibility);
+    prefersReducedMotion.addEventListener('change', syncIdleVisibility);
 
     root.GeoWars = root.GeoWars || {};
     root.GeoWars.globe = {

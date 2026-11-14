@@ -79,6 +79,9 @@
     const landmarkMediaToggle = document.getElementById('explorer-landmark-media-toggle');
     const landmarkLearnMore = document.getElementById('explorer-landmark-learn-more');
     const landmarkMediaSource = document.getElementById('explorer-landmark-media-source');
+    const landmarkPlaceholder = document.getElementById('explorer-landmark-placeholder');
+    const landmarkPlaceholderLink = document.getElementById('explorer-landmark-placeholder-link');
+    const landmarkStatus = document.getElementById('explorer-landmark-status');
     const zoomInButton = document.getElementById('btn-explorer-zoom-in');
     const zoomOutButton = document.getElementById('btn-explorer-zoom-out');
     const resetButton = document.getElementById('btn-explorer-reset');
@@ -176,6 +179,7 @@
     let pinchDistance = 0;
     let pinchZoom = 1;
     let animationFrame = 0;
+    let interactionFrame = 0;
     let resizeFrame = 0;
     let searchMatches = [];
     let activeSearchIndex = -1;
@@ -192,6 +196,8 @@
     let huntAdvanceTimeout = 0;
     let huntSessionId = 0;
     let landmarkMediaRequestId = 0;
+    let pendingLandmarkCountry = null;
+    let landmarkImageObserver = null;
     const huntPauseReasons = new Set();
 
     function getRadius() {
@@ -535,12 +541,12 @@
     }
 
     function draw() {
+      if (interactionFrame) root.cancelAnimationFrame(interactionFrame);
+      interactionFrame = 0;
       if (!countries.length) return;
       const devicePixelRatio = Math.min(root.devicePixelRatio || 1, 2);
       context.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
       context.clearRect(0, 0, size, size);
-      hitContext.setTransform(1, 0, 0, 1, 0, 0);
-      hitContext.clearRect(0, 0, size, size);
 
       context.save();
       context.beginPath();
@@ -562,13 +568,19 @@
       drawAtmosphere(context);
       context.restore();
 
-      hitContext.save();
-      hitContext.beginPath();
-      hitContext.rect(0, 0, size, size);
-      hitContext.clip();
-      drawOrder.forEach(country => drawCountry(hitContext, country, true));
-      drawSmallCountryMarkers(hitContext, true);
-      hitContext.restore();
+      // Picking is only used after a gesture ends. Avoid projecting and painting
+      // every country a second time while a finger is rotating or pinching.
+      if (!dragging || dragDistance < 7) {
+        hitContext.setTransform(1, 0, 0, 1, 0, 0);
+        hitContext.clearRect(0, 0, size, size);
+        hitContext.save();
+        hitContext.beginPath();
+        hitContext.rect(0, 0, size, size);
+        hitContext.clip();
+        drawOrder.forEach(country => drawCountry(hitContext, country, true));
+        drawSmallCountryMarkers(hitContext, true);
+        hitContext.restore();
+      }
 
       updateCenteredCountry();
       syncGlobeControls();
@@ -577,7 +589,9 @@
     function resize() {
       const rect = globeFrame.getBoundingClientRect();
       if (!rect.width) return;
-      size = Math.max(220, Math.round(Math.min(rect.width, rect.height || rect.width)));
+      // Match the frame's content box, including short iPhone viewports. A
+      // 220px minimum cropped the globe and its hit map inside smaller frames.
+      size = Math.max(1, Math.min(globeFrame.clientWidth, globeFrame.clientHeight || globeFrame.clientWidth));
       center = size / 2;
       baseRadius = size * 0.45;
       const devicePixelRatio = Math.min(root.devicePixelRatio || 1, 2);
@@ -778,15 +792,21 @@
       return bestId;
     }
 
-    function setRotation(nextLongitude, nextLatitude) {
-      longitude = normalizeLongitude(nextLongitude);
-      latitude = clamp(nextLatitude, -70, 72);
-      draw();
+    function scheduleInteractionDraw() {
+      if (!interactionFrame) interactionFrame = root.requestAnimationFrame(draw);
     }
 
-    function setZoom(nextZoom) {
+    function setRotation(nextLongitude, nextLatitude, deferDraw = false) {
+      longitude = normalizeLongitude(nextLongitude);
+      latitude = clamp(nextLatitude, -70, 72);
+      if (deferDraw) scheduleInteractionDraw();
+      else draw();
+    }
+
+    function setZoom(nextZoom, deferDraw = false) {
       zoom = clamp(nextZoom, MIN_ZOOM, MAX_ZOOM);
-      draw();
+      if (deferDraw) scheduleInteractionDraw();
+      else draw();
     }
 
     function stopAnimation() {
@@ -883,10 +903,12 @@
     }
 
     function setDetailValue(element, value) {
-      if (element) element.textContent = value || '—';
+      if (element) element.textContent = String(value || '—').replace(/\b(?:about|around)\s+(?=\d)/gi, '~');
     }
 
     function clearLandmarkMedia() {
+      landmarkImageObserver?.disconnect();
+      landmarkImageObserver = null;
       landmarkMedia?.classList.add('hidden');
       landmarkMedia?.classList.remove('is-expanded');
       if (landmarkMediaImage) {
@@ -898,13 +920,14 @@
       landmarkMediaToggle?.setAttribute('aria-expanded', 'false');
       landmarkMediaToggle?.removeAttribute('aria-label');
       landmarkLearnMore?.removeAttribute('href');
-      if (landmarkLearnMore) landmarkLearnMore.textContent = 'Learn about this landmark';
+      if (landmarkLearnMore) landmarkLearnMore.textContent = 'Wikipedia';
       landmarkMediaSource?.removeAttribute('href');
     }
 
     function hideLandmarkMedia() {
       landmarkMediaRequestId += 1;
       clearLandmarkMedia();
+      landmarkPlaceholder?.classList.add('hidden');
     }
 
     function getApprovedLandmarkCandidates(landmarkName) {
@@ -942,6 +965,15 @@
         || (requireResponseTitle && !responseTitle)
         || typeof resolvedTitle !== 'string' || !resolvedTitle) return null;
 
+      // API text is untrusted. Only use Wikimedia images and English Wikipedia links.
+      try {
+        const image = new URL(imageUrl);
+        const source = new URL(sourceUrl);
+        if (image.protocol !== 'https:' || image.hostname !== 'upload.wikimedia.org'
+          || source.protocol !== 'https:' || source.hostname !== 'en.wikipedia.org'
+          || image.username || image.password || source.username || source.password) return null;
+      } catch (_) { return null; }
+
       return Object.freeze({ imageUrl, sourceUrl, resolvedTitle });
     }
 
@@ -971,8 +1003,18 @@
       const landmarkName = (Array.isArray(country?.landmarks) ? country.landmarks : [])
         .find(candidate => typeof candidate === 'string' && candidate.trim())?.trim();
       hideLandmarkMedia();
-      if (screen.dataset.atlasView === 'shapes') return;
       if (!landmarkName || !root.fetch || !landmarkMedia || !landmarkMediaImage) return;
+      landmarkPlaceholder?.classList.remove('hidden');
+      if (landmarkStatus) landmarkStatus.textContent = 'Loading photo…';
+      if (landmarkPlaceholderLink) {
+        landmarkPlaceholderLink.textContent = landmarkName;
+        landmarkPlaceholderLink.href = 'https://en.wikipedia.org/w/index.php?search=' + encodeURIComponent(`${landmarkName} ${country.name}`);
+      }
+      const showUnavailable = () => {
+        clearLandmarkMedia();
+        if (landmarkStatus) landmarkStatus.textContent = 'Photo unavailable · Wikipedia';
+        landmarkPlaceholder?.classList.remove('hidden');
+      };
 
       const requestId = landmarkMediaRequestId;
       const candidates = getLandmarkDirectCandidates(country);
@@ -983,7 +1025,10 @@
       const displayMedia = (media, isCurrentAttempt, onImageError) => {
         clearLandmarkMedia();
         landmarkMediaImage.onload = () => {
-          if (isCurrentAttempt() && screen.dataset.atlasView !== 'shapes') landmarkMedia.classList.remove('hidden');
+          if (isCurrentAttempt()) {
+            landmarkMedia.classList.remove('hidden');
+            landmarkPlaceholder?.classList.add('hidden');
+          }
         };
         landmarkMediaImage.onerror = () => {
           if (isCurrentAttempt()) onImageError();
@@ -992,10 +1037,25 @@
         landmarkMediaToggle?.setAttribute('aria-label', `Expand image of ${media.resolvedTitle}`);
         if (landmarkLearnMore) {
           landmarkLearnMore.href = media.sourceUrl;
-          landmarkLearnMore.textContent = `Learn about ${media.resolvedTitle}`;
+          landmarkLearnMore.textContent = media.resolvedTitle;
         }
         if (landmarkMediaSource) landmarkMediaSource.href = media.sourceUrl;
-        landmarkMediaImage.src = media.imageUrl;
+        const loadImage = () => {
+          if (!isCurrentAttempt()) return;
+          // The image stays hidden until loaded. Start its request only when
+          // the reserved placeholder approaches the viewport.
+          landmarkMediaImage.loading = 'eager';
+          landmarkMediaImage.src = media.imageUrl;
+        };
+        if (root.IntersectionObserver && landmarkPlaceholder) {
+          landmarkImageObserver = new root.IntersectionObserver(entries => {
+            if (!isCurrentAttempt() || !entries.some(entry => entry.isIntersecting)) return;
+            landmarkImageObserver?.disconnect();
+            landmarkImageObserver = null;
+            loadImage();
+          }, { rootMargin: '160px' });
+          landmarkImageObserver.observe(landmarkPlaceholder);
+        } else loadImage();
       };
 
       const beginFallback = () => {
@@ -1020,7 +1080,7 @@
               if (requestId !== landmarkMediaRequestId) return;
               const media = fallbackCandidates[fallbackCandidateIndex++];
               if (!media) {
-                clearLandmarkMedia();
+                showUnavailable();
                 return;
               }
 
@@ -1032,7 +1092,7 @@
             tryNextFallbackCandidate();
           })
           .catch(() => {
-            if (isCurrentSearchAttempt()) clearLandmarkMedia();
+            if (isCurrentSearchAttempt()) showUnavailable();
           });
       };
 
@@ -1190,9 +1250,9 @@
       huntSelectionCard?.classList.remove('is-correct', 'is-wrong');
       huntSelectionCard?.classList.add('is-empty');
       if (huntSelectedFlag) huntSelectedFlag.replaceChildren();
-      if (huntSelectionLabel) huntSelectionLabel.textContent = 'Waiting for your choice';
+      if (huntSelectionLabel) huntSelectionLabel.textContent = 'Selected';
       if (huntSelectedCountry) huntSelectedCountry.textContent = 'Tap a country';
-      if (huntSelectionFeedback) huntSelectionFeedback.textContent = 'Your selection will appear here.';
+      if (huntSelectionFeedback) huntSelectionFeedback.textContent = '';
       hideHuntGuidance();
       resetHuntFeedback();
     }
@@ -1220,7 +1280,7 @@
         huntSelectionFeedback.textContent = correct
           ? `You found ${target.name}. Next country coming up.`
           : hint
-            ? `${target.name} is about ${hint.displayDistance} ${hint.directionLabel}. Keep looking.`
+            ? `${target.name} is ~${hint.displayDistance} ${hint.directionLabel}. Keep looking.`
             : `${country.name} is not ${target.name}. Keep looking.`;
       }
       return hint;
@@ -1234,7 +1294,6 @@
       void huntCelebration.offsetWidth;
       huntCelebration.classList.add('is-active');
       root.Particles?.burst?.(globeFrame, { count: 30, duration: 1700 });
-      root.CelebrationText?.show?.(globeFrame);
     }
 
     function hideHuntCelebration() {
@@ -1253,7 +1312,7 @@
         territoryStatus.classList.toggle('hidden', !isTerritory);
       }
       const detailsSummary = details?.querySelector('summary');
-      if (detailsSummary) detailsSummary.textContent = isTerritory ? 'More territory details' : 'More country details';
+      if (detailsSummary) detailsSummary.textContent = 'Details';
       flag.replaceChildren();
       flag.classList.remove('is-flag-code');
       flag.setAttribute('aria-label', `${country.name} flag`);
@@ -1271,7 +1330,7 @@
         renderFlagCodeInto(flag, country);
       }
       name.textContent = country.name;
-      region.textContent = `${country.continent} · ${country.subregion}`;
+      region.textContent = [country.continent, country.subregion].filter((value, index, values) => value && values.indexOf(value) === index).join(' · ');
       setDetailValue(capital, country.capital);
       setDetailValue(population, country.population_hint);
       setDetailValue(languages, country.main_languages?.join(', '));
@@ -1283,11 +1342,17 @@
       );
       setDetailValue(landmark, country.landmarks?.[0]);
       setDetailValue(fact, country.fun_facts?.[0] || country.built_in_clue);
-      if (options.landmarkMedia === false) hideLandmarkMedia();
-      else loadLandmarkMedia(country);
-      details.open = !huntActive;
-      if (document.body?.classList?.contains('design-review') && screen.dataset.atlasView === 'shapes') details.open = false;
+      hideLandmarkMedia();
+      pendingLandmarkCountry = options.landmarkMedia === false ? null : country;
+      details.open = false;
     }
+
+    details?.addEventListener('toggle', () => {
+      if (!details.open || !pendingLandmarkCountry) return;
+      const country = pendingLandmarkCountry;
+      pendingLandmarkCountry = null;
+      loadLandmarkMedia(country);
+    });
 
     // Hunt lifecycle signal for the Atlas mode controller. Guarded so harnesses
     // without event support keep working.
@@ -1310,7 +1375,7 @@
     function renderCountry(countryId, options = {}) {
       const country = cardsById.get(Number(countryId));
       if (!country) return;
-      renderCountryCard(country, { landmarkMedia: options.source !== 'atlas-shapes' });
+      renderCountryCard(country);
       dispatchCountryEvent(country, options.source || 'render');
     }
 
@@ -1418,8 +1483,13 @@
 
     function chooseNextHuntTarget() {
       if (!huntActive || !cards.length) return;
-      const candidates = cards.filter(country => country.id !== lastHuntTargetId);
-      const next = candidates[Math.floor(Math.random() * candidates.length)] || cards[0];
+      const options = root.GeoWars?.activities?.getHuntOptions?.();
+      const filtered = options && root.GeoWarsDifficulty
+        ? root.GeoWarsDifficulty.buildLevelDeck(options.level, cards, options.continent)
+        : cards;
+      const pool = filtered.length ? filtered : cards;
+      const candidates = pool.filter(country => country.id !== lastHuntTargetId);
+      const next = candidates[Math.floor(Math.random() * candidates.length)] || pool[0];
       huntTargetId = next.id;
       lastHuntTargetId = next.id;
       selectedCountryId = null;
@@ -1940,7 +2010,7 @@
       if (pointers.size >= 2) {
         const [first, second] = [...pointers.values()];
         const nextDistance = Math.hypot(second.x - first.x, second.y - first.y);
-        if (pinchDistance > 0) setZoom(pinchZoom * nextDistance / pinchDistance);
+        if (pinchDistance > 0) setZoom(pinchZoom * nextDistance / pinchDistance, true);
         dragDistance = Math.max(dragDistance, 12);
         return;
       }
@@ -1955,7 +2025,8 @@
         const dragScale = Math.sqrt(zoom);
         setRotation(
           longitude - deltaX * 0.38 / dragScale,
-          latitude + deltaY * 0.28 / dragScale
+          latitude + deltaY * 0.28 / dragScale,
+          true
         );
         lastX = event.clientX;
         lastY = event.clientY;
@@ -1995,6 +2066,8 @@
 
       if (!pointers.size) {
         dragging = false;
+        // Flush the final view and restore its hit map before the next tap.
+        draw();
         primaryPointerId = null;
         pinchDistance = 0;
         globeFrame.classList.remove('is-dragging');
@@ -2031,7 +2104,7 @@
     canvas.addEventListener('wheel', event => {
       if (!countries.length) return;
       event.preventDefault();
-      setZoom(zoom * (event.deltaY < 0 ? 1.14 : 1 / 1.14));
+      setZoom(zoom * (event.deltaY < 0 ? 1.14 : 1 / 1.14), true);
     }, { passive: false });
     canvas.addEventListener('keydown', event => {
       const rotation = {
@@ -2086,6 +2159,8 @@
       startHunt,
       endHunt,
       dismissHuntSummary,
+      pauseHunt: pauseHuntClock,
+      resumeHunt: resumeHuntClock,
       submitCountry: handleCountryActivation,
       getState: () => ({
         opened,

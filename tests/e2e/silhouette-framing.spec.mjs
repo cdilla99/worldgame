@@ -7,8 +7,8 @@ test('previously distorted outlines stay readable in the Atlas, quiz and Daily r
   for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
     await page.setViewportSize(viewport);
     await page.goto('/');
-    await page.locator('#btn-mode-explore').click();
-    await page.locator('#btn-atlas-shapes').click();
+    await page.evaluate(() => GeoWars.activities.explore('globe'));
+    await page.evaluate(() => GeoWars.activities.explore('shapes'));
     for (const country of ['Argentina', 'Cuba', 'Senegal', 'Barbados', 'Fiji', 'Samoa']) {
       await page.locator('#atlas-shape-country').selectOption({ label: country });
       const svg = page.locator('#atlas-shape-art svg');

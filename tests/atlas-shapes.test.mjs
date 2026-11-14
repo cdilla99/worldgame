@@ -171,7 +171,7 @@ function createHarness(randomValues = [0]) {
 
 test('Shapes toolbar markup has the requested controls and unique IDs', () => {
   assert.match(indexHtml, /class="atlas-shape-toolbar"[\s\S]*Explore a country outline/);
-  assert.match(indexHtml, /id="atlas-shape-status"[^>]*>Preview mode is on - click to take over\.<\/p>/);
+  assert.match(indexHtml, /id="atlas-shape-status"[^>]*>Preview playing\.<\/p>/);
   assert.equal((indexHtml.match(/id="btn-atlas-shape-previous"/g) ?? []).length, 1);
   assert.equal((indexHtml.match(/id="atlas-shape-country"/g) ?? []).length, 1);
   assert.equal((indexHtml.match(/id="btn-atlas-shape-next"/g) ?? []).length, 1);
@@ -207,7 +207,7 @@ test('opening Shapes selects a random country and starts one five-second demo ti
   assert.equal(harness.atlas.getState().countryId, 2, 'demo opens on the default country before rotating');
   assert.equal(harness.timers.size, 1);
   assert.equal([...harness.timers.values()][0].milliseconds, 5000);
-  assert.equal(harness.shapeStatus.textContent, 'Preview mode is on - click to take over.');
+  assert.equal(harness.shapeStatus.textContent, 'Preview playing.');
 });
 
 test('each demo transition changes country and avoids consecutive repeats', () => {
@@ -229,7 +229,7 @@ test('first Shapes-workspace interaction stops demo mode and updates status', ()
   assert.equal(harness.atlas.getState().demoActive, false);
   assert.equal(harness.timers.size, 0);
   assert.equal(harness.cleared.length, 1);
-  assert.equal(harness.shapeStatus.textContent, 'Preview paused - use the controls to browse.');
+  assert.equal(harness.shapeStatus.textContent, 'Preview paused.');
 });
 
 test('selector, Previous/Next, and Shape Quiz controls all take over from demo mode', () => {

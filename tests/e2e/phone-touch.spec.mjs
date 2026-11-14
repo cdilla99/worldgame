@@ -7,7 +7,7 @@ for (const profile of ['iPhone 13', 'Pixel 7']) {
     try {
       await page.route(/^https:\/\//, route => route.abort());
       await page.goto('/');
-      await page.locator('#btn-mode-explore').tap();
+      await page.locator('#btn-explore-hunt').tap();
       await expect.poll(() => page.evaluate(() => window.GeoWars.explorer.getState().geometryReady)).toBe(true);
       const canvas = page.locator('#explorer-globe-canvas');
       const box = await canvas.boundingBox();
@@ -34,7 +34,8 @@ for (const profile of ['iPhone 13', 'Pixel 7']) {
       await expect(page.locator('#explorer-country-name')).toHaveText('Japan');
       await page.locator('#country-sheet-toggle').tap();
       await expect(page.locator('#country-sheet-toggle')).toHaveAttribute('aria-expanded', 'true');
-      await page.locator('#btn-open-worldle').tap();
+      await page.locator('#btn-activity-home').tap();
+      await page.locator('#btn-activity-daily').tap();
       const input = page.locator('#worldle-guess-input');
       await input.fill('can');
       await expect(page.locator('#worldle-suggestions')).toBeVisible();

@@ -111,7 +111,7 @@
         root.clearInterval?.(demoTimer);
         demoTimer = null;
       }
-      if (wasActive) setShapeStatus('Preview paused - use the controls to browse.');
+      if (wasActive) setShapeStatus('Preview paused.');
     }
 
     function selectRandomCountry() {
@@ -125,11 +125,11 @@
       stopDemoMode();
       if (cards.length < 2 || typeof root.setInterval !== 'function') {
         syncCountry({ render: true });
-        setShapeStatus('Use the controls to browse.');
+        setShapeStatus('Choose a country.');
         return;
       }
       demoActive = true;
-      setShapeStatus('Preview mode is on - click to take over.');
+      setShapeStatus('Preview playing.');
       // Open on the default country (Canada) so it is the visible default, then
       // begin rotating through random countries on each timer tick.
       syncCountry({ render: true });
@@ -217,7 +217,7 @@
         var borderCount = Array.isArray(card.neighbors) ? card.neighbors.length : 0;
         shapeBorders.textContent = borderCount ? String(borderCount) : 'None';
       }
-      if (shapeArea) shapeArea.textContent = card.area_hint || 'Area unavailable';
+      if (shapeArea) shapeArea.textContent = (card.area_hint || 'Area unavailable').replace(/\b(?:about|around)\s+(?=\d)/gi, '~');
       // Visible facts come from the shared rich card (flag, capital, population,
       // languages, currency, fun fact, landmark, economics — formatted once).
       // Only populate it while the Shapes view owns the panel, so the initial
@@ -271,7 +271,8 @@
     var HUNT_SWITCH_MESSAGES = {
       explore: 'Switching to Explore will end your current Country Hunt.',
       shapes: 'Switching to Shapes will end your current Country Hunt.',
-      daily: 'Opening the Daily Puzzle will end your current Country Hunt.'
+      daily: 'Opening the Daily Puzzle will end your current Country Hunt.',
+      home: 'Returning to all activities will end your current Country Hunt.'
     };
 
     // Request a hunt switch for a specific target. Stores the pending switch and
@@ -283,7 +284,7 @@
         announce('End Country Hunt before switching views.');
         return;
       }
-      var normalizedTarget = target === 'explore' || target === 'shapes' || target === 'daily'
+      var normalizedTarget = target === 'explore' || target === 'shapes' || target === 'daily' || target === 'home'
         ? target
         : 'explore';
       modeState.pendingSwitch = {
@@ -322,6 +323,8 @@
         openDailyPuzzle({ opener: pending.opener, confirmedEndHunt: true });
       } else if (target === 'shapes') {
         setView('shapes', { focus: true, confirmedEndHunt: true });
+      } else if (target === 'home') {
+        setMode('challenge', { focus: true, confirmedEndHunt: true });
       } else {
         // target === 'explore': return to Explore with the remembered view.
         setMode('explore', { focus: true, confirmedEndHunt: true });
@@ -642,7 +645,7 @@
     // First_Load: Explore with Globe (or Shapes if the markup preset it), and
     // Challenge_Panel unavailable.
     setView(screen.dataset.atlasView === 'shapes' ? 'shapes' : 'globe', { announce: false });
-    if (root.matchMedia?.('(max-width: 767px)').matches) {
+    if (root.matchMedia?.('(max-width: 767px), (max-width: 960px) and (max-height: 500px) and (pointer: coarse)').matches) {
       setMode('challenge', { focus: false, announce: false });
     }
     if (isHuntActive()) handleExplorerModeEvent({ mode: 'hunt', summary: false });
@@ -673,6 +676,10 @@
         return setMode('explore', Object.assign({ focus: true }, options));
       },
       showChallenge: function (options) {
+        return setMode('challenge', Object.assign({ focus: true }, options));
+      },
+      showHome: function (options) {
+        if (isHuntActive()) { requestHuntSwitch('home', options?.opener); return false; }
         return setMode('challenge', Object.assign({ focus: true }, options));
       },
       openDailyPuzzle: openDailyPuzzle,

@@ -172,7 +172,7 @@ function createHarness(input) {
     main_languages: ['Fixture'],
     neighbors: []
   };
-  const sandbox = { window: root, document, countryCards: [country], ResizeObserver, CustomEvent, console };
+  const sandbox = { window: root, document, countryCards: [country], ResizeObserver, CustomEvent, console, URL };
   vm.runInNewContext(sourceWithApprovedCandidates(input), sandbox, { filename: 'globe-explorer.js' });
   return {
     requestedTitles,
@@ -183,7 +183,12 @@ function createHarness(input) {
     toggle: getElement('explorer-landmark-media-toggle'),
     learnMore: getElement('explorer-landmark-learn-more'),
     source: getElement('explorer-landmark-media-source'),
-    select: () => root.GeoWars.explorer.selectCountry(country.id, { animate: false })
+    select: () => {
+      root.GeoWars.explorer.selectCountry(country.id, { animate: false });
+      const details = getElement('explorer-more-details');
+      details.open = true;
+      (details.listeners.get('toggle') || []).forEach(listener => listener({ type: 'toggle' }));
+    }
   };
 }
 
@@ -219,8 +224,8 @@ function candidate(title, response, imageOutcome = 'load', resolvedTitle = title
     response,
     imageOutcome,
     responseTitle: resolvedTitle,
-    imageUrl: `https://images.test/${encodeURIComponent(title)}-${imageOutcome === 'error' ? 'error-image' : 'load-image'}.jpg`,
-    sourceUrl: `https://source.test/wiki/${encodeURIComponent(resolvedTitle.replace(/\s+/g, '_'))}`
+    imageUrl: `https://upload.wikimedia.org/test-fixtures/${encodeURIComponent(title)}-${imageOutcome === 'error' ? 'error-image' : 'load-image'}.jpg`,
+    sourceUrl: `https://en.wikipedia.org/wiki/wiki/${encodeURIComponent(resolvedTitle.replace(/\s+/g, '_'))}`
   };
 }
 
@@ -399,7 +404,7 @@ const fallbackCases = [
           first: searchPage({ title: 'Meroe pyramids', index: 1 }),
           second: searchPage({
             title: 'Pyramids of Meroë',
-            imageUrl: 'https://images.test/meroe-pyramids.jpg',
+            imageUrl: 'https://upload.wikimedia.org/test-fixtures/meroe-pyramids.jpg',
             sourceUrl: 'https://en.wikipedia.org/wiki/Pyramids_of_Meroë',
             index: 2,
             canonical: true
@@ -407,7 +412,7 @@ const fallbackCases = [
         } }
       },
       expectedTitle: 'Pyramids of Meroë',
-      expectedImage: 'https://images.test/meroe-pyramids.jpg',
+      expectedImage: 'https://upload.wikimedia.org/test-fixtures/meroe-pyramids.jpg',
       expectedSource: 'https://en.wikipedia.org/wiki/Pyramids_of_Meroë'
     }
   },
@@ -420,14 +425,14 @@ const fallbackCases = [
       candidates: [candidate('Descriptive landmark', 'http-error')],
       fallbackResponse: {
         query: { pages: {
-          first: searchPage({ title: 'First result', imageUrl: '', sourceUrl: 'https://source.test/first', index: 1 }),
-          second: searchPage({ title: 'Second result', imageUrl: 'https://images.test/second.jpg', sourceUrl: '', index: 2 }),
-          third: searchPage({ title: 'First usable result', imageUrl: 'https://images.test/usable.jpg', sourceUrl: 'https://source.test/usable', index: 3 })
+          first: searchPage({ title: 'First result', imageUrl: '', sourceUrl: 'https://en.wikipedia.org/wiki/first', index: 1 }),
+          second: searchPage({ title: 'Second result', imageUrl: 'https://upload.wikimedia.org/test-fixtures/second.jpg', sourceUrl: '', index: 2 }),
+          third: searchPage({ title: 'First usable result', imageUrl: 'https://upload.wikimedia.org/test-fixtures/usable.jpg', sourceUrl: 'https://en.wikipedia.org/wiki/usable', index: 3 })
         } }
       },
       expectedTitle: 'First usable result',
-      expectedImage: 'https://images.test/usable.jpg',
-      expectedSource: 'https://source.test/usable'
+      expectedImage: 'https://upload.wikimedia.org/test-fixtures/usable.jpg',
+      expectedSource: 'https://en.wikipedia.org/wiki/usable'
     }
   },
   {
@@ -439,12 +444,12 @@ const fallbackCases = [
       candidates: [candidate('Image fallback landmark', 'success', 'error')],
       fallbackResponse: {
         query: { pages: {
-          usable: searchPage({ title: 'Fallback image article', imageUrl: 'https://images.test/fallback.jpg', sourceUrl: 'https://source.test/fallback', index: 1 })
+          usable: searchPage({ title: 'Fallback image article', imageUrl: 'https://upload.wikimedia.org/test-fixtures/fallback.jpg', sourceUrl: 'https://en.wikipedia.org/wiki/fallback', index: 1 })
         } }
       },
       expectedTitle: 'Fallback image article',
-      expectedImage: 'https://images.test/fallback.jpg',
-      expectedSource: 'https://source.test/fallback'
+      expectedImage: 'https://upload.wikimedia.org/test-fixtures/fallback.jpg',
+      expectedSource: 'https://en.wikipedia.org/wiki/fallback'
     }
   }
 ];
@@ -470,9 +475,9 @@ const noSuitableFallback = createHarness({
   candidates: [candidate('Unavailable landmark', 'missing-thumbnail')],
   fallbackResponse: {
     query: { pages: {
-      noImage: searchPage({ title: 'No image', sourceUrl: 'https://source.test/no-image', index: 1 }),
-      noSource: searchPage({ title: 'No source', imageUrl: 'https://images.test/no-source.jpg', index: 2 }),
-      noTitle: searchPage({ title: '', imageUrl: 'https://images.test/no-title.jpg', sourceUrl: 'https://source.test/no-title', index: 3 })
+      noImage: searchPage({ title: 'No image', sourceUrl: 'https://en.wikipedia.org/wiki/no-image', index: 1 }),
+      noSource: searchPage({ title: 'No source', imageUrl: 'https://upload.wikimedia.org/test-fixtures/no-source.jpg', index: 2 }),
+      noTitle: searchPage({ title: '', imageUrl: 'https://upload.wikimedia.org/test-fixtures/no-title.jpg', sourceUrl: 'https://en.wikipedia.org/wiki/no-title', index: 3 })
     } }
   }
 });
@@ -489,8 +494,8 @@ const fallbackImageFailure = createHarness({
   fallbackResponse: {
     query: { pages: { broken: searchPage({
       title: 'Broken fallback article',
-      imageUrl: 'https://images.test/fallback-error-image.jpg',
-      sourceUrl: 'https://source.test/broken-fallback',
+      imageUrl: 'https://upload.wikimedia.org/test-fixtures/fallback-error-image.jpg',
+      sourceUrl: 'https://en.wikipedia.org/wiki/broken-fallback',
       index: 1
     }) } }
   }
@@ -507,7 +512,7 @@ const directSuccess = createHarness({
   candidates: [candidate('Nile River', 'success')],
   fallbackResponse: {
     query: { pages: { shouldNotBeUsed: searchPage({
-      title: 'Should not be used', imageUrl: 'https://images.test/not-used.jpg', sourceUrl: 'https://source.test/not-used', index: 1
+      title: 'Should not be used', imageUrl: 'https://upload.wikimedia.org/test-fixtures/not-used.jpg', sourceUrl: 'https://en.wikipedia.org/wiki/not-used', index: 1
     }) } }
   }
 });
@@ -580,14 +585,14 @@ const fallbackSecondImageHarness = createHarness({
     query: { pages: {
       first: searchPage({
         title: 'First fallback result',
-        imageUrl: 'https://images.test/first-error-image.jpg',
-        sourceUrl: 'https://source.test/first-fallback',
+        imageUrl: 'https://upload.wikimedia.org/test-fixtures/first-error-image.jpg',
+        sourceUrl: 'https://en.wikipedia.org/wiki/first-fallback',
         index: 1
       }),
       second: searchPage({
         title: 'Second fallback result',
-        imageUrl: 'https://images.test/second-load-image.jpg',
-        sourceUrl: 'https://source.test/second-fallback',
+        imageUrl: 'https://upload.wikimedia.org/test-fixtures/second-load-image.jpg',
+        sourceUrl: 'https://en.wikipedia.org/wiki/second-fallback',
         index: 2
       })
     } }
@@ -596,7 +601,7 @@ const fallbackSecondImageHarness = createHarness({
 fallbackSecondImageHarness.select();
 await driveImageEvents(fallbackSecondImageHarness);
 assertTargetedSearch(fallbackSecondImageHarness, 'Fallback landmark Fallbackia');
-assert.equal(fallbackSecondImageHarness.image.src, 'https://images.test/second-load-image.jpg');
+assert.equal(fallbackSecondImageHarness.image.src, 'https://upload.wikimedia.org/test-fixtures/second-load-image.jpg');
 assert.equal(fallbackSecondImageHarness.image.alt, 'Second fallback result in Fallbackia');
 assert.equal(fallbackSecondImageHarness.figure.classList.contains('hidden'), false);
 console.log('Brazil/Sudan aliases, secondary direct landmarks, ordered fallback image retry, direct fast path, and stale-event fixtures passed offline.');

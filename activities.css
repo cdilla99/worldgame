@@ -1,0 +1,137 @@
+/* Activity-first navigation. Shared engines keep their existing state and APIs. */
+body.activity-navigation .app {
+  width: 100%; max-width: 1480px; margin-inline: auto;
+  padding: clamp(16px, 2.4vw, 36px) clamp(16px, 2.4vw, 36px) 32px;
+}
+body.activity-navigation .atlas-shell { width: 100%; max-width: none; }
+body.activity-navigation .atlas-header { grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; min-height: 72px; padding: 0 0 20px; }
+body.activity-navigation .atlas-header .explorer-home-logo { width: clamp(150px, 16vw, 210px); }
+body.activity-navigation .atlas-utility-menu { grid-column: auto; grid-row: auto; }
+body.activity-navigation .atlas-primary-nav,
+body.activity-navigation .atlas-explore-switch { display: none !important; }
+.activity-signin { display: flex; align-items: center; justify-content: center; gap: 9px; min-height: 44px; padding: 10px 15px; border: 1px solid #4c4667; border-radius: 11px; background: #201a35; color: #f3f0ff; font: 600 0.82rem/1.3 var(--font-body); cursor: pointer; }
+.activity-signin svg { width: 18px; height: 18px; flex: none; }
+#header-google-label { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.activity-signin:hover { background: #302347; border-color: #a98eff; }
+.activity-signin.is-signed-in { background: #142a24; border-color: #366554; }
+body.activity-navigation #atlas-challenge-panel { gap: 20px; padding: 0; }
+body.activity-navigation #atlas-challenge-panel .atlas-challenge-heading { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+body.activity-navigation #atlas-challenge-panel .atlas-challenge-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 24px; }
+body.activity-navigation #atlas-challenge-panel .atlas-challenge-card { display: flex; flex-direction: column; order: 0; gap: 16px; padding: clamp(20px, 2vw, 28px); border-radius: 22px; border: 1px solid #343142; background: #12121c; box-shadow: inset 0 1px 0 #ffffff05; }
+body.activity-navigation #atlas-challenge-panel .atlas-challenge-card h3 { margin: 0; font-size: clamp(1.25rem, 1.6vw, 1.65rem); letter-spacing: -0.035em; }
+body.activity-navigation #atlas-challenge-panel .atlas-challenge-card > p { display: block; min-height: 1.5em; color: #b5b5cb; font-size: 0.9rem; line-height: 1.5; }
+body.activity-navigation #atlas-challenge-panel .atlas-challenge-stage { display: grid; flex: none; place-items: center; height: clamp(230px, 36dvh, 400px); min-height: 0; padding: 16px; border: 1px solid #2d293b; border-radius: 16px; background: radial-gradient(ellipse at center, #6c3bff2b, transparent 70%), #0b0b13; }
+body.activity-navigation #atlas-challenge-panel .atlas-hunt-preview { width: min(80%, 340px, 32dvh); height: auto; aspect-ratio: 1; filter: drop-shadow(0 0 26px #6c3bff26); }
+body.activity-navigation #activity-shape-preview .atlas-quiz-art { width: min(80%, 370px); height: 85%; }
+body.activity-navigation #activity-shape-preview .atlas-quiz-preview { max-width: 100%; height: 100%; }
+body.activity-navigation #atlas-challenge-quiz-slot { display: none; }
+.activity-paths { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: auto; }
+body.activity-navigation #atlas-challenge-panel .activity-paths button { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; min-width: 0; min-height: 70px; margin: 0; padding: 12px 8px; border-radius: 13px; font: inherit; text-transform: none; letter-spacing: 0; cursor: pointer; }
+.activity-explore-path { border: 1px solid #534b6c; background: #201a2f; color: #f0eafa; }
+.activity-explore-path:hover { background: #302441; border-color: #a68add; }
+.activity-paths strong { font-size: 0.95rem; font-weight: 700; }
+body.activity-navigation .activity-paths button:disabled { opacity: 0.48; cursor: default; }
+body.activity-navigation #atlas-challenge-panel .activity-paths .cta { grid-column: auto; background: var(--color-primary, #6c3bff); border: 1px solid #8c60ff; color: #fff; }
+.activity-paths small { font-size: 0.72rem; font-weight: 450; line-height: 1.4; opacity: 0.8; }
+.activity-daily { display: flex; align-items: center; justify-content: space-between; gap: 20px; width: 100%; padding: 18px 22px; border: 1px solid #302c3d; border-radius: 16px; background: #111019; color: #efecf8; font: inherit; text-align: left; cursor: pointer; }
+.activity-daily:hover { border-color: #86719e; background: #191522; }
+.activity-daily strong, .activity-daily small { display: block; }
+.activity-daily strong { font-size: 0.95rem; }
+.activity-daily small { margin-top: 5px; color: #aaa5bd; font-size: 0.8rem; line-height: 1.5; }
+.activity-context:not([hidden]) { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 22px; padding: 0 0 16px; border-bottom: 1px solid #292532; }
+.activity-back { border: 0; background: transparent; color: #c5badc; padding: 8px 0; min-height: 44px; font: 600 0.8rem/1.4 var(--font-body); cursor: pointer; }
+.activity-section-copy strong, .activity-section-copy span { display: block; }
+.activity-section-copy strong { color: #f4efff; font-size: 1.05rem; }
+.activity-section-copy span { margin-top: 4px; color: #a9a3bc; font-size: 0.75rem; }
+.activity-section-actions { display: flex; align-items: center; gap: 7px; }
+.activity-section-actions button { min-height: 44px; padding: 9px 14px; border: 1px solid #393343; border-radius: 10px; background: #17121f; color: #d0c9e2; font: 600 0.8rem/1.3 var(--font-body); cursor: pointer; }
+.activity-section-actions button[aria-pressed='true'] { background: #332151; border-color: #9a74da; color: #fff; }
+.activity-difficulty { white-space: nowrap; }
+body.activity-navigation .game-run-context { display: none; }
+body.activity-navigation .game-utility { grid-template-columns: minmax(0, 1fr) auto auto; }
+#btn-game-difficulty { width: auto; min-width: 120px; min-height: 44px; }
+body.activity-navigation #game { max-width: none; }
+.activity-settings-dialog { width: min(540px, calc(100vw - 28px)); max-height: calc(100dvh - 32px); margin: auto; padding: 24px; border: 1px solid #51445f; border-radius: 20px; background: #15111e; color: #eee7fa; overflow-y: auto; box-shadow: 0 24px 90px #0009; }
+.activity-settings-dialog::backdrop { background: #06030dba; backdrop-filter: blur(7px); }
+.activity-settings-dialog > header { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+.activity-settings-dialog header p { margin: 0 0 6px; color: #c5afea; font-size: 0.75rem; }
+.activity-settings-dialog h2 { margin: 0; font-size: 1.3rem; line-height: 1.3; }
+.activity-settings-dialog header button { flex: none; width: 44px; height: 44px; border: 1px solid #51445f; border-radius: 10px; background: #20182c; color: #eee7fa; font-size: 1.4rem; cursor: pointer; }
+#activity-settings-description { margin: 18px 0; color: #b8adc9; font-size: 0.85rem; line-height: 1.5; }
+#activity-settings-slot #atlas-menu-setup-slot { display: grid; gap: 22px; }
+#activity-settings-slot .mode-select, #activity-settings-slot .game-setup-summary { display: none; }
+#activity-settings-slot .setup-group { margin: 0; padding: 0; border: 0; min-width: 0; }
+#activity-settings-slot legend { margin-bottom: 10px; color: #c6b9d9; font-size: 0.8rem; }
+#activity-settings-slot .difficulty-grid, #activity-settings-slot .region-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+#activity-settings-slot .diff-btn { min-width: 0; min-height: 46px; border: 1px solid #4d405b; border-radius: 10px; background: #21192e; color: #e0d8ee; padding: 10px 8px; font-size: 0.82rem; cursor: pointer; }
+#activity-settings-slot .diff-btn em { display: none; }
+#activity-settings-slot .diff-btn.active { background: #4b2a7d; border-color: #ad86e1; color: #fff; }
+#activity-settings-slot .game-setup, #activity-settings-slot .game-setup-content { border: 0; background: transparent; padding: 0; margin: 0; }
+.activity-settings-actions { display: grid; grid-template-columns: 1fr 1.6fr; gap: 10px; margin-top: 24px; }
+.activity-settings-actions > button { min-height: 46px; border-radius: 11px; padding: 10px; cursor: pointer; }
+.activity-settings-actions > button:first-child { border: 1px solid #4d405b; background: #21192e; color: #e0d8ee; }
+body.activity-navigation button:focus-visible { outline: 3px solid #c5a5ff; outline-offset: 3px; }
+body.activity-navigation .results-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.challenge-next-difficulty { min-width: 0; margin: 20px 0; padding: 0; border: 0; text-align: left; }
+.challenge-next-difficulty[hidden] { display: none; }
+.challenge-next-difficulty legend { margin-bottom: 12px; color: #c6bfd8; font: 600 0.85rem/1.4 var(--font-body); }
+.next-difficulty-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.next-difficulty-options button { min-width: 0; min-height: 46px; padding: 10px 6px; border: 1px solid #4a425b; border-radius: 10px; background: #15121f; color: #e7e0f4; font: 600 0.8rem/1.3 var(--font-body); cursor: pointer; }
+.next-difficulty-options button:hover:not(:disabled) { border-color: #b597f5; background: #2a203c; }
+.next-difficulty-options button[aria-pressed='true'] { border-color: #ad8dff; background: #392365; color: #fff; box-shadow: inset 0 0 0 1px #ad8dff; }
+.next-difficulty-options button:disabled { opacity: 0.4; cursor: default; }
+@media (max-width: 600px) {
+  body.activity-navigation .results-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .next-difficulty-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+  body.activity-navigation .app { padding: env(safe-area-inset-top, 0px) 16px 24px; }
+  body.activity-navigation .atlas-header { min-height: 68px; padding-bottom: 10px; gap: 7px; }
+  body.activity-navigation .atlas-header .explorer-home-logo { width: clamp(120px, 36vw, 160px); }
+  body.activity-navigation #atlas-challenge-panel .atlas-challenge-grid { grid-template-columns: 1fr; gap: 16px; }
+  body.activity-navigation #atlas-challenge-panel .atlas-challenge-card { gap: 12px; padding: 18px; }
+  body.activity-navigation #atlas-challenge-panel .atlas-challenge-stage { height: clamp(130px, 20svh, 190px); padding: 12px; }
+  body.activity-navigation #atlas-challenge-panel .atlas-hunt-preview { width: min(75%, 150px, max(100px, 16svh)); }
+  body.activity-navigation #activity-shape-preview .atlas-quiz-art { width: 66%; height: 90%; }
+  body.activity-navigation #atlas-challenge-panel .activity-paths button { min-height: 58px; padding: 8px; }
+  .activity-paths { gap: 8px; }
+  .activity-paths strong { font-size: 0.85rem; }
+  .activity-paths small { font-size: 0.65rem; }
+  .activity-daily { padding: 15px 18px; }
+  .activity-context:not([hidden]) { grid-template-columns: auto minmax(0, 1fr); gap: 6px 16px; padding-bottom: 12px; }
+  .activity-section-actions { grid-column: 1 / -1; }
+  .activity-section-actions button { flex: 1; padding: 9px 8px; font-size: 0.75rem; }
+  .activity-section-copy strong { font-size: 0.95rem; }
+  .activity-signin { padding: 9px; font-size: 0.75rem; }
+  body.activity-navigation .game-utility-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+  #btn-game-difficulty { font-size: 0.72rem; padding: 8px; }
+  body.activity-navigation .game-stage { padding: 16px; }
+  body.activity-navigation .silhouette-box { height: clamp(160px, 28svh, 260px); min-height: 160px; }
+}
+@media (max-width: 520px) {
+  .activity-signin.is-signed-in #header-google-label { max-width: 60px; }
+  body.activity-navigation .atlas-utility-menu > summary { padding: 9px; min-width: 44px; }
+  body.activity-navigation .atlas-utility-menu > summary > span { display: none; }
+  .activity-settings-dialog { padding: 18px; }
+}
+@media (max-width: 1023px) {
+  body.activity-navigation .game-utility { grid-template-areas: 'brand difficulty' 'hud hud'; grid-template-columns: minmax(0, 1fr) auto; }
+  body.activity-navigation .game-brand-nav { grid-area: brand; }
+  body.activity-navigation #btn-game-difficulty { grid-area: difficulty; width: auto; }
+  body.activity-navigation .game-hud { grid-area: hud; justify-content: space-between; min-width: 0; }
+}
+@media (max-height: 500px) and (min-width: 600px) {
+  body.activity-navigation .app { padding: 10px 16px 20px; }
+  body.activity-navigation .atlas-header { min-height: 48px; padding-bottom: 10px; }
+  body.activity-navigation #atlas-challenge-panel .atlas-challenge-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  body.activity-navigation #atlas-challenge-panel .atlas-challenge-card { padding: 14px; gap: 10px; }
+  body.activity-navigation #atlas-challenge-panel .atlas-challenge-stage { height: 120px; }
+  body.activity-navigation #atlas-challenge-panel .atlas-hunt-preview { width: 115px; }
+  body.activity-navigation #atlas-challenge-panel .activity-paths button { min-height: 50px; }
+  body.activity-navigation #game { grid-template-areas: 'utility utility' 'stage panel'; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+  body.activity-navigation #game .game-stage { min-height: 0; padding: 14px; }
+  body.activity-navigation #game .game-stage-title { font-size: 1.1rem; }
+  body.activity-navigation #game .silhouette-box { height: 150px; min-height: 150px; }
+  body.activity-navigation #game .answer-interaction-panel { min-height: 0; padding: 14px; }
+  body.activity-navigation #game:has(.has-feedback) { grid-template-areas: 'utility' 'stage' 'panel'; grid-template-columns: 1fr; }
+}

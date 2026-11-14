@@ -83,6 +83,7 @@ body.is-explorer-active[data-atlas-view='shapes'] .app {
 }
 
 .atlas-header .explorer-brand { justify-self: start; }
+.atlas-header:has(.atlas-utility-menu[open]) { z-index: 90; }
 .atlas-header .explorer-home-logo { width: clamp(176px, 15vw, 215px); }
 
 
@@ -341,7 +342,15 @@ body.is-explorer-active[data-atlas-view='shapes'] .app {
   background: #12221e;
   box-shadow: 0 24px 60px rgba(20, 32, 29, 0.28);
   color: #eef4f1;
+  max-height: calc(100dvh - 110px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
+
+.atlas-utility-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.atlas-utility-panel-heading strong { font-size: 0.85rem; }
+#btn-close-player-panel { display: grid; place-items: center; flex: none; width: 44px; height: 44px; padding: 0; border: 1px solid var(--theme-line, #39394a); border-radius: 12px; background: transparent; color: inherit; font: 400 1.6rem/1 sans-serif; cursor: pointer; }
+#btn-close-player-panel:hover { background: rgba(255, 255, 255, 0.08); }
 
 .atlas-player-slot .player-context {
   width: 100%;
@@ -657,8 +666,7 @@ body.is-explorer-active[data-atlas-view='shapes'] .app {
    screen; hide it while the card lives in the Shapes view. */
 .atlas-shape-info-slot .explorer-focus-country { display: none; }
 
-/* A late Globe image response must never add media height to Shapes. */
-.atlas-shape-info-slot #explorer-landmark-media { display: none !important; }
+/* Landmark photos share the reserved thumbnail layout in both Explore views. */
 
 @media (max-width: 900px) {
   .atlas-shape-study { grid-template-columns: minmax(0, 1fr); }

@@ -68,10 +68,10 @@ npm test
 npm run build
 ```
 
-For browser-facing changes, install Chromium once and run the Explorer smoke test:
+For browser-facing changes, install Chromium and WebKit once and run the browser suite, including the iPhone viewport checks:
 
 ```text
-npx playwright install chromium
+npx playwright install chromium webkit
 npm run test:e2e
 ```
 
@@ -86,7 +86,7 @@ Browser reports are written to `playwright-report/` and `test-results/`. Visual 
 ## GitHub Actions
 
 - **CI** runs type checking, Node tests, and the Vite production build on pushes and pull requests.
-- **Browser smoke** installs pinned Playwright Chromium, tests Explorer economics behavior, and uploads failure reports for 14 days.
+- **Browser smoke** installs pinned Playwright Chromium and WebKit, checks browser flows and iPhone layouts, and uploads failure reports for 14 days.
 - **Lighthouse** records initially nonblocking performance, accessibility, best-practices, and SEO baselines on pull requests.
 - **Supabase migrations** runs only for Supabase/workflow changes and validates migrations, lint, RLS pgTAP tests, and local reset behavior using Docker-backed Supabase services.
 

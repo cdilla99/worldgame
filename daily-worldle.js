@@ -61,7 +61,7 @@
     const store = getStore();
     if (!store) return {};
     try {
-      const raw = store.getItem(STORAGE_KEY);
+      const raw = store.getItem(root.GeoWarsProfiles ? root.GeoWarsProfiles.storageKey(STORAGE_KEY) : STORAGE_KEY);
       if (!raw) return {};
       const parsed = JSON.parse(raw);
       return parsed && typeof parsed === 'object' ? parsed : {};
@@ -74,7 +74,8 @@
     const store = getStore();
     if (!store) return false;
     try {
-      store.setItem(STORAGE_KEY, JSON.stringify(state || {}));
+      store.setItem(root.GeoWarsProfiles ? root.GeoWarsProfiles.storageKey(STORAGE_KEY) : STORAGE_KEY, JSON.stringify(state || {}));
+      if (root.GeoWarsDB?.syncProgress) root.GeoWarsDB.syncProgress();
       return true;
     } catch (e) {
       return false;

@@ -90,11 +90,12 @@ test('More country details has unique ordered content sections with economics fi
     return `.${className}`;
   });
   assert.deepEqual(directContentOrder, [
-    '.explorer-more-facts',
     '#explorer-landmark-media',
+    '.explorer-more-facts',
     '#explorer-economics-callout'
   ]);
   assert.equal(directContentOrder.at(-1), '#explorer-economics-callout', 'no direct content section may follow economics');
+  assert.ok(detailsBody.includes('id="explorer-landmark-media"'), 'landmark photos belong inside the optional details disclosure');
 });
 
 test('explorer controller lazy-loads geometry and supports pointer, touch, keyboard, and search', () => {
@@ -113,12 +114,13 @@ test('explorer controller lazy-loads geometry and supports pointer, touch, keybo
   assert.match(script, /function showFreeExplorer\(\)/);
 });
 
-test('free exploration opens selected-country details by default', () => {
+test('free exploration keeps secondary details closed and loads photos on expansion', () => {
   const script = read('globe-explorer.js');
 
-  assert.match(script, /details\.open = !huntActive;/);
+  assert.match(script, /details\.open = false;/);
+  assert.match(script, /details\?\.addEventListener\('toggle',[\s\S]*loadLandmarkMedia\(country\)/);
   assert.match(script, /function showFreeExplorer\(\)[\s\S]*renderCountryCard\(cardsById\.get\(selectedCountryId\)\)/);
-  assert.match(script, /function renderCountry\(countryId, options = \{\}\)[\s\S]*renderCountryCard\(country, \{ landmarkMedia: options\.source !== 'atlas-shapes' \}\)/);
+  assert.match(script, /function renderCountry\(countryId, options = \{\}\)[\s\S]*renderCountryCard\(country\)/);
 });
 
 test('Explorer loads an optional expandable landmark image with information and source links', () => {
@@ -128,7 +130,7 @@ test('Explorer loads an optional expandable landmark image with information and 
 
   assert.match(html, /id="explorer-landmark-media" class="explorer-landmark-media hidden"/);
   assert.match(html, /id="explorer-landmark-media-toggle" class="explorer-landmark-media-toggle" type="button" aria-expanded="false"/);
-  assert.match(html, /id="explorer-landmark-learn-more"[\s\S]*Learn about this landmark/);
+  assert.match(html, /id="explorer-landmark-learn-more"[\s\S]*Wikipedia/);
   assert.match(html, /id="explorer-landmark-media-source"[\s\S]*Wikipedia/);
   assert.match(script, /https:\/\/en\.wikipedia\.org\/w\/api\.php/);
   assert.match(script, /const LANDMARK_WIKIPEDIA_CANDIDATES = Object\.freeze\(/);

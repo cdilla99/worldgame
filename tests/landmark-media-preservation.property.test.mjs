@@ -251,7 +251,7 @@ function createFixture(cards) {
   class ResizeObserver { observe() {} }
   class CustomEvent { constructor(type, options) { this.type = type; this.detail = options?.detail; } }
   const context = vm.createContext({
-    window: root, document, ResizeObserver, CustomEvent, console, Promise, Object, Map, Set, Math, Date
+    window: root, document, ResizeObserver, CustomEvent, console, Promise, Object, Map, Set, Math, Date, URL
   });
   vm.runInContext(`const countryCards = ${JSON.stringify(cards)};`, context);
   vm.runInContext(explorerSource, context);
@@ -269,8 +269,12 @@ function createFixture(cards) {
       zoomOut: elements['btn-explorer-zoom-out'], reset: elements['btn-explorer-reset'],
       regionButton, showoff: elements['btn-showoff'], start: elements['btn-start-game']
     },
-    select(id) { root.GeoWars.explorer.selectCountry(id, { animate: false, source: 'test' }); },
-    study(id) { root.GeoWars.explorer.renderCountry(id, { source: 'atlas-shapes' }); },
+    openDetails() {
+      elements['explorer-more-details'].open = true;
+      elements['explorer-more-details'].dispatch('toggle');
+    },
+    select(id) { root.GeoWars.explorer.selectCountry(id, { animate: false, source: 'test' }); this.openDetails(); },
+    study(id) { root.GeoWars.explorer.renderCountry(id, { source: 'atlas-shapes' }); this.openDetails(); },
     setView(view) { elements.explorer.dataset.atlasView = view; },
     state() { return root.GeoWars.explorer.getState(); }
   };
@@ -287,7 +291,7 @@ function assertNileSnapshot(fixture, { name, imageUrl, sourceUrl }) {
   assert.deepEqual(mediaSnapshot(fixture), {
     visible: true, expanded: false, src: imageUrl, alt: `Nile River in ${name}`,
     ariaExpanded: 'false', ariaLabel: 'Expand image of Nile River',
-    learnHref: sourceUrl, learnText: 'Learn about Nile River', sourceHref: sourceUrl
+    learnHref: sourceUrl, learnText: 'Nile River', sourceHref: sourceUrl
   });
 }
 
@@ -323,7 +327,7 @@ await runProperty({
     const nile = country({ id: 31, name: 'Egypt', landmark: 'Nile River', salt });
     const other = country({ id: 32, name: `Other ${salt}`, landmark: `Other landmark ${salt}`, salt: salt + 1 });
     const fixture = createFixture([nile, other]);
-    const imageUrl = `https://images.example.test/nile-${iteration}.jpg`;
+    const imageUrl = `https://upload.wikimedia.org/test-fixtures/nile-${iteration}.jpg`;
     const sourceUrl = `https://en.wikipedia.org/wiki/Nile_River_${salt}`;
     fixture.select(nile.id);
     assert.deepEqual(fixture.requests.map(request => request.title), ['Nile River']);
@@ -347,6 +351,7 @@ await runProperty({
         fixture.elements.search.dispatch('input');
         assert.equal(fixture.elements.searchList.children.length, 1, 'search retains the direct country result');
         fixture.elements.searchList.children[0].click();
+        fixture.openDetails();
         await loadCurrentRequest(fixture, { ok: true, json: async () => page({ title: 'Nile River', imageUrl, sourceUrl }) });
         fixture.elements.image.onload();
       }
@@ -359,7 +364,7 @@ await runProperty({
 function assertClearedMedia(fixture) {
   assert.deepEqual(mediaSnapshot(fixture), {
     visible: false, expanded: false, src: '', alt: '', ariaExpanded: 'false', ariaLabel: null,
-    learnHref: '', learnText: 'Learn about this landmark', sourceHref: ''
+    learnHref: '', learnText: 'Wikipedia', sourceHref: ''
   });
 }
 
@@ -384,7 +389,7 @@ await runProperty({
     await loadCurrentRequest(fixture, {
       ok: true,
       json: async () => page({
-        title: 'Nile River', imageUrl: `https://images.example.test/previous-${iteration}.jpg`,
+        title: 'Nile River', imageUrl: `https://upload.wikimedia.org/test-fixtures/previous-${iteration}.jpg`,
         sourceUrl: `https://en.wikipedia.org/wiki/Nile_River_${salt}`
       })
     });
@@ -405,7 +410,7 @@ await runProperty({
       return;
     }
 
-    const failedImageUrl = `https://images.example.test/error-${iteration}.jpg`;
+    const failedImageUrl = `https://upload.wikimedia.org/test-fixtures/error-${iteration}.jpg`;
     const failedSourceUrl = `https://en.wikipedia.org/wiki/Unavailable_${salt}`;
     await loadCurrentRequest(fixture, {
       ok: true,
@@ -437,8 +442,8 @@ await runProperty({
     const first = country({ id: 31, name: `First ${iteration}`, landmark: `First landmark ${salt}`, salt });
     const second = country({ id: 32, name: `Second ${iteration}`, landmark: `Second landmark ${salt}`, salt: salt + 1 });
     const fixture = createFixture([first, second]);
-    const firstImageUrl = `https://images.example.test/first-${iteration}.jpg`;
-    const secondImageUrl = `https://images.example.test/second-${iteration}.jpg`;
+    const firstImageUrl = `https://upload.wikimedia.org/test-fixtures/first-${iteration}.jpg`;
+    const secondImageUrl = `https://upload.wikimedia.org/test-fixtures/second-${iteration}.jpg`;
     const firstSourceUrl = `https://en.wikipedia.org/wiki/First_${salt}`;
     const secondSourceUrl = `https://en.wikipedia.org/wiki/Second_${salt}`;
     fixture.select(first.id);
@@ -511,11 +516,12 @@ async function assertNamedRoute({ fixture, selected, resolvedTitle, path: select
     fixture.elements.search.dispatch('input');
     assert.equal(fixture.elements.searchList.children.length, 1, 'search exposes the selected country');
     fixture.elements.searchList.children[0].click();
+    fixture.openDetails();
   }
 
   assert.deepEqual(fixture.requests.map(request => request.title), [resolvedTitle]);
   const sourceUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(resolvedTitle)}`;
-  const imageUrl = `https://images.example.test/${encodeURIComponent(selected.name)}.jpg`;
+  const imageUrl = `https://upload.wikimedia.org/test-fixtures/${encodeURIComponent(selected.name)}.jpg`;
   await loadCurrentRequest(fixture, {
     ok: true,
     json: async () => page({ title: `${resolvedTitle} resolved`, imageUrl, sourceUrl })
@@ -527,7 +533,7 @@ async function assertNamedRoute({ fixture, selected, resolvedTitle, path: select
   assert.deepEqual(mediaSnapshot(fixture), {
     visible: true, expanded: false, src: imageUrl, alt: `${resolvedTitle} resolved in ${selected.name}`,
     ariaExpanded: 'false', ariaLabel: `Expand image of ${resolvedTitle} resolved`,
-    learnHref: sourceUrl, learnText: `Learn about ${resolvedTitle} resolved`, sourceHref: sourceUrl
+    learnHref: sourceUrl, learnText: `${resolvedTitle} resolved`, sourceHref: sourceUrl
   });
   fixture.elements.toggle.click();
   assert.equal(fixture.elements.media.classList.contains('is-expanded'), true, 'details image expands');
@@ -570,8 +576,8 @@ resolveRequest(staleFallbackRequest, {
   ok: true,
   json: async () => page({
     title: 'First fallback article',
-    imageUrl: 'https://images.example.test/stale-first.jpg',
-    sourceUrl: 'https://source.test/stale-first'
+    imageUrl: 'https://upload.wikimedia.org/test-fixtures/stale-first.jpg',
+    sourceUrl: 'https://en.wikipedia.org/wiki/stale-first'
   })
 });
 await settle();
@@ -583,8 +589,8 @@ resolveRequest(currentDirectRequest, {
   ok: true,
   json: async () => page({
     title: staleFallbackSecond.landmarks[0],
-    imageUrl: 'https://images.example.test/current-second.jpg',
-    sourceUrl: 'https://source.test/current-second'
+    imageUrl: 'https://upload.wikimedia.org/test-fixtures/current-second.jpg',
+    sourceUrl: 'https://en.wikipedia.org/wiki/current-second'
   })
 });
 await settle();
@@ -593,42 +599,50 @@ const currentSnapshot = mediaSnapshot(staleFallbackFixture);
 staleFallbackLoad();
 staleFallbackError();
 assert.deepEqual(mediaSnapshot(staleFallbackFixture), currentSnapshot, 'late fallback image events cannot mutate the latest card');
-assert.equal(currentSnapshot.src, 'https://images.example.test/current-second.jpg');
+assert.equal(currentSnapshot.src, 'https://upload.wikimedia.org/test-fixtures/current-second.jpg');
 assert.equal(currentSnapshot.alt, `${staleFallbackSecond.landmarks[0]} in ${staleFallbackSecond.name}`);
 console.log('Late fallback response/image ownership fixture passed.');
 
-// Shapes must neither fetch a photo nor reveal a pending Globe photo later.
+// Both Explore views load photos, while a newer render still owns the response.
 const studyCountry = country({ id: 701, name: 'Study country', landmark: 'Study landmark', salt: 701 });
 const studyFixture = createFixture([studyCountry]);
 studyFixture.study(studyCountry.id);
-assert.equal(studyFixture.requests.length, 0, 'Shapes does not request landmark media');
+assert.equal(studyFixture.requests.length, 1, 'Shapes requests landmark media');
 studyFixture.select(studyCountry.id);
-assert.equal(studyFixture.requests.length, 1, 'Globe still requests landmark media');
+assert.equal(studyFixture.requests.length, 2, 'Globe still requests landmark media');
 studyFixture.study(studyCountry.id);
 resolveRequest(studyFixture.requests[0], {
   ok: true,
-  json: async () => page({ title: 'Study landmark', imageUrl: 'https://images.example.test/stale.jpg', sourceUrl: 'https://source.test/stale' })
+  json: async () => page({ title: 'Study landmark', imageUrl: 'https://upload.wikimedia.org/test-fixtures/stale.jpg', sourceUrl: 'https://en.wikipedia.org/wiki/stale' })
 });
 await settle();
 assert.equal(studyFixture.elements.media.classList.contains('hidden'), true);
 assert.equal(studyFixture.elements.image.getAttribute('src'), null);
-assert.equal(studyFixture.requests.length, 1, 'late Globe response cannot initiate more Shapes media');
-console.log('Shapes landmark suppression and pending response fixture passed.');
+assert.equal(studyFixture.requests.length, 3, 'stale responses do not initiate extra requests');
+resolveRequest(studyFixture.requests[2], {
+  ok: true,
+  json: async () => page({ title: 'Study landmark', imageUrl: 'https://upload.wikimedia.org/test-fixtures/current.jpg', sourceUrl: 'https://en.wikipedia.org/wiki/current' })
+});
+await settle();
+studyFixture.elements.image.onload();
+assert.equal(studyFixture.elements.media.classList.contains('hidden'), false, 'current Shapes photo becomes visible');
+assert.equal(studyFixture.elements.image.src, 'https://upload.wikimedia.org/test-fixtures/current.jpg');
+console.log('Shapes landmark loading and pending response fixture passed.');
 
 const latePhotoFixture = createFixture([studyCountry]);
 latePhotoFixture.select(studyCountry.id);
 resolveRequest(latePhotoFixture.requests[0], {
   ok: true,
-  json: async () => page({ title: 'Study landmark', imageUrl: 'https://images.example.test/late.jpg', sourceUrl: 'https://source.test/late' })
+  json: async () => page({ title: 'Study landmark', imageUrl: 'https://upload.wikimedia.org/test-fixtures/late.jpg', sourceUrl: 'https://en.wikipedia.org/wiki/late' })
 });
 await settle();
 const latePhotoLoad = latePhotoFixture.elements.image.onload;
 assert.equal(typeof latePhotoLoad, 'function');
 latePhotoFixture.setView('shapes');
 latePhotoLoad();
-assert.equal(latePhotoFixture.elements.media.classList.contains('hidden'), true, 'photo onload cannot reveal media in Shapes');
+assert.equal(latePhotoFixture.elements.media.classList.contains('hidden'), false, 'same-country photo remains useful after switching to Shapes');
 latePhotoFixture.select(studyCountry.id);
-assert.equal(latePhotoFixture.requests.length, 1, 'even Globe selection API cannot request photos while Shapes owns the panel');
+assert.equal(latePhotoFixture.requests.length, 2, 'the shared panel can request photos in Shapes');
 latePhotoFixture.setView('globe');
 latePhotoFixture.select(studyCountry.id);
-assert.equal(latePhotoFixture.requests.length, 2, 'Globe photos resume outside Shapes');
+assert.equal(latePhotoFixture.requests.length, 3, 'Globe photos continue outside Shapes');
