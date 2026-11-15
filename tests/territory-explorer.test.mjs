@@ -66,7 +66,7 @@ test('Explorer loads and searches territory entities while Country Hunt remains 
   assert.match(html, /data\/territories\.js\?v=/);
   assert.match(html, /id="explorer-country-status"/);
   assert.match(script, /GeoWarsGlobeTerritories/);
-  assert.match(script, /const explorerCards = \[\.\.\.cards, \.\.\.territoryCards\]/);
+  assert.match(script, /const explorerCards = \[\.\.\.cards, \.\.\.territoryCards, \.\.\.featureCards\]/);
   assert.match(script, /searchMatches = explorerCards/);
   assert.match(script, /buildLevelDeck\(options.level, cards, options.continent\)/);
   assert.match(script, /const candidates = pool\.filter/);

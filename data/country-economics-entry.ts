@@ -36,7 +36,7 @@ function setValue(id: string, value: string): void {
 function renderEconomicComparison(event: Event): void {
   const detail = (event as CustomEvent).detail;
   const callout = document.getElementById("explorer-economics-callout");
-  const isTerritory = detail?.kind === "territory";
+  const isTerritory = detail?.kind && detail.kind !== "country";
   callout?.classList.toggle("hidden", isTerritory);
   if (!callout || isTerritory) return;
 

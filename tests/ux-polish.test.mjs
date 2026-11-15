@@ -111,7 +111,7 @@ test('landing statistics are available through a subtle collapsed disclosure', (
   const styles = read('ux-polish.css');
 
   assert.match(html, /<details class="landing-statistics-disclosure">/);
-  assert.match(html, /<summary class="landing-statistics-toggle"><span id="statistics-title" class="statistics-heading">Your best<\/span><\/summary>/);
+  assert.match(html, /<summary class="landing-statistics-toggle"><span id="statistics-title" class="statistics-heading">Your best scores<\/span><\/summary>/);
   assert.match(html, /id="btn-reset-stats"[\s\S]*aria-haspopup="dialog"/);
   assert.match(styles, /\.landing-statistics-toggle::after\s*\{[\s\S]*content: '\+';/);
   assert.match(styles, /\.landing-statistics-disclosure\[open\] \.landing-statistics-toggle::after\s*\{[\s\S]*content: '-';/);

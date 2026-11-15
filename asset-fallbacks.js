@@ -19,13 +19,13 @@
       source: 'FlagCDN country flags',
       documentationUrl: 'https://flagcdn.com',
       urlTemplate: 'https://flagcdn.com/w160/{code}.png',
-      // A single flag host is a single point of failure: network filters, DNS
-      // failures, and blocked third-party requests all leave every flag slot
-      // empty. Mirrors are tried in order before any placeholder is shown.
+      // Both formats preserve the source flag's native proportions. Standard
+      // 4:3 icon packs change square, wide and non-rectangular flag designs.
+      // If neither original loads, show an honest unavailable state.
       mirrorTemplates: Object.freeze([
-        'https://cdn.jsdelivr.net/npm/flag-icons@7.5.0/flags/4x3/{code}.svg'
+        'https://flagcdn.com/{code}.svg'
       ]),
-      aspectRatio: '3 / 2', fallbackIcon: 'flag', fallback: 'Local SVG and country-name-preserving flag state.'
+      aspectRatio: '3 / 2', fallbackIcon: 'flag', fallback: 'Native flag artwork or an explicit country-name-preserving unavailable state.'
     }),
     font: Object.freeze({
       source: 'No remote font is essential',

@@ -173,15 +173,15 @@ test('Explorer supports deep manual zoom while auto-framing preserves geographic
   assert.match(script, /setZoom\(zoom \* ZOOM_STEP\)/);
   assert.match(script, /setZoom\(zoom \/ ZOOM_STEP\)/);
 });
-test('Explorer music is preloaded and its label follows actual playback', () => {
+test('Explorer music loads on request and its label follows actual playback', () => {
   const music = read('background-music.js');
   const explorer = read('globe-explorer.js');
 
   assert.match(music, /function prepare\(\)/);
-  assert.match(music, /audio\.preload = 'auto'/);
+  assert.match(music, /audio\.preload = 'none'/);
   assert.match(music, /return playback\.then\(function \(\) \{ return true; \}\)/);
-  assert.match(music, /prepare\(\);\s*\n\}\)\(\);/);
+  assert.doesNotMatch(music, /\n\s*prepare\(\);\s*\n\}\)\(\);/);
   assert.match(explorer, /music\.isPlaying/);
-  assert.match(explorer, /playing \? 'Music on' : 'Start music'/);
+  assert.match(explorer, /musicButton\.setAttribute\('aria-checked', String\(!muted && playing\)\)/);
   assert.match(explorer, /renderMusicControl\(false\);\s*\n\s*navigation\?\.showExplorer/);
 });

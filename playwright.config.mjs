@@ -18,7 +18,7 @@ export default defineConfig({
     use: { ...devices['Desktop Chrome'] },
   }, {
     name: 'webkit-phone',
-    testMatch: ['phone-game-viewport.spec.mjs', 'globe-drag.spec.mjs'],
+    testMatch: ['phone-game-viewport.spec.mjs', 'globe-drag.spec.mjs', 'landing-sound.spec.mjs'],
     use: { ...devices['iPhone 13'] },
   }],
   webServer: {

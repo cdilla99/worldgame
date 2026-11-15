@@ -78,7 +78,7 @@ test('World Explorer is a prominent landing feature with independent music contr
 
   assert.match(html, /class="[^"]*landing-explorer-showcase[^"]*"[\s\S]*id="btn-open-explorer"/);
   assert.match(html, /World Explorer[\s\S]*Country Hunt/);
-  assert.match(html, /id="btn-explorer-music"[\s\S]*Start music/);
+  assert.match(html, /id="btn-explorer-music"[^>]*role="switch"[^>]*aria-label="Music"/);
   assert.match(styles, /\.landing-explorer-showcase[\s\S]*grid-template-columns/);
   assert.match(explorerStyles, /\.explorer-globe-controls[\s\S]*position: absolute/);
   assert.match(explorer, /startExplorerMusic/);

@@ -14,14 +14,29 @@ for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }
     await expect(page.locator('#btn-showoff')).toBeHidden();
     await expect(page.locator('[data-level="cadet"]')).toBeHidden();
     const player = page.locator('#atlas-utility-menu > summary');
-    await expect(player).toHaveText('Player');
+    await expect(player).toHaveAccessibleName('Player menu for Guest');
+    await expect(player.locator('.player-avatar')).toBeVisible();
     const box = await player.boundingBox();
     expect(box.width).toBeGreaterThanOrEqual(44);
     expect(box.height).toBeGreaterThanOrEqual(44);
+    const scrollBefore = await page.evaluate(() => window.scrollY);
     await player.tap();
+    const menuBox = await page.locator('#atlas-utility-panel').boundingBox();
+    expect(menuBox.y).toBeGreaterThanOrEqual(box.y + box.height);
+    expect(menuBox.y - (box.y + box.height)).toBeLessThanOrEqual(12);
+    expect(menuBox.y + menuBox.height).toBeLessThanOrEqual(viewport.height);
+    expect(await page.evaluate(() => window.scrollY)).toBe(scrollBefore);
     await expect(page.locator('#atlas-utility-panel #btn-sprint')).toHaveCount(0);
+    await expect(page.locator('#btn-choose-player')).toBeHidden();
+    await page.evaluate(async () => {
+      GeoWarsProfiles.create('Ada', '🌍', false);
+      await renderPlayerContext({ local: true, displayName: 'Ada', claimed: false });
+    });
     await expect(page.locator('#btn-choose-player')).toBeVisible();
-    await expect(page.locator('#btn-explorer-music span')).toBeVisible();
+    const playerRow = await page.locator('#btn-choose-player').boundingBox();
+    const playerSlot = await page.locator('#atlas-player-slot').boundingBox();
+    expect(Math.abs(playerRow.width - playerSlot.width)).toBeLessThanOrEqual(1);
+    await expect(page.locator('#btn-explorer-music span').first()).toBeVisible();
     expect((await page.locator('#btn-explorer-music').boundingBox()).width).toBeGreaterThan(100);
     await player.press('Escape');
     await expect(page.locator('#atlas-utility-menu')).toHaveJSProperty('open', false);
@@ -38,6 +53,7 @@ for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }
     await player.tap();
     await page.locator('#btn-choose-player').click();
     await expect(page.locator('#player-profile-modal')).toBeVisible();
+    await expect(page.getByRole('button', { name: '🌍 Ada · Current', exact: true })).toBeDisabled();
     await page.locator('#btn-close-player-modal').click();
     if (viewport.width === 390) {
       await player.tap();
@@ -50,6 +66,50 @@ for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
   });
 }
+
+test('phone player menu stays beneath its icon, shows full names, traps focus and dismisses', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.evaluate(async () => {
+    await renderPlayerContext({ local: true, displayName: 'Alexandra Long Player Name', claimed: false });
+    let playing = false;
+    let muted = false;
+    window.BackgroundMusic = {
+      isPlaying: () => playing,
+      isMuted: () => muted,
+      setMuted: value => { muted = value; },
+      start: () => { playing = true; return Promise.resolve(true); },
+    };
+  });
+  const trigger = page.locator('#atlas-utility-menu > summary');
+  await expect(trigger.locator('.player-initial')).toBeVisible();
+  await expect(trigger.locator('.player-initial')).toHaveText('A');
+  await expect(trigger.locator('.player-avatar')).toBeHidden();
+  await trigger.click();
+  const sheet = page.locator('#atlas-utility-panel');
+  await expect(sheet).toHaveAttribute('aria-modal', 'true');
+  const sheetBox = await sheet.boundingBox();
+  const triggerBox = await trigger.boundingBox();
+  expect(Math.abs(sheetBox.y - triggerBox.y - triggerBox.height - 8)).toBeLessThanOrEqual(1);
+  expect(sheetBox.y + sheetBox.height).toBeLessThanOrEqual(844);
+  await expect(page.locator('#player-context-name')).toContainText('Alexandra Long Player Name');
+  expect(await page.locator('#player-context-name').evaluate(element => getComputedStyle(element).textOverflow)).toBe('clip');
+  const music = page.getByRole('switch', { name: 'Music', exact: true });
+  await music.click();
+  await expect(music).toHaveAttribute('aria-checked', 'true');
+  await music.click();
+  await expect(music).toHaveAttribute('aria-checked', 'false');
+  const close = page.locator('#btn-close-player-panel');
+  await close.focus();
+  await page.keyboard.press('Shift+Tab');
+  await expect(page.locator('.landing-statistics-toggle')).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(close).toBeFocused();
+  await page.locator('#player-menu-backdrop').click({ position: { x: 10, y: 10 } });
+  await expect(page.locator('#atlas-utility-menu')).toHaveJSProperty('open', false);
+  await expect(trigger).toBeFocused();
+  await expect(page.locator('body')).not.toHaveClass(/player-sheet-open/);
+});
 
 for (const view of ['globe', 'shapes']) {
   test(`phone ${view}: loading and loaded landmark photo use the same visible space`, async ({ page }) => {

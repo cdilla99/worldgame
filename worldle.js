@@ -171,7 +171,7 @@
       }
 
       if (roundCounter) {
-        roundCounter.innerHTML = `Attempt <strong>${Math.min(max, guesses.length + 1)}/${max}</strong>`;
+        roundCounter.innerHTML = `${game.completed ? 'Guesses' : 'Attempt'} <strong>${Math.min(max, guesses.length + (game.completed ? 0 : 1))}/${max}</strong>`;
       }
       const remaining = document.getElementById('worldle-guesses-remaining');
       if (remaining) remaining.textContent = game.completed ? (game.won ? 'Solved' : 'Complete') : `${max - guesses.length} guesses left`;

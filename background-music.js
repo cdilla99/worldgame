@@ -25,7 +25,7 @@
 
       var audio = new window.Audio('sounds/' + encodeURIComponent(track));
       audio.loop = true;
-      audio.preload = 'auto';
+      audio.preload = 'none';
       audio.volume = VOLUME;
       audio.muted = muted;
       audio.addEventListener('error', function () {});
@@ -101,5 +101,5 @@
     isPlaying: isPlaying
   });
 
-  prepare();
+  // Music is prepared by start() after the player requests it, not on page load.
 })();

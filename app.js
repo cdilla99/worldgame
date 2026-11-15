@@ -475,6 +475,8 @@ if ($btnRecoverHome) $btnRecoverHome.addEventListener('click', returnHomeFromAss
 // Mute button
 const $btnMute = document.getElementById('btn-mute');
 let audioMuted = false;
+try { audioMuted = localStorage.getItem('earthling-sound-muted') === 'true'; } catch (_) {}
+const $soundEffects = document.getElementById('btn-sound-effects');
 
 function invokeBackgroundMusic(method, value) {
   const music = window.BackgroundMusic;
@@ -482,17 +484,26 @@ function invokeBackgroundMusic(method, value) {
   try { music[method](value); } catch (error) {}
 }
 
-if ($btnMute) {
-  $btnMute.addEventListener('click', () => {
-    audioMuted = !audioMuted;
-    AudioEngine.setEnabled(!audioMuted);
-    invokeBackgroundMusic('setMuted', audioMuted);
+function renderSoundPreference() {
+  AudioEngine.setEnabled(!audioMuted);
+  if ($btnMute) {
     setControlIcon($btnMute, audioMuted ? 'icon-sound-muted' : 'icon-sound');
-    setControlLabel($btnMute, audioMuted ? 'Sound off' : 'Sound on');
-    $btnMute.setAttribute('aria-label', audioMuted ? 'Enable sound' : 'Mute sound');
+    setControlLabel($btnMute, audioMuted ? 'Effects off' : 'Effects on');
+    $btnMute.setAttribute('aria-label', audioMuted ? 'Enable sound effects' : 'Mute sound effects');
     $btnMute.setAttribute('aria-pressed', String(audioMuted));
-  });
+  }
+  $soundEffects?.setAttribute('aria-checked', String(!audioMuted));
+  setControlIcon($soundEffects, audioMuted ? 'icon-sound-muted' : 'icon-sound');
 }
+function toggleSoundPreference() {
+  audioMuted = !audioMuted;
+  renderSoundPreference();
+  try { localStorage.setItem('earthling-sound-muted', String(audioMuted)); } catch (_) {}
+  if (!audioMuted) { try { AudioEngine.playInterfaceClick(); } catch (_) {} }
+}
+$btnMute?.addEventListener('click', toggleSoundPreference);
+$soundEffects?.addEventListener('click', toggleSoundPreference);
+renderSoundPreference();
 
 // Results
 const $resultsTitle = document.getElementById('results-title');
@@ -1420,8 +1431,6 @@ loadStats();
 function startGame(options) {
   options = options || {};
   AudioEngine.init();
-  invokeBackgroundMusic('setMuted', audioMuted);
-  invokeBackgroundMusic('start');
   clearTimeout(state.feedbackTimeout);
   state.feedbackTimeout = null;
   // Re-read the visible controls at the final start boundary so mode changes
@@ -1639,7 +1648,9 @@ function nextRound() {
     resumeTimer();
   }
 
-  state.currentCard = state.deck.pop();
+  state.currentCard = state.level === 'adaptive' && !state.finiteDeck && learningProgress?.selectAdaptiveCountry
+    ? learningProgress.selectAdaptiveCountry(filterDeck(state.level), state.currentCard?.id)
+    : state.deck.pop();
   state.flagRevealed = false;
   state.regionRevealed = false;
   state.answered = false;
@@ -2031,15 +2042,28 @@ function advanceFromFeedback() {
   nextRound();
 }
 
+function pauseFeedbackAdvance() {
+  clearTimeout(state.feedbackTimeout);
+  state.feedbackTimeout = null;
+}
+
+const feedbackInteractiveSelector = 'button, a, summary, details, input, select, textarea, [role="button"], [contenteditable]';
+const feedbackFacts = document.getElementById('feedback-facts');
+// Let facts expand and remain readable while the already-paused clock waits.
+feedbackFacts?.addEventListener('click', pauseFeedbackAdvance);
+feedbackFacts?.addEventListener('keydown', pauseFeedbackAdvance);
+
 // Register once. Per-round listeners used to survive timeout/keyboard advancement
 // and later advance through several unseen countries in a single tap.
-$feedback.addEventListener('click', () => {
+$feedback.addEventListener('click', event => {
+  if (event.target?.closest?.(feedbackInteractiveSelector)) return;
   if (state.mode === 'sprint') advanceFromFeedback();
 });
 
 $feedbackNext.addEventListener('click', (event) => {
   event.stopPropagation();
-  if (state.mode === 'showoff' && state.answered && !state.gameOver) nextRound();
+  if (state.mode === 'sprint') advanceFromFeedback();
+  else if (state.mode === 'showoff' && state.answered && !state.gameOver) nextRound();
 });
 
 function finishPracticeSession(destination) {
@@ -2091,6 +2115,20 @@ function showFeedback(correct, isReveal) {
   renderFeedbackStatusIcon(correct, isReveal);
   $feedbackScore.replaceChildren();
   $feedbackCountryName.textContent = card.name;
+  const feedbackOutline = document.getElementById('feedback-outline');
+  if (feedbackOutline) {
+    const outline = document.getElementById('silhouette-img')?.cloneNode(true);
+    feedbackOutline.replaceChildren();
+    feedbackOutline.hidden = !outline;
+    if (outline) {
+      outline.removeAttribute('id');
+      outline.querySelectorAll('[id]').forEach(element => element.removeAttribute('id'));
+      outline.setAttribute('aria-hidden', 'true');
+      outline.removeAttribute('aria-label');
+      if (outline.tagName === 'IMG') outline.alt = '';
+      feedbackOutline.append(outline);
+    }
+  }
   $feedbackRegion.textContent = [card.continent, card.subregion].filter((value, index, values) => value && values.indexOf(value) === index).join(' · ');
   $feedbackText.replaceChildren();
   $feedbackFlag.replaceChildren();
@@ -2107,8 +2145,10 @@ function showFeedback(correct, isReveal) {
   setControlIcon($feedbackNext, 'icon-next');
   setControlLabel($feedbackNext, state.finiteDeck && !state.deck.length ? 'Results' : 'Next country');
   setControlDisabled($feedbackNext, false);
-  $feedbackActions.classList.toggle('hidden', !showPracticeRoutes);
-  if ($feedbackContinueHint) $feedbackContinueHint.classList.toggle('hidden', showPracticeRoutes);
+  $feedbackActions.classList.remove('hidden');
+  $feedbackResults?.classList.toggle('hidden', !showPracticeRoutes);
+  $feedbackHome?.classList.toggle('hidden', !showPracticeRoutes);
+  if ($feedbackContinueHint) $feedbackContinueHint.classList.add('hidden');
 
   // Reveal the flag on the stage as supporting information.
   $flagHint.classList.remove('flag-blurred');
@@ -2352,7 +2392,16 @@ async function renderPlayerContext(identityOverride) {
     headerGoogleLabel.textContent = identity.claimed ? identity.displayName : 'Sign in';
     headerGoogle.setAttribute('aria-label', identity.claimed ? 'Manage player ' + identity.displayName : 'Sign in');
   }
-  document.querySelector('#atlas-utility-menu > summary')?.setAttribute('aria-label', 'Player and preferences for ' + (identity.displayName || 'Guest'));
+  const playerMenuButton = document.querySelector('#atlas-utility-menu > summary');
+  playerMenuButton?.setAttribute('aria-label', 'Player menu for ' + (identity.displayName || 'Guest'));
+  const playerInitial = playerMenuButton?.querySelector('.player-initial');
+  const hasSavedPlayer = !!(identity.claimed || identity.local);
+  if (playerInitial) {
+    playerInitial.textContent = Array.from((identity.displayName || 'Player').trim())[0]?.toLocaleUpperCase() || 'P';
+    playerInitial.hidden = !hasSavedPlayer;
+  }
+  const playerAvatar = playerMenuButton?.querySelector('.player-avatar');
+  if (playerAvatar) playerAvatar.style.display = hasSavedPlayer ? 'none' : '';
   if (identity.signInError) {
     $playerContextDetail.textContent = identity.signInError;
   } else if (identity.claimed) {
@@ -2363,9 +2412,10 @@ async function renderPlayerContext(identityOverride) {
     $playerContextDetail.textContent = 'Saved on this device.';
   }
 
-  $choosePlayerButton.textContent = identity.claimed || identity.local ? 'Switch player' : 'Choose player';
+  $choosePlayerButton.textContent = 'Switch player';
+  $choosePlayerButton.hidden = !(window.GeoWarsProfiles?.list().length > 0);
   $choosePlayerButton.disabled = false;
-  $choosePlayerButton.setAttribute('aria-label', identity.claimed ? 'Switch to another player' : 'Choose a player');
+  $choosePlayerButton.setAttribute('aria-label', 'Switch player');
 }
 
 function playerProfilesAreOnline() {
@@ -2397,10 +2447,12 @@ function renderDevicePlayers() {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'device-player-button';
-    button.textContent = player.avatar + ' ' + player.name + (player.cloudUserId ? ' · account linked' : '');
-    button.setAttribute('aria-pressed', String((active?.id || 'guest') === player.id));
+    const isCurrent = (active?.id || 'guest') === player.id;
+    button.textContent = player.avatar + ' ' + player.name + (player.cloudUserId ? ' · account linked' : '') + (isCurrent ? ' · Current' : '');
+    button.setAttribute('aria-pressed', String(isCurrent));
+    button.disabled = isCurrent;
     button.addEventListener('click', async () => {
-      if ((active?.id || 'guest') === player.id) { closePlayerModal(); return; }
+      if (isCurrent) return;
       button.disabled = true;
       const result = await GeoWarsDB.switchLocalPlayer(player.id);
       if (result.error) {
@@ -2420,6 +2472,8 @@ async function startGooglePlayerSignIn() {
   if (button.disabled) return;
   const version = ++googlePlayerRenderVersion;
   button.disabled = true;
+  button.hidden = true;
+  container.replaceChildren();
   status.textContent = 'Loading Google sign-in…';
   container.inert = false;
   container.setAttribute('aria-busy', 'true');
@@ -2440,9 +2494,11 @@ async function startGooglePlayerSignIn() {
     });
     if (version !== googlePlayerRenderVersion || result.cancelled) return;
     button.hidden = !!result.success;
+    if (!result.success) container.replaceChildren();
     status.textContent = result.error || '';
   } catch (_) {
     if (version === googlePlayerRenderVersion) {
+      container.replaceChildren();
       status.textContent = 'Google sign-in could not load. Check your connection and retry.';
       button.hidden = false;
     }
@@ -2470,7 +2526,7 @@ document.getElementById('local-player-form')?.addEventListener('submit', async e
     const result = await GeoWarsDB.switchLocalPlayer(active?.id || 'guest');
     if (result.error) throw new Error(result.error);
     store.create(document.getElementById('player-local-name').value,
-      document.getElementById('player-local-avatar').value,
+      '🌍',
       !active && document.getElementById('keep-guest-progress').checked);
     location.reload();
   } catch (error) {
@@ -2541,7 +2597,7 @@ async function openPlayerModal() {
   setPlayerModalInteractive(true);
   renderDevicePlayers();
   $playerProfileModal.querySelector('.profile-modal-card').scrollTop = 0;
-  document.getElementById('player-local-name')?.focus({ preventScroll: true });
+  document.getElementById('player-profile-title')?.focus({ preventScroll: true });
 
   // Wait for the client so opening the dialog during startup does not leave the
   // submit button permanently disabled.
@@ -2698,6 +2754,8 @@ document.addEventListener('keydown', (e) => {
 
   // Enter/Space to advance feedback
   if ((e.key === 'Enter' || e.key === ' ') && !$feedback.classList.contains('hidden') && state.mode === 'sprint') {
+    // Native controls keep their own keyboard action (including facts and Next).
+    if (e.target?.closest?.(feedbackInteractiveSelector)) return;
     e.preventDefault();
     advanceFromFeedback();
     return;

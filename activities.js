@@ -1,4 +1,4 @@
-/* Two activities, each with a calm Explore path and a timed Challenge path. */
+/* Two activities, each with untimed Practise and timed Play paths. */
 (function (root) {
   'use strict';
 
@@ -12,10 +12,23 @@
     const dialog = byId('activity-settings-dialog');
     const setup = byId('atlas-menu-setup-slot');
     const settings = byId('challenge-settings');
+    const homeDifficultyValue = byId('home-difficulty-value');
+    const homeRegionValue = byId('home-region-value');
     let settingsSnapshot = null;
     let opener = null;
     let frame = 0;
     body.classList.add('activity-navigation');
+    // Capture the originating home action before navigation changes the screen.
+    // Native keyboard activation also produces a trusted click; hover and script
+    // clicks never make sound. Play buttons retain their existing round-start cue.
+    document.addEventListener('click', event => {
+      if (!event.isTrusted || document.hidden || body.dataset.activity !== 'home') return;
+      const control = event.target.closest?.('button, summary, a[href]');
+      if (!control || control.disabled || control.getAttribute('aria-disabled') === 'true') return;
+      if (['btn-sound-effects', 'btn-explorer-music', 'btn-challenge-hunt', 'btn-challenge-shapes'].includes(control.id)) return;
+      if (control.closest('#player-google-button')) return;
+      try { root.AudioEngine?.playInterfaceClick?.(); } catch (_) { /* Audio never blocks an action. */ }
+    }, true);
 
     // Relocate the original controls and preview: no duplicate IDs or state.
     byId('activity-shape-preview').append(byId('quiz-preview-art'));
@@ -82,15 +95,33 @@
       const shapes = quiz || (current.mode === 'explore' && current.view === 'shapes');
       const challenge = quiz || (current.mode === 'challenge' && !home);
       body.dataset.activity = home ? 'home' : daily ? 'daily' : `${shapes ? 'shapes' : 'hunt'}-${challenge ? 'challenge' : 'explore'}`;
+      const huntResults = current.mode === 'challenge' && current.challengeStage === 'summary';
+      const enteringHuntResults = huntResults && !body.classList.contains('has-hunt-results');
+      body.classList.toggle('has-hunt-results', huntResults);
+      if (enteringHuntResults) root.requestAnimationFrame(() => byId('explorer-hunt-summary-title')?.focus());
+      const dailyGame = root.GeoWarsDailyWorldle?.getDailyGame(root.countryCards || []);
+      const dailyStatus = byId('activity-daily-status');
+      isHidden(dailyStatus, !dailyGame?.completed);
+      if (dailyGame?.completed) {
+        const count = dailyGame.guesses.length;
+        const result = dailyGame.won ? 'Solved' : 'Completed';
+        text(dailyStatus, `${result} · ${count} ${count === 1 ? 'guess' : 'guesses'}`);
+        byId('btn-activity-daily').setAttribute('aria-label', `Daily challenge, ${result.toLowerCase()} today in ${count} ${count === 1 ? 'guess' : 'guesses'}. View result`);
+      } else byId('btn-activity-daily').setAttribute('aria-label', 'Daily challenge');
       isHidden(context, home || quiz || daily);
       text(byId('activity-section-title'), daily ? 'Daily Puzzle' : shapes ? 'Shape Quiz' : 'Country Hunt');
-      text(byId('activity-section-description'), daily ? 'Daily Puzzle' : challenge ? '60 seconds' : 'Explore');
+      text(byId('activity-section-description'), daily ? 'Daily Puzzle' : challenge ? '60 seconds' : 'Practise');
       isHidden(byId('btn-activity-explore'), daily);
       isHidden(byId('btn-activity-challenge'), daily || challenge);
       isHidden(byId('btn-activity-difficulty'), daily || !challenge);
       byId('btn-activity-explore').setAttribute('aria-pressed', String(!challenge));
       const levelName = root.GeoWarsDifficulty?.getLevelLabel(selectedLevel()) || 'Easy';
       [byId('btn-game-difficulty'), byId('btn-activity-difficulty')].forEach(button => text(button, 'Difficulty: ' + levelName));
+      // Keep the home summary on the applied settings while the dialog edits a draft.
+      const homeLevel = settingsSnapshot?.level || selectedLevel();
+      const homeRegion = settingsSnapshot?.region || selectedRegion();
+      text(homeDifficultyValue, root.GeoWarsDifficulty.getLevelLabel(homeLevel));
+      text(homeRegionValue, setup.querySelector(`[data-continent="${homeRegion}"]`)?.textContent.trim() || 'Worldwide');
       syncQuizReplay(!byId('results').classList.contains('hidden') && state.sessionKind === 'standard' && state.mode === 'sprint');
       syncHuntReplay(current.mode === 'challenge' && current.challengeStage === 'summary');
     }
@@ -100,7 +131,7 @@
       options = Object.assign({ opener: document.activeElement }, options);
       root.GeoWars.navigate.showExplorer();
       const opened = atlas.showHome ? atlas.showHome(options) : atlas.showChallenge(options);
-      if (opened !== false && options.announce !== false) text(byId('explorer-live'), 'All activities. Choose Country Hunt or Shape Quiz, then Explore or Challenge.');
+      if (opened !== false && options.announce !== false) text(byId('explorer-live'), 'All activities. Choose Country Hunt or Shape Quiz, then Practise or Play. Timed games last 60 seconds.');
       return opened;
     }
     function explore(view) {
@@ -118,9 +149,9 @@
       else startHunt();
     }
 
-    function openSettings() {
+    function openSettings(section = 'difficulty', trigger = document.activeElement) {
       if (dialog.open) return;
-      opener = document.activeElement;
+      opener = trigger;
       settingsSnapshot = {
         level: selectedLevel(), region: selectedRegion(), quiz: quizActive(),
         hunt: atlas.getState().mode === 'challenge' && atlas.getState().challengeStage !== 'panel',
@@ -130,8 +161,9 @@
       if (settingsSnapshot.hunt) root.GeoWars.explorer.pauseHunt?.('settings');
       settings.open = true;
       text(byId('activity-settings-description'), '');
+      text(byId('btn-apply-activity-settings'), settingsSnapshot.quiz || settingsSnapshot.hunt ? 'Apply and restart' : 'Apply');
       dialog.showModal();
-      setup.querySelector('[data-level].active')?.focus();
+      setup.querySelector(section === 'region' ? '[data-continent].active' : '[data-level].active')?.focus();
     }
     function closeSettings(apply) {
       if (!dialog.open || !settingsSnapshot) return;
@@ -164,13 +196,24 @@
     byId('btn-activity-daily').addEventListener('click', () => atlas.openDailyPuzzle());
     byId('btn-activity-explore').addEventListener('click', () => explore(atlas.getState().view));
     byId('btn-activity-challenge').addEventListener('click', challengeCurrent);
-    byId('btn-game-difficulty').addEventListener('click', openSettings);
-    byId('btn-activity-difficulty').addEventListener('click', openSettings);
+    ['btn-game-difficulty', 'btn-activity-difficulty', 'btn-home-difficulty'].forEach(id => {
+      byId(id).addEventListener('click', event => openSettings('difficulty', event.currentTarget));
+    });
+    byId('btn-home-region').addEventListener('click', event => openSettings('region', event.currentTarget));
     byId('btn-close-activity-settings').addEventListener('click', () => closeSettings(false));
     byId('btn-cancel-activity-settings').addEventListener('click', () => closeSettings(false));
     byId('btn-apply-activity-settings').addEventListener('click', () => closeSettings(true));
     dialog.addEventListener('cancel', event => { event.preventDefault(); closeSettings(false); });
     byId('btn-header-google').addEventListener('click', () => root.openPlayerModal());
+    root.addEventListener('focus', scheduleSync);
+    root.addEventListener('storage', scheduleSync);
+    document.addEventListener('visibilitychange', scheduleSync);
+    function refreshAfterMidnight() {
+      const nextDay = new Date();
+      nextDay.setHours(24, 0, 0, 0);
+      root.setTimeout(() => { scheduleSync(); refreshAfterMidnight(); }, Math.max(1, nextDay.getTime() - Date.now()));
+    }
+    refreshAfterMidnight();
     new MutationObserver(scheduleSync).observe(body, { subtree: true, attributes: true, attributeFilter: ['class', 'data-atlas-mode', 'data-atlas-view'] });
     root.GeoWars.activities = Object.freeze({
       home, explore, startQuiz, startHunt, openSettings,

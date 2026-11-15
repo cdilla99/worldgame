@@ -168,6 +168,14 @@
 
     init: function () { init(); },
 
+    // Short interaction feedback, initialized inside the user's click gesture.
+    playInterfaceClick: function () {
+      if (!enabled) return;
+      init();
+      if (!ok()) return;
+      voice(NOTE.C5, 0, 0.045, 'sine', 0.035);
+    },
+
     /**
      * Round start — bright two-note chime. Anticipation.
      */

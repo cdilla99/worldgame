@@ -11,7 +11,7 @@ for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }
     await expect(page.locator('.atlas-primary-nav')).toBeHidden();
     for (const id of ['btn-explore-hunt', 'btn-challenge-hunt', 'btn-explore-shapes', 'btn-challenge-shapes', 'btn-activity-daily', 'btn-header-google']) await expect(page.locator('#' + id)).toBeVisible();
     for (const button of await page.locator('.activity-paths button').all()) {
-      await expect(button).toHaveAccessibleName(/^(Explore|Play) (Country Hunt|Shape Quiz)$/);
+      await expect(button).toHaveAccessibleName(/^(Practise|Play) (Country Hunt|Shape Quiz)$/);
       await expect(button.locator('.activity-action-label')).toBeVisible();
       await expect(button.locator('svg')).toBeVisible();
       await expect.poll(() => button.locator('svg').evaluate(svg => svg.getBBox().width)).toBeGreaterThan(0);
@@ -57,10 +57,10 @@ test('action labels remain visible on touch and keyboard navigation', async ({ p
   const tooltip = await daily.locator('.activity-action-label').boundingBox();
   expect(tooltip.x).toBeGreaterThanOrEqual(0);
   expect(tooltip.x + tooltip.width).toBeLessThanOrEqual(1280);
-  const explore = page.getByRole('button', { name: 'Explore Country Hunt', exact: true });
+  const explore = page.getByRole('button', { name: 'Practise Country Hunt', exact: true });
   await explore.focus();
   await expect(explore.locator('.activity-action-label')).toBeVisible();
-  await expect(explore.locator('.activity-action-label')).toHaveText('Explore');
+  await expect(explore.locator('.activity-action-label')).toHaveText('Practise');
   await page.keyboard.press('Tab');
   const challenge = page.getByRole('button', { name: 'Play Country Hunt', exact: true });
   await expect(challenge).toBeFocused();
@@ -210,9 +210,11 @@ for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }
     await page.locator('#choices button').filter({ hasText: answer }).click();
     await page.evaluate(() => endGame());
     await expect(page.locator('#results')).toBeVisible();
+    await expect(page.locator('#btn-again')).toBeInViewport({ ratio: 1 });
+    await expect(page.locator('#btn-home')).toBeInViewport({ ratio: 1 });
     const levels = page.locator('#quiz-next-difficulty');
     await expect(levels).toBeVisible();
-    await expect(levels.locator('button')).toHaveCount(4);
+    await expect(levels.locator('button')).toHaveText(await page.evaluate(() => GeoWarsDifficulty.listLevels().map(level => level.name)));
     await expect(levels.getByRole('button', { name: 'Easy', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await levels.getByRole('button', { name: 'Medium', exact: true }).click();
     await expect(levels.getByRole('button', { name: 'Medium', exact: true })).toHaveAttribute('aria-pressed', 'true');

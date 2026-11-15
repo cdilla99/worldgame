@@ -3,8 +3,8 @@
  *
  * - Country Hunt: turn toward a country, highlight it for two seconds, then
  *   show its flag and name for four seconds using the existing map geometry.
- * - Shape Quiz: show an outline for two seconds, then its flag and name for
- *   four seconds before moving to the next country.
+ * - Shape Quiz shares the globe's cycle, with its reveal 1.25 seconds earlier.
+ *   Both answers remain visible for four seconds.
  *
  * Both are decorative (aria-hidden). They only animate while their card is on
  * screen and the tab is visible, and stay still under prefers-reduced-motion.
@@ -16,6 +16,29 @@
   var SHAPE_GUESS_MS = 2000;
   var SHAPE_ANSWER_MS = 4000;
   var SHAPE_FADE_MS = 280;
+  var PREVIEW_CYCLE_MS = GLOBE_TURN_MS + SHAPE_GUESS_MS + SHAPE_ANSWER_MS;
+  var PREVIEW_STAGGER_MS = 1250;
+  var timelineStartedAt = null;
+  var timelinePausedAt = root.document.hidden ? root.performance.now() : null;
+  var timelinePausedMs = 0;
+
+  // Both cards read one clock, so rendering and timer delays cannot accumulate drift.
+  // Hidden tabs freeze the clock; offscreen cards catch up when visible again.
+  root.document.addEventListener('visibilitychange', function () {
+    var time = root.performance.now();
+    if (root.document.hidden && timelinePausedAt === null) timelinePausedAt = time;
+    else if (!root.document.hidden && timelinePausedAt !== null) {
+      timelinePausedMs += time - timelinePausedAt;
+      timelinePausedAt = null;
+    }
+  });
+
+  function cyclePosition(offset) {
+    var time = (timelinePausedAt === null ? root.performance.now() : timelinePausedAt) - timelinePausedMs;
+    if (timelineStartedAt === null) timelineStartedAt = time;
+    var elapsed = time - timelineStartedAt + offset;
+    return { round: Math.floor(elapsed / PREVIEW_CYCLE_MS), elapsed: elapsed % PREVIEW_CYCLE_MS };
+  }
   // Russia wraps the date line and Portugal is too small to read at this size.
   var EXCLUDED_IDS = { 11: true, 17: true, 126: true, 127: true };
 
@@ -73,6 +96,7 @@
     var targets = [];
     var index = 0;
     var selected = null;
+    var selectedRound = null;
     var fromLongitude = longitude;
     var fromLatitude = latitude;
     var motion = root.matchMedia ? root.matchMedia('(prefers-reduced-motion: reduce)') : null;
@@ -230,8 +254,8 @@
       if (first) { longitude = normalizeLongitude(target.map.x - 24); latitude = target.map.y + 8; }
       fromLongitude = longitude;
       fromLatitude = latitude;
-      // Use the short route around the globe, with longer turns for distant targets.
-      duration = Math.max(GLOBE_TURN_MS, Math.hypot(normalizeLongitude(target.map.x - longitude), target.map.y - latitude) / 0.025);
+      // Keep the short route and a fixed duration to maintain the shared cadence.
+      duration = GLOBE_TURN_MS;
       remaining = duration;
       showPhase('turn');
       if (reducedMotion()) {
@@ -244,20 +268,6 @@
     }
 
     function advance() {
-      if (phase === 'turn') {
-        longitude = selected.map.x;
-        latitude = selected.map.y;
-        showPhase('shape');
-        remaining = SHAPE_GUESS_MS;
-      } else if (phase === 'shape') {
-        showPhase('answer');
-        remaining = SHAPE_ANSWER_MS;
-      } else {
-        index = (index + 1) % targets.length;
-        select(targets[index], false);
-        return;
-      }
-      draw();
       sync();
     }
 
@@ -278,6 +288,24 @@
     function sync() {
       if (!visible || root.document.hidden || reducedMotion()) { pause(); return; }
       if (!selected || frame || timer) return;
+      var position = cyclePosition(0);
+      if (selectedRound !== null && selectedRound !== position.round) {
+        index = (index + Math.max(1, position.round - selectedRound)) % targets.length;
+        selectedRound = position.round;
+        select(targets[index], false);
+        return;
+      }
+      selectedRound = position.round;
+      if (position.elapsed < GLOBE_TURN_MS) {
+        showPhase('turn');
+        remaining = GLOBE_TURN_MS - position.elapsed;
+      } else {
+        longitude = selected.map.x;
+        latitude = selected.map.y;
+        showPhase(position.elapsed < GLOBE_TURN_MS + SHAPE_GUESS_MS ? 'shape' : 'answer');
+        remaining = (phase === 'shape' ? GLOBE_TURN_MS + SHAPE_GUESS_MS : PREVIEW_CYCLE_MS) - position.elapsed;
+      }
+      draw();
       startedAt = now();
       if (phase === 'turn') frame = root.requestAnimationFrame(step);
       else timer = root.setTimeout(function () {
@@ -376,6 +404,7 @@
     var ready = false;
     var current = null;
     var generation = 0;
+    var selectedRound = null;
     var motion = root.matchMedia ? root.matchMedia('(prefers-reduced-motion: reduce)') : null;
     var answer = root.document.createElement('div');
     var flagSlot = root.document.createElement('span');
@@ -460,17 +489,24 @@
       var shouldRun = ready && visible && !root.document.hidden && !reducedMotion();
       if (!shouldRun) { pause(); return; }
       if (timer) return;
+      var position = cyclePosition(PREVIEW_STAGGER_MS);
+      if (selectedRound !== null && selectedRound !== position.round) {
+        index = (index + Math.max(1, position.round - selectedRound)) % order.length;
+        selectedRound = position.round;
+        show(order[index]);
+        return;
+      }
+      selectedRound = position.round;
+      var revealAt = PREVIEW_CYCLE_MS - SHAPE_ANSWER_MS;
+      phase = position.elapsed < revealAt ? 'shape' : 'answer';
+      remaining = (phase === 'shape' ? revealAt : PREVIEW_CYCLE_MS) - position.elapsed;
+      renderPhase();
       startedAt = now();
       timer = root.setTimeout(function () {
         timer = 0;
         remaining = 0;
         if (!visible || root.document.hidden || reducedMotion()) { sync(); return; }
-        if (phase === 'shape') {
-          phase = 'answer';
-          remaining = SHAPE_ANSWER_MS;
-          renderPhase();
-          sync();
-        } else next();
+        sync();
       }, remaining);
     }
 

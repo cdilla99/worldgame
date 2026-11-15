@@ -168,7 +168,7 @@ test('country geometry remains required while territory geometry can degrade gra
   assert.match(script, /Promise\.allSettled\(/);
   assert.match(script, /if \(countryResult\.status !== 'fulfilled'\) throw countryResult\.reason/);
   assert.match(script, /const territoryData = territoryResult\.status === 'fulfilled' \? territoryResult\.value : \[\]/);
-  assert.match(script, /geometryState = territoryGeometryReady \? 'ready' : 'partial'/);
+  assert.match(script, /geometryState = territoryGeometryReady && featureData.length === featureCards.length \? 'ready' : 'partial'/);
   assert.match(script, /Country globe ready\. Territory outlines are temporarily unavailable\./);
 });
 

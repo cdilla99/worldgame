@@ -1,8 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 async function chooser(page) {
-  await page.locator('#atlas-utility-menu > summary').click();
-  await page.locator('#btn-choose-player').click();
+  await page.locator('#btn-header-google').click();
   await expect(page.locator('#player-profile-modal')).toBeVisible();
 }
 
@@ -56,9 +55,10 @@ for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }
     await page.evaluate(() => localStorage.setItem('geowars-stats', JSON.stringify({ played: 3, totalCorrect: 5, bestStreak: 2 })));
     await chooser(page);
     await page.locator('#player-local-name').fill('Ada');
-    await page.locator('#player-local-avatar').selectOption('🦊');
+    await expect(page.getByLabel('Player name', { exact: true })).toBeVisible();
+    await expect(page.locator('#player-local-avatar')).toHaveCount(0);
     await page.getByRole('button', { name: 'Create player', exact: true }).click();
-    await expect(page.locator('#player-context-name')).toHaveText('🦊 Ada');
+    await expect(page.locator('#player-context-name')).toHaveText('🌍 Ada');
     expect(await page.evaluate(async () => (await GeoWarsDB.getStats()).played)).toBe(3);
     await chooser(page);
     await page.locator('#player-local-name').fill('Ben');
@@ -66,18 +66,18 @@ for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }
     await expect(page.locator('#player-context-name')).toHaveText('🌍 Ben');
     expect(await page.evaluate(async () => (await GeoWarsDB.getStats()).played)).toBe(0);
     await chooser(page);
-    await page.getByRole('button', { name: '🦊 Ada', exact: true }).click();
-    await expect(page.locator('#player-context-name')).toHaveText('🦊 Ada');
+    await page.getByRole('button', { name: '🌍 Ada', exact: true }).click();
+    await expect(page.locator('#player-context-name')).toHaveText('🌍 Ada');
     expect(await page.evaluate(async () => (await GeoWarsDB.getStats()).played)).toBe(3);
     await chooser(page);
     await page.screenshot({ path: `test-results/player-accounts-${viewport.width}.png` });
     await page.locator('#btn-close-player-modal').click();
-    await expect(page.locator('#atlas-utility-menu > summary')).toBeFocused();
+    await expect(page.locator('#btn-header-google')).toBeFocused();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
   });
 }
 
-for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }, { width: 844, height: 390 }]) {
+for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }, { width: 844, height: 390 }, { width: 1440, height: 900 }]) {
 test(`${viewport.width}: direct Google sign-in links the selected nickname and transfers progress`, async ({ page }) => {
   await page.setViewportSize(viewport);
   await mockGoogle(page);
@@ -94,6 +94,9 @@ test(`${viewport.width}: direct Google sign-in links the selected nickname and t
   expect(await page.evaluate(() => GeoWarsDB.isClaimed())).toBe(false);
   const google = page.getByRole('button', { name: 'Continue with Google', exact: true });
   await expect(google).toBeVisible();
+  await expect(page.locator('#btn-player-google')).toBeHidden();
+  await expect(page.locator('#player-profile-title')).toBeInViewport({ ratio: 1 });
+  await expect(google).toBeInViewport({ ratio: 1 });
   await google.scrollIntoViewIfNeeded();
   await expect(google).toBeInViewport({ ratio: 1 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
@@ -135,6 +138,7 @@ test('closing the chooser ignores unsolicited or late Google credentials', async
   await page.goto('/');
   await chooser(page);
   await expect(page.getByRole('button', { name: 'Continue with Google', exact: true })).toBeVisible();
+  await expect(page.locator('#btn-player-google')).toBeHidden();
   await page.evaluate(() => window.__googleConfig.callback({ credential: 'unsolicited-token' }));
   expect(await page.evaluate(() => sessionStorage.getItem('google-request'))).toBeNull();
   await page.locator('#btn-close-player-modal').click();
@@ -150,11 +154,13 @@ test('a blocked Google script can be retried without redirecting or losing a nic
   await chooser(page);
   await expect(page.locator('#player-google-status')).toContainText('could not load');
   await expect(page.getByRole('button', { name: 'Retry Google sign-in' })).toBeEnabled();
+  await expect(page.locator('#player-google-button')).toBeEmpty();
   expect(await page.evaluate(() => sessionStorage.getItem('google-request'))).toBeNull();
   await page.unroute('https://accounts.google.com/gsi/client');
   await page.route('https://accounts.google.com/gsi/client', route => route.fulfill({ contentType: 'application/javascript', body: 'window.google={accounts:{id:{initialize(){},renderButton(c){const b=document.createElement("button");b.textContent="Continue with Google";c.append(b)}}}};' }));
   await page.getByRole('button', { name: 'Retry Google sign-in' }).click();
   await expect(page.getByRole('button', { name: 'Continue with Google', exact: true })).toBeVisible();
+  await expect(page.locator('#btn-player-google')).toBeHidden();
   expect(await page.evaluate(() => GeoWarsDB.isClaimed())).toBe(false);
 });
 

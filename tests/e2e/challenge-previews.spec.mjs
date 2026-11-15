@@ -55,7 +55,7 @@ async function bounds(page) {
     }));
 }
 
-test('demo reveals the matching flag and name after 2 seconds and holds them for 4 seconds', async ({ page }) => {
+test('demo reveals its first answer at the staggered 2.55-second point and holds it for 4 seconds', async ({ page }) => {
   const preview = await openDemo(page);
   await restartVisiblePhase(page, preview);
   const answer = preview.locator('.atlas-quiz-answer');
@@ -67,7 +67,7 @@ test('demo reveals the matching flag and name after 2 seconds and holds them for
   await expect.poll(() => answer.locator('img').evaluate(image => image.complete && image.naturalWidth > 0)).toBe(true);
   await expect(answer).toBeHidden();
 
-  await page.clock.runFor(1999);
+  await page.clock.runFor(2549);
   await expect(answer).toBeHidden();
   await page.clock.runFor(1);
   await expect(answer).toBeVisible();
@@ -84,26 +84,29 @@ test('demo reveals the matching flag and name after 2 seconds and holds them for
   await expect(answer.locator('img')).toHaveAttribute('src', new RegExp(`/${expectedCode}\\.png$`));
 });
 
-test('demo waits until visible and pauses when scrolled away', async ({ page }) => {
-  await page.setViewportSize({ width: 320, height: 568 });
+test('demo does no animation offscreen and rejoins the shared cycle when visible', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 300 });
   const preview = await openDemo(page, { reducedMotion: 'no-preference' });
   const answer = preview.locator('.atlas-quiz-answer');
   await expect(preview).not.toBeInViewport({ ratio: 0.5 });
   await page.clock.fastForward(10000);
   await expect(answer).toBeHidden();
   await expect(preview.locator('.atlas-quiz-answer-name')).toHaveText('Brazil');
-  await restartVisiblePhase(page, preview);
-  await page.clock.runFor(900);
-  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-  await expect(preview).not.toBeInViewport({ ratio: 0.5 });
-  await page.clock.fastForward(10000);
-  await expect(answer).toBeHidden();
   await preview.evaluate(element => element.scrollIntoView({ block: 'center', behavior: 'instant' }));
   await expect(preview).toBeInViewport({ ratio: 0.8 });
-  await page.clock.runFor(1000);
-  await expect(answer).toBeHidden();
-  await page.clock.runFor(150);
-  await expect(answer).toBeVisible();
+  await page.clock.runFor(32);
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  await expect(preview).not.toBeInViewport({ ratio: 0.5 });
+  await page.clock.runFor(32);
+  const paused = await preview.getAttribute('data-preview-phase');
+  const name = await preview.locator('.atlas-quiz-answer-name').textContent();
+  await page.clock.fastForward(10000);
+  await expect(preview).toHaveAttribute('data-preview-phase', paused);
+  await expect(preview.locator('.atlas-quiz-answer-name')).toHaveText(name);
+  await preview.evaluate(element => element.scrollIntoView({ block: 'center', behavior: 'instant' }));
+  await expect(preview).toBeInViewport({ ratio: 0.8 });
+  await page.clock.runFor(7800);
+  await expect(preview.locator('.atlas-quiz-answer-name')).not.toHaveText(name);
 });
 
 test('tab visibility pauses both phases instead of skipping countries', async ({ page }) => {
@@ -119,7 +122,7 @@ test('tab visibility pauses both phases instead of skipping countries', async ({
   await page.clock.runFor(10000);
   await expect(answer).toBeHidden();
   await setHidden(false);
-  await page.clock.runFor(999);
+  await page.clock.runFor(1549);
   await expect(answer).toBeHidden();
   await page.clock.runFor(1);
   await expect(answer).toBeVisible();
@@ -153,7 +156,7 @@ test('reduced motion shows a static answer and responds to preference changes', 
 test('flag failures retain the country name and compact fallback', async ({ page }) => {
   const preview = await openDemo(page, { flags: false });
   await restartVisiblePhase(page, preview);
-  await page.clock.runFor(2000);
+  await page.clock.runFor(2550);
   await expect(preview.locator('.atlas-quiz-answer')).toBeVisible();
   await expect(preview.locator('.atlas-quiz-answer-name')).toHaveText('Brazil');
   await expect(preview.locator('.asset-fallback__code')).toHaveText('BR');
@@ -166,7 +169,7 @@ for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }
     await restartVisiblePhase(page, preview);
     const before = await bounds(page);
     await page.screenshot({ path: `test-results/demo-shape-${viewport.width}.png`, fullPage: true, animations: 'disabled' });
-    await page.clock.runFor(2000);
+    await page.clock.runFor(2550);
     await expect(preview.locator('.atlas-quiz-answer')).toBeVisible();
     await preview.locator('.atlas-quiz-answer').evaluate(element => element.getAnimations().forEach(animation => animation.finish()));
     const placement = await preview.evaluate(element => {

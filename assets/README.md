@@ -1,5 +1,14 @@
 # EARTHLING visual assets
 
+- `globe-features.js` adds Explorer-only Antarctica geometry from Natural Earth's
+  public-domain 1:50m map-unit dataset. Rebuild with
+  `node scripts/build-globe-features.mjs <ne_50m_admin_0_map_units.geojson>`.
+  Source: https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_50m_admin_0_map_units.geojson
+  This does not modify the canonical country or economics datasets. The South
+  Pole marker is the geographic point at 90°S, not an additional country.
+  Facts: https://www.bas.ac.uk/about/education-and-schools/antarctic-factsheet/
+  and https://education.nationalgeographic.org/resource/south-pole/.
+
 - `geowars-icons.svg` is the local EARTHLING interface icon sprite.
 - `geowars-logo.svg` is the responsive EARTHLING lockup (indigo globe, mint
   continents, orbiting satellite, outlined Sora wordmark) used on the landing

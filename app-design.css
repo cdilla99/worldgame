@@ -20,10 +20,9 @@ body.activity-navigation,
 body.activity-navigation.is-explorer-active,
 body.activity-navigation.is-explorer-active[data-atlas-view='shapes'] {
   color: var(--color-text);
-  background: radial-gradient(ellipse at 5% 0, #f28c280a, transparent 40rem),
-    radial-gradient(ellipse at 95% 10%, #1b4d3e08, transparent 38rem), var(--color-page);
+  background: var(--color-page);
 }
-body.activity-navigation .app { max-width: 1400px; }
+body.activity-navigation .app { max-width: 1320px; }
 body.activity-navigation :is(h1, h2, h3) { text-shadow: none; }
 body.activity-navigation :is(button, input, select) { -webkit-tap-highlight-color: transparent; }
 body.activity-navigation :is(.cta, .profile-submit, .feedback-next-btn, .explorer-practice-action, .worldle-share-btn) {
@@ -31,7 +30,7 @@ body.activity-navigation :is(.cta, .profile-submit, .feedback-next-btn, .explore
   border-radius: 12px; font-weight: 650; text-transform: none; letter-spacing: 0;
   box-shadow: none;
 }
-body.activity-navigation .atlas-header { border-color: var(--app-soft-line); padding-bottom: 18px; }
+body.activity-navigation .atlas-header { border-color: #34443a; padding-bottom: 18px; }
 body.activity-navigation .activity-signin { padding: 8px 12px; border-color: transparent; background: transparent; color: var(--color-muted); font-weight: 550; }
 body.activity-navigation .activity-signin:hover { background: #ffffff08; color: var(--color-text); }
 body.activity-navigation .atlas-utility-menu > summary { color: var(--color-muted); font-weight: 550; }
@@ -40,7 +39,7 @@ body.activity-navigation .atlas-utility-menu > summary { color: var(--color-mute
 body.activity-navigation #atlas-challenge-panel {
   --preview-image-height: clamp(264px, calc(32dvh + 24px), 344px);
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: 'daily' 'games'; gap: 18px;
+  grid-template-areas: 'toolbar' 'games' 'footer'; gap: 18px;
   align-items: center; padding-top: 0;
 }
 body.activity-navigation #atlas-challenge-panel .atlas-challenge-heading {
@@ -50,11 +49,11 @@ body.activity-navigation #atlas-challenge-panel .atlas-challenge-heading {
 body.activity-navigation #atlas-challenge-panel .atlas-challenge-grid { grid-area: games; gap: 22px; }
 body.activity-navigation #atlas-challenge-panel .atlas-challenge-card {
   position: relative; gap: 12px; padding: 24px; border: 1px solid #f28c2824;
-  border-radius: 24px; background: linear-gradient(150deg, #f28c2808, transparent 65%), var(--app-panel);
+  border-radius: 18px; background: var(--app-panel);
   box-shadow: none;
 }
 body.activity-navigation #atlas-challenge-panel .atlas-challenge-hunt {
-  border-color: #a7c8ad26; background: linear-gradient(150deg, #a7c8ad08, transparent 65%), var(--app-panel);
+  border-color: var(--app-line); background: var(--app-panel);
 }
 body.activity-navigation #atlas-challenge-panel .atlas-challenge-card h3 {
   font-size: 1rem; font-weight: 600; letter-spacing: -0.02em;
@@ -71,22 +70,22 @@ body.activity-navigation #atlas-challenge-panel .atlas-challenge-card > p {
 body.activity-navigation #atlas-challenge-panel .atlas-challenge-stage {
   height: var(--preview-image-height); padding: 0; border: 0; border-radius: 0;
   grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr);
-  background: radial-gradient(ellipse, #f28c280e, transparent 65%); overflow: visible;
+  background: transparent; overflow: visible;
 }
 body.activity-navigation #atlas-challenge-panel .atlas-challenge-hunt .atlas-challenge-stage {
-  background: radial-gradient(ellipse, #1b4d3e0a, transparent 65%);
+  background: transparent;
 }
 body.activity-navigation #atlas-challenge-panel .atlas-hunt-preview {
   grid-column: 1; grid-row: 1;
-  width: min(75%, 344px, var(--preview-image-height)); filter: drop-shadow(0 10px 24px #05090c50);
+  width: min(75%, 344px, var(--preview-image-height)); filter: none;
 }
 body.activity-navigation #activity-shape-preview .atlas-quiz-art { grid-column: 1; grid-row: 1; width: min(72%, 344px); height: 100%; }
-body.activity-navigation #activity-shape-preview :is(svg, img) { filter: drop-shadow(0 8px 20px #f28c281a); }
+body.activity-navigation #activity-shape-preview :is(svg, img) { filter: none; }
 body.activity-navigation .has-preview-answer .atlas-quiz-shape { bottom: 0; }
 body.activity-navigation .atlas-quiz-answer {
   position: absolute; inset: 50% auto auto 50%; z-index: 2;
   display: flex; align-items: center; justify-content: center; gap: 12px;
-  width: max-content; max-width: calc(100% - 16px); min-width: 180px; min-height: 72px; padding: 14px 16px;
+  width: 220px; max-width: calc(100% - 16px); min-width: 0; height: 72px; padding: 14px 16px;
   border: 1px solid #ffc58440; border-radius: 16px; background: rgba(10, 15, 22, 0.8);
   box-shadow: 0 10px 36px #0005, 0 0 24px #f28c2814; backdrop-filter: blur(4px);
   transform: translate(-50%, -50%);
@@ -96,26 +95,14 @@ body.activity-navigation [data-preview-phase='answer'] .atlas-quiz-answer { opac
 body.activity-navigation .atlas-quiz-answer-name {
   min-width: 0; color: var(--color-text);
   font: 600 1.125rem/1.25 var(--font-body); text-align: center; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 body.activity-navigation .atlas-quiz-answer-flag {
   display: grid; place-items: center; width: 48px; height: 32px; flex: none;
   border-radius: 3px; overflow: hidden; background: var(--app-raised);
 }
-body.activity-navigation .atlas-quiz-answer-flag img { display: block; width: 100%; height: 100%; object-fit: contain; filter: none; }
+body.activity-navigation .atlas-quiz-answer-flag img { display: block; object-fit: contain; filter: none; }
 body.activity-navigation .atlas-quiz-answer-flag .asset-fallback { min-height: 0; padding: 0; border: 0; }
-body.activity-navigation #activity-hunt-preview .atlas-hunt-answer {
-  top: 50%; min-width: 164px; min-height: 54px; padding: 10px 14px; gap: 10px;
-  border-color: #a7c8ad4d; box-shadow: 0 8px 24px #0004;
-}
-body.activity-navigation .atlas-hunt-answer .atlas-quiz-answer-name { font-size: 1rem; }
-body.activity-navigation .atlas-hunt-answer .atlas-quiz-answer-flag { width: 36px; height: 24px; }
-body.activity-navigation .atlas-hunt-answer .atlas-quiz-answer-flag {
-  display: flex; align-items: center; justify-content: center;
-}
-body.activity-navigation .atlas-hunt-answer .atlas-quiz-answer-flag img {
-  width: auto; height: auto; max-width: 100%; max-height: 100%;
-  min-width: 0; min-height: 0; flex: none; border-radius: 0;
-}
 /* The pennant's cutout and blue border must not inherit rectangular flag chrome. */
 body.activity-navigation .asset-slot--nonrect-flag:not(.flag-blurred) {
   overflow: visible; border-color: transparent; border-radius: 0; background: transparent;
@@ -124,6 +111,20 @@ body.activity-navigation .asset-slot--nonrect-flag:not(.flag-blurred) {
 body.activity-navigation img.is-nonrect-flag {
   object-fit: contain !important; border-radius: 0; box-shadow: none;
 }
+/* A slot aligns flags; it must not redraw them as a uniform rectangle. */
+body.activity-navigation .asset-slot--flag:has(> img) {
+  display: grid; place-items: center;
+  grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr);
+}
+body.activity-navigation .asset-slot--flag > img {
+  display: block; width: auto; height: auto; min-width: 0; min-height: 0; max-width: 100%; max-height: 100%;
+  object-fit: contain; border-radius: 0; box-shadow: none;
+  align-self: center; justify-self: center;
+}
+body.activity-navigation .asset-slot--flag:has(> img):not(.flag-blurred) {
+  background: transparent; border-color: transparent; border-radius: 0; box-shadow: none;
+}
+body.activity-navigation .feedback-flag.asset-slot--flag { height: 64px; }
 body.activity-navigation #atlas-challenge-panel .activity-paths {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
   justify-content: center; align-self: center; gap: 10px; width: min(100%, 248px);
@@ -137,20 +138,8 @@ body.activity-navigation .activity-action-icon { display: block; width: 20px; he
 body.activity-navigation .activity-action-label {
   display: block; font: 500 .875rem/1.25 var(--font-body); white-space: nowrap;
 }
-body.activity-navigation .activity-explore-path { background: #1b2130; border-color: #f28c282b; color: #e3d9ff; }
-body.activity-navigation .atlas-challenge-hunt .activity-explore-path { background: var(--palette-forest); border-color: #648873; color: #f6f3e9; }
-body.activity-navigation #atlas-challenge-panel .activity-paths .cta {
-  background: var(--palette-mandarin); border-color: var(--palette-mandarin); color: var(--color-on-primary);
-}
-body.activity-navigation #atlas-challenge-panel .atlas-challenge-hunt .activity-paths .cta {
-  background: var(--palette-mandarin); border-color: var(--palette-mandarin); color: var(--color-on-primary);
-}
-@media (hover: hover) {
-  body.activity-navigation #atlas-challenge-panel .activity-paths .cta:hover { background: var(--color-primary-hover); }
-  body.activity-navigation #atlas-challenge-panel .atlas-challenge-hunt .activity-paths .cta:hover { background: var(--color-primary-hover); }
-}
 body.activity-navigation .activity-daily {
-  position: relative; grid-area: daily; justify-self: end;
+  position: relative; justify-self: end;
   display: inline-flex; align-items: center; justify-content: center;
   width: auto; min-width: 48px; height: 44px; min-height: 44px; gap: 8px; padding: 10px 14px;
   border: 1px solid #f4c54224; border-radius: 10px; background: #f4c54206; color: var(--app-amber);
@@ -270,6 +259,27 @@ body.activity-navigation .result-stat span { color: var(--color-muted); text-tra
 body.activity-navigation #game-review { border: 0; border-top: 1px solid var(--app-soft-line); background: transparent; border-radius: 0; }
 body.activity-navigation .review-row { border-color: var(--app-soft-line); }
 body.activity-navigation .results-actions .cta { width: 100%; max-width: none; }
+body.activity-navigation .results-actions { margin: 0 0 16px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+body.activity-navigation .results-actions :is(.cta, .ghost-sm) { min-height: 48px; }
+body.activity-navigation .feedback-country-card { grid-template-columns: 72px minmax(0, 1fr) 48px; }
+.feedback-outline { display: grid; place-items: center; width: 72px; height: 64px; color: var(--color-text); }
+.feedback-outline[hidden] { display: none; }
+.feedback-outline :is(svg, img) { display: block; width: 100%; height: 100%; max-width: 100%; max-height: 100%; object-fit: contain; filter: none; }
+body.activity-navigation.has-hunt-results :is(.explorer-stage, #activity-context) { display: none; }
+body.activity-navigation.has-hunt-results .atlas-globe-workspace .explorer-layout { display: block; width: min(100%, 640px); margin-inline: auto; }
+body.activity-navigation.has-hunt-results .explorer-info-panel { width: 100%; margin: 0; }
+body.activity-navigation .explorer-hunt-summary-actions { margin: 16px 0; }
+body.activity-navigation .explorer-hunt-summary-actions #btn-explorer-hunt-again { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-primary); }
+body.activity-navigation .explorer-hunt-summary-actions #btn-explorer-hunt-again:hover { background: var(--color-primary-hover); }
+body.activity-navigation .activity-daily small { margin-top: 2px; color: inherit; font-size: .75rem; font-weight: 500; }
+body.activity-navigation .activity-daily small[hidden] { display: none; }
+@media (max-height: 500px) {
+  body.activity-navigation .results-card { padding: 16px 20px; }
+  body.activity-navigation .results-summary { padding: 8px 0; }
+  body.activity-navigation .results-stats { padding: 4px; }
+  body.activity-navigation .result-stat { min-height: 64px; padding: 6px; }
+  body.activity-navigation .results-card h2 { margin: 0; }
+}
 body.activity-navigation .results-actions .ghost-sm {
   display: inline-flex; align-items: center; justify-content: center; gap: 9px;
   border-color: var(--app-line); background: transparent;
@@ -293,24 +303,91 @@ body.activity-navigation :is(.profile-modal-eyebrow, .worldle-modal-kicker) { co
 body.activity-navigation .profile-modal-card h2 { font-weight: 650; font-size: 1.7rem; letter-spacing: -0.04em; }
 body.activity-navigation .profile-modal-card h2 { margin-top: 0; }
 body.activity-navigation .profile-modal-card h3 { font-size: 1rem; font-weight: 600; }
+body.activity-navigation .profile-modal-card { background: var(--color-surface); }
+body.activity-navigation .profile-modal-heading {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  position: sticky; top: 0; z-index: 5; background: var(--color-surface); padding: 4px 0 12px;
+}
+body.activity-navigation .profile-modal-heading h2 { margin: 0; }
+body.activity-navigation .profile-modal-heading .profile-close-slot { position: static; height: auto; flex: none; }
+body.activity-navigation .profile-modal-heading .profile-modal-close { position: static; }
+body.activity-navigation .profile-modal-card .player-google-options { margin: 0; padding: 8px 0 20px; border: 0; }
+body.activity-navigation .player-google-options h3 { margin: 0 0 12px; }
+body.activity-navigation .device-player-heading { border-top: 1px solid var(--color-border); margin: 0; padding-top: 20px; }
+body.activity-navigation .profile-modal-card .device-player-list { margin-top: 12px; }
+body.activity-navigation .google-signin-container { min-height: 0; }
 body.activity-navigation .device-player-button { border-color: var(--app-line); background: #0f1720; }
 body.activity-navigation .device-player-button[aria-pressed='true'] { border-color: #a7c8ad5c; background: #a7c8ad0d; }
 body.activity-navigation .player-google-options { border-color: var(--app-soft-line); }
 body.activity-navigation .profile-close-slot .profile-modal-close { background: #141c26; border-color: var(--app-line); }
-body.activity-navigation .atlas-utility-panel { border-color: var(--app-line); background: #141c26; border-radius: 18px; box-shadow: 0 20px 60px #0005; }
+body.activity-navigation .atlas-utility-panel { width: min(320px, calc(100vw - 32px)); gap: 0; padding: 16px; border-color: var(--color-border); background: var(--color-surface); border-radius: 18px; box-shadow: 0 20px 60px #0005; color: var(--color-text); }
+body.activity-navigation .atlas-utility-menu > summary { width: 44px; height: 44px; padding: 0; border-radius: 50%; -webkit-tap-highlight-color: transparent; }
+body.activity-navigation .atlas-utility-menu[open] > summary,
+body.activity-navigation .atlas-utility-menu > summary:hover { background: var(--color-surface-raised); border-color: var(--color-border); color: var(--color-text); }
+body.activity-navigation .atlas-utility-menu > summary > .player-initial { display: inline; font-size: 1rem; font-weight: 600; }
+.player-initial[hidden], .player-menu-backdrop[hidden] { display: none !important; }
+.player-menu-backdrop { display: none; }
+body.activity-navigation .atlas-utility-panel-heading { margin-bottom: 12px; }
+body.activity-navigation .atlas-player-slot .player-context { display: grid; grid-template-columns: minmax(0, 1fr); max-width: none; padding: 0; border: 0; border-radius: 0; background: transparent; backdrop-filter: none; gap: 12px; }
+body.activity-navigation .atlas-player-slot .player-context-copy { display: grid; grid-template-columns: minmax(0, 1fr); padding: 0; gap: 4px; }
+body.activity-navigation .atlas-player-slot .player-context-eyebrow { display: none; }
+body.activity-navigation .atlas-player-slot .player-context-name { overflow: visible; white-space: normal; text-overflow: clip; overflow-wrap: anywhere; font-size: 1rem; line-height: 1.4; }
+body.activity-navigation .atlas-player-slot .player-context-detail { position: static; width: auto; height: auto; clip: auto; clip-path: none; white-space: normal; margin: 0; color: var(--color-muted); font-size: .8rem; }
+body.activity-navigation .atlas-player-slot .player-context-action,
+body.activity-navigation .atlas-utility-panel .atlas-preference-controls button,
+body.activity-navigation .atlas-stats-slot .landing-statistics-toggle { display: flex; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; min-height: 48px; padding: 12px 4px; margin: 0; border: 0; border-radius: 0; background: transparent; color: var(--color-text); font: 500 .9rem/1.4 var(--font-body); text-align: left; text-transform: none; letter-spacing: 0; }
+body.activity-navigation .atlas-player-slot .player-context-action::after { content: '›'; margin-left: auto; font-size: 1.3rem; color: var(--color-muted); }
+body.activity-navigation .atlas-player-slot .player-context-action { max-width: none; }
+body.activity-navigation .atlas-player-slot .player-context-action[hidden] { display: none !important; }
+body.activity-navigation .atlas-utility-panel .atlas-preference-controls { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); }
+body.activity-navigation .atlas-utility-panel .atlas-preference-controls button.hidden { display: none; }
+body.activity-navigation .atlas-stats-slot .landing-statistics { padding: 0; border: 0; border-radius: 0; background: transparent; }
+body.activity-navigation .atlas-stats-slot .statistics-heading { font: inherit; color: inherit; text-transform: none; letter-spacing: 0; }
+body.activity-navigation .atlas-stats-slot .landing-statistics-toggle::after { margin-left: auto; }
+body.activity-navigation .atlas-stats-slot .landing-statistics-content { padding: 8px 0; }
+body.activity-navigation .atlas-utility-panel :is(.player-context-action, .atlas-preference-controls button, .landing-statistics-toggle):hover { background: var(--color-surface-raised); }
+body.activity-navigation .atlas-utility-panel .player-switch { display: block; position: relative; flex: none; width: 36px; height: 22px; margin-left: auto; border: 1px solid var(--color-border); border-radius: 99px; background: var(--color-page); }
+.player-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: var(--color-muted); }
+body.activity-navigation [aria-checked='true'] .player-switch { background: var(--color-success); }
+[aria-checked='true'] .player-switch::after { left: 17px; background: var(--color-page); }
+@media (max-width: 767px), (max-width: 960px) and (max-height: 500px) and (pointer: coarse) {
+  body.player-sheet-open { overflow: hidden; }
+  body.activity-navigation .player-menu-backdrop:not([hidden]) { display: block; position: fixed; inset: 0; z-index: 89; width: 100%; height: 100%; padding: 0; border: 0; border-radius: 0; background: #0008; }
+  body.activity-navigation .atlas-utility-panel { position: fixed; inset: var(--player-menu-top, 72px) var(--player-menu-right, 12px) auto auto; width: min(320px, calc(100vw - 24px)); max-height: calc(100dvh - var(--player-menu-top, 72px) - 12px); padding: 12px 16px; border-radius: 18px; z-index: 90; }
+  body.activity-navigation .atlas-utility-panel-heading { margin-bottom: 8px; }
+  body.activity-navigation .atlas-player-slot .player-context { gap: 8px; }
+  body.activity-navigation .atlas-player-slot .player-context-action,
+  body.activity-navigation .atlas-utility-panel .atlas-preference-controls button,
+  body.activity-navigation .atlas-stats-slot .landing-statistics-toggle { min-height: 44px; padding-block: 8px; }
+}
 body.activity-navigation :is(#activity-settings-description, #player-google-status, #local-player-status):empty { display: none; }
+
+/* Privacy uses the same surface, close control and focus treatment as other dialogs. */
+.privacy-dialog { position: fixed; inset: 0; margin: auto; width: min(560px, calc(100vw - 24px)); height: fit-content; max-height: calc(100dvh - 32px); padding: 0 20px 20px; border: 1px solid var(--color-border); border-radius: 18px; background: var(--color-surface); color: var(--color-text); overflow-y: auto; overscroll-behavior: contain; }
+.privacy-dialog::backdrop { background: #0008; }
+body:has(> .privacy-dialog[open]) { overflow: hidden; }
+.privacy-dialog-heading { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; background: var(--color-surface); }
+.privacy-dialog-heading h2 { margin: 0; font: 600 1.25rem/1.3 var(--font-body); }
+.privacy-dialog-heading button { display: grid; place-items: center; flex: none; width: 44px; height: 44px; padding: 0; border: 1px solid var(--color-border); border-radius: 12px; background: transparent; color: inherit; font: 400 1.6rem/1 sans-serif; cursor: pointer; }
+.privacy-dialog-heading button:hover { background: var(--color-surface-raised); }
+.privacy-dialog :is(button, a):focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
+.privacy-dialog-content p { margin: 0 0 14px; font-size: .9rem; font-weight: 400; line-height: 1.6; }
+.privacy-dialog-content p:last-child { margin-bottom: 0; }
+.privacy-dialog-content .updated { color: var(--color-muted); font-size: .8rem; }
+.privacy-dialog-content a { color: var(--color-text); text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
 
 @media (max-width: 767px) {
   body.activity-navigation .atlas-header { min-height: 64px; padding-bottom: 8px; }
-  body.activity-navigation #atlas-challenge-panel { --preview-image-height: 214px; gap: 14px; }
+  body.activity-navigation #atlas-challenge-panel { --preview-image-height: clamp(100px, 17svh, 144px); gap: 10px; }
   body.activity-navigation #atlas-challenge-panel .atlas-challenge-grid { gap: 16px; }
-  body.activity-navigation #atlas-challenge-panel .atlas-challenge-card { padding: 17px; gap: 8px; border-radius: 20px; }
+  body.activity-navigation #atlas-challenge-panel .atlas-challenge-card { padding: 12px 16px; gap: 4px; border-radius: 20px; }
   body.activity-navigation #atlas-challenge-panel .atlas-challenge-card > p { font-size: 0.75rem; }
   body.activity-navigation #atlas-challenge-panel .atlas-hunt-preview { width: var(--preview-image-height); }
   body.activity-navigation #activity-shape-preview .atlas-quiz-art { width: 90%; }
-  body.activity-navigation .atlas-quiz-answer { min-width: 164px; min-height: 64px; padding: 12px 14px; gap: 10px; }
+  body.activity-navigation .atlas-quiz-answer { width: 180px; height: 64px; padding: 12px 14px; gap: 10px; }
   body.activity-navigation .atlas-quiz-answer-name { font-size: 1rem; }
   body.activity-navigation .atlas-quiz-answer-flag { width: 42px; height: 28px; }
+  body.activity-navigation .has-feedback #feedback-flag { height: 40px; }
   body.activity-navigation[data-activity$='-explore'] .activity-section-actions { justify-self: center; gap: 10px; }
   body.activity-navigation[data-activity$='-explore'] .activity-section-actions button { flex: none; width: 104px; padding: 8px 12px; font-size: 0.8125rem; }
   body.activity-navigation .activity-section-copy strong { font-size: 1rem; }
@@ -328,16 +405,30 @@ body.activity-navigation :is(#activity-settings-description, #player-google-stat
   body.activity-navigation #game:has(.has-feedback) .game-stage:has(> .game-round-progress[hidden]) { display: none; }
 }
 
+/* Short portrait phones keep both activities' actions in the opening view. */
+@media (max-width: 767px) and (max-height: 650px) and (orientation: portrait) {
+  body.activity-navigation #atlas-challenge-panel .atlas-challenge-card {
+    display: grid; grid-template-columns: minmax(0, 1fr) 100px;
+    grid-template-areas: 'title title' 'actions art'; gap: 4px 12px;
+  }
+  body.activity-navigation #atlas-challenge-panel .atlas-challenge-card-header { grid-area: title; }
+  body.activity-navigation #atlas-challenge-panel .atlas-challenge-stage { grid-area: art; height: 100px; }
+  body.activity-navigation #atlas-challenge-panel .activity-paths {
+    grid-area: actions; grid-template-columns: 1fr; width: 100%; margin-top: 0; gap: 8px;
+  }
+  body.activity-navigation #atlas-challenge-panel .atlas-hunt-preview { width: 100px; }
+}
+
 @media (max-height: 500px) and (min-width: 600px) {
   body.activity-navigation .app { padding-top: 8px; }
   body.activity-navigation .atlas-shell { gap: 10px; }
   body.activity-navigation .atlas-header { min-height: 44px; padding-bottom: 4px; }
-  body.activity-navigation #atlas-challenge-panel { --preview-image-height: 140px; gap: 10px; padding: 0; }
+  body.activity-navigation #atlas-challenge-panel { --preview-image-height: 100px; gap: 6px; padding: 0; }
   body.activity-navigation #atlas-challenge-panel .atlas-challenge-card { padding: 12px; gap: 6px; }
   body.activity-navigation #atlas-challenge-panel .atlas-challenge-card h3 { font-size: 0.92rem; }
   body.activity-navigation #atlas-challenge-panel .atlas-challenge-card > p { font-size: 0.73rem; min-height: 1.5em; }
   body.activity-navigation #atlas-challenge-panel .atlas-hunt-preview { width: var(--preview-image-height); }
-  body.activity-navigation .atlas-quiz-answer { min-width: 150px; min-height: 54px; padding: 10px 12px; gap: 10px; border-radius: 12px; }
+  body.activity-navigation .atlas-quiz-answer { width: 164px; height: 64px; padding: 10px 12px; gap: 10px; border-radius: 12px; }
   body.activity-navigation .atlas-quiz-answer-name { font-size: 0.875rem; }
   body.activity-navigation .atlas-quiz-answer-flag { width: 36px; height: 24px; }
   body.activity-navigation #game:has(.has-feedback) .game-stage > :not(.game-round-progress) { display: none; }
@@ -367,6 +458,18 @@ body.activity-navigation .app-privacy-link {
 }
 body.activity-navigation .app-privacy-link:hover { color: var(--app-mint, #a7c8ad); }
 body.activity-navigation .app-privacy-link:focus-visible { outline: 2px solid var(--app-mint, #a7c8ad); outline-offset: 3px; }
+body.activity-navigation .activity-home-footer {
+  grid-area: footer; display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: space-between; gap: 0 16px; min-width: 0;
+  font: 400 .75rem/1.5 var(--font-body);
+}
+body.activity-navigation .activity-home-footer a {
+  display: inline-flex; align-items: center; min-height: 44px; max-width: 100%;
+  color: var(--color-muted); overflow-wrap: anywhere; text-underline-offset: 3px;
+  text-decoration-color: var(--color-border);
+}
+body.activity-navigation .activity-home-footer a:hover { color: var(--color-text); text-decoration-color: currentColor; }
+body.activity-navigation .activity-home-footer a:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
 
 /* Keep the artwork and country essentials together in Safari's short viewport.
    Leave document scrolling available for expanded details and enlarged text. */

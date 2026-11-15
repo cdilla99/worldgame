@@ -4,12 +4,15 @@
   font-weight: 100 900;
   font-display: swap;
 }
-:root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; background: #0b1018; color: #dce4ed; }
+:root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; background: #101a18; color: #f1eee5; }
 * { box-sizing: border-box; }
 body { margin: 0; }
 main { max-width: 720px; margin: 0 auto; padding: 28px 24px 64px; }
 .brand { display: inline-flex; align-items: center; min-height: 44px; }
 .brand img { display: block; width: 156px; height: auto; }
+.privacy-page-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.privacy-close { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border: 1px solid #3b4e43; border-radius: 12px; color: #f1eee5; font: 400 1.6rem/1 sans-serif; text-decoration: none; }
+.privacy-close:hover { background: #21332a; }
 h1 { color: #f4f7fb; font-size: 2rem; font-weight: 650; letter-spacing: -.04em; margin: 32px 0 8px; }
 h2 { color: #f4f7fb; font-size: 1.125rem; font-weight: 600; margin: 32px 0 10px; }
 p { font-size: 1rem; line-height: 1.75; margin: 0 0 14px; }

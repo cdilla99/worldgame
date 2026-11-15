@@ -131,7 +131,7 @@ test('real guesses turn the compass, celebrate getting warmer and retain the clo
 });
 
 test('puzzle uses SVG controls and flag images with an offline fallback', async ({ page }) => {
-  await page.route('https://cdn.jsdelivr.net/**', route => route.fulfill({
+  await page.route('https://flagcdn.com/*.svg', route => route.fulfill({
     status: 200, contentType: 'image/svg+xml',
     body: '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="20"><rect width="30" height="20" fill="red"/></svg>'
   }));
@@ -149,12 +149,12 @@ test('puzzle uses SVG controls and flag images with an offline fallback', async 
   await page.locator('#worldle-guess-input').fill(wrong);
   const option = page.locator('#worldle-suggestions [role="option"]').filter({ hasText: wrong });
   const flag = option.locator('.worldle-autocomplete-flag img');
-  await expect(flag).toHaveAttribute('src', /flags\/4x3\/[a-z]{2}\.svg/);
+  await expect(flag).toHaveAttribute('src', /flagcdn\.com\/[a-z]{2}\.svg/);
   await expect.poll(() => flag.evaluate(image => image.complete && image.naturalWidth > 0)).toBe(true);
   await option.click();
   await expect(page.locator('.worldle-guess-row:not(.is-empty) .worldle-guess-flag img')).toBeVisible();
 
-  await page.unroute('https://cdn.jsdelivr.net/**');
+  await page.unroute('https://flagcdn.com/*.svg');
   await page.reload();
   await page.locator('#btn-activity-daily').click();
   const offlineFlag = page.locator('.worldle-guess-row:not(.is-empty) .worldle-guess-flag');

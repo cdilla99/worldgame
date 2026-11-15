@@ -13,7 +13,7 @@
     21, 22, 23, 24, 25
   ]);
 
-  const LEVEL_ORDER = Object.freeze(['cadet', 'explorer', 'earthling', 'expert']);
+  const LEVEL_ORDER = Object.freeze(['adaptive', 'cadet', 'explorer', 'earthling', 'expert']);
 
   const LEVELS = Object.freeze({
     cadet: Object.freeze({
@@ -116,6 +116,7 @@
   });
 
   function normalizeLevelId(levelId) {
+    if (levelId === 'adaptive') return levelId;
     return Object.prototype.hasOwnProperty.call(LEVELS, levelId) ? levelId : 'earthling';
   }
 
@@ -128,10 +129,13 @@
   }
 
   function listLevels() {
-    return LEVEL_ORDER.map(levelId => cloneLevel(LEVELS[levelId]));
+    return LEVEL_ORDER.map(getLevel);
   }
 
   function getLevel(levelId) {
+    if (levelId === 'adaptive') return cloneLevel({ ...LEVELS.explorer, id: 'adaptive', name: 'Adaptive',
+      description: 'A mix of countries that adjusts to your progress.', recommendation: 'Adjusts to your progress on this player profile.',
+      showTypedAnswer: true, poolKind: 'full', recommended: true });
     return cloneLevel(LEVELS[normalizeLevelId(levelId)]);
   }
 
@@ -140,7 +144,7 @@
       throw new TypeError('countryIndex must be an array');
     }
 
-    const level = LEVELS[normalizeLevelId(levelId)];
+    const level = getLevel(levelId);
     if (level.poolKind === 'curated') {
       const ids = new Set(level.poolIds || []);
       return countryIndex.filter(country => ids.has(country.id));

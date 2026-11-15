@@ -20,11 +20,11 @@ test('globe centres and highlights a country before revealing its matching flag,
   const answer = preview.locator('.atlas-hunt-answer');
   await expect(preview).toHaveAttribute('data-preview-phase', 'turn');
   await expect(answer).toBeHidden();
-  await page.clock.runFor(2500);
+  await page.clock.runFor(2600);
   await expect(preview).toHaveAttribute('data-preview-phase', 'shape');
   await expect(answer).toBeHidden();
   await expect(page.locator('#quiz-preview-art .atlas-quiz-answer')).toBeVisible();
-  await page.clock.runFor(1500);
+  await page.clock.runFor(1400);
   await expect(answer).toBeVisible();
   await expect(answer).toContainText('South Africa');
   await expect(answer.locator('img')).toHaveAttribute('src', /\/za\.png$/);
@@ -77,8 +77,8 @@ test('reduced motion keeps the highlighted country and answer still, including p
   expect(await canvas.evaluate(canvas => canvas.toDataURL())).toBe(still);
   await expect(preview).toHaveAttribute('data-preview-country', '18');
   await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await expect(preview).toHaveAttribute('data-preview-phase', 'shape');
-  await page.clock.runFor(2000);
+  await expect(preview).toHaveAttribute('data-preview-phase', 'turn');
+  await page.clock.runFor(3800);
   await expect(preview).toHaveAttribute('data-preview-phase', 'answer');
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.clock.runFor(20000);
@@ -92,10 +92,12 @@ test('a blocked flag keeps the country name and compact country-code fallback', 
   await expect(preview.locator('.asset-fallback__code')).toHaveText('ZA');
 });
 
-test('scrolling away pauses the globe until it is visible again', async ({ page }) => {
-  await page.setViewportSize({ width: 320, height: 480 });
+test('scrolling away freezes drawing and returning rejoins the shared cycle', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 300 });
   const preview = await openGlobe(page);
   const canvas = preview.locator('canvas');
+  await canvas.scrollIntoViewIfNeeded();
+  await expect(canvas).toBeInViewport({ ratio: 0.8 });
   await page.clock.runFor(2200);
   await expect(preview).toHaveAttribute('data-preview-phase', 'shape');
   await page.locator('#btn-challenge-shapes').scrollIntoViewIfNeeded();
@@ -111,7 +113,7 @@ test('scrolling away pauses the globe until it is visible again', async ({ page 
   // Let the real IntersectionObserver resume the timer before advancing fake time.
   await expect(canvas).toBeInViewport({ ratio: 0.5 });
   await page.clock.runFor(2200);
-  await expect(preview).toHaveAttribute('data-preview-phase', 'answer');
+  await expect(preview).not.toHaveAttribute('data-preview-country', '18');
 });
 
 for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }, { width: 844, height: 390 }, { width: 1440, height: 900 }]) {

@@ -17,10 +17,36 @@
     const settingsTitle = settings?.querySelector('.game-setup-title');
     const playerMenu = document.getElementById('atlas-utility-menu');
     const playerButton = playerMenu?.querySelector('summary');
-    document.getElementById('btn-close-player-panel')?.addEventListener('click', () => {
+    const playerPanel = document.getElementById('atlas-utility-panel');
+    const playerBackdrop = document.getElementById('player-menu-backdrop');
+    function closePlayerMenu() {
       if (playerMenu) playerMenu.open = false;
+      syncPlayerMenu();
       playerButton?.focus({ preventScroll: true });
-    });
+    }
+    function syncPlayerMenu() {
+      const modal = Boolean(phone.matches && playerMenu?.open);
+      document.body.classList.toggle('player-sheet-open', modal);
+      if (playerBackdrop) playerBackdrop.hidden = !modal;
+      if (modal) {
+        const anchor = playerButton.getBoundingClientRect();
+        playerPanel?.style.setProperty('--player-menu-top', `${Math.max(8, anchor.bottom + 8)}px`);
+        playerPanel?.style.setProperty('--player-menu-right', `${Math.max(12, root.innerWidth - anchor.right)}px`);
+        playerPanel?.setAttribute('role', 'dialog');
+        playerPanel?.setAttribute('aria-modal', 'true');
+        if (!playerPanel?.contains(document.activeElement)) {
+          document.getElementById('btn-close-player-panel')?.focus({ preventScroll: true });
+        }
+      } else {
+        playerPanel?.removeAttribute('role');
+        playerPanel?.removeAttribute('aria-modal');
+      }
+    }
+    playerMenu?.addEventListener('toggle', syncPlayerMenu);
+    phone.addEventListener('change', syncPlayerMenu);
+    root.addEventListener('resize', () => { if (playerMenu?.open) syncPlayerMenu(); });
+    document.getElementById('btn-close-player-panel')?.addEventListener('click', closePlayerMenu);
+    playerBackdrop?.addEventListener('click', closePlayerMenu);
     let expanded = false;
     let lastMode = '';
     let dragStart = null;
@@ -98,8 +124,20 @@
     playerMenu?.addEventListener('keydown', event => {
       if (event.key === 'Escape' && playerMenu.open) {
         event.preventDefault();
-        playerMenu.open = false;
-        playerButton?.focus();
+        closePlayerMenu();
+      }
+      if (event.key === 'Tab' && phone.matches && playerMenu.open) {
+        const controls = Array.from(playerPanel.querySelectorAll('button, a[href], summary, input, select, [tabindex="0"]'))
+          .filter(element => !element.disabled && element.getClientRects().length > 0);
+        const first = controls[0];
+        const last = controls[controls.length - 1];
+        if (event.shiftKey && (document.activeElement === first || !playerPanel.contains(document.activeElement))) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
       }
     });
     document.addEventListener('pointerdown', event => {

@@ -10,6 +10,7 @@
 (function installGlobeExplorer(root) {
   const geometryUrl = 'assets/globe-countries.js?v=20260831-cy-ps197';
   const territoryGeometryUrl = 'assets/globe-territories.js?v=20260730-guidance1';
+  const featureGeometryUrl = 'assets/globe-features.js?v=20261115-antarctica1';
   const MIN_ZOOM = 1;
   const DEFAULT_VIEW = Object.freeze({ longitude: -16, latitude: 12, zoom: MIN_ZOOM });
   // Zoom 9 stopped well short of small island and microstate outlines. At 60 the
@@ -136,7 +137,8 @@
     const territoryCards = Array.isArray(root.GeoWarsExplorerTerritories)
       ? root.GeoWarsExplorerTerritories
       : [];
-    const explorerCards = [...cards, ...territoryCards];
+    const featureCards = Array.isArray(root.GeoWarsExplorerFeatures) ? root.GeoWarsExplorerFeatures : [];
+    const explorerCards = [...cards, ...territoryCards, ...featureCards];
 
     if (
       !screen || !openButton || !canvas || !globeFrame || !status ||
@@ -150,6 +152,13 @@
 
     const cardsById = new Map(explorerCards.map(card => [card.id, card]));
     const geometryById = new Map();
+    const southPoleMarker = document.createElement('span');
+    southPoleMarker.id = 'explorer-south-pole-marker';
+    southPoleMarker.className = 'explorer-pole-marker';
+    southPoleMarker.textContent = 'South Pole · 90°S';
+    southPoleMarker.setAttribute('aria-hidden', 'true');
+    southPoleMarker.hidden = true;
+    globeFrame.appendChild(southPoleMarker);
     const pointers = new Map();
     const prefersReducedMotion = root.matchMedia('(prefers-reduced-motion: reduce)');
     let geometryPromise = null;
@@ -387,7 +396,11 @@
           center + gradientSpan,
           center + gradientSpan
         );
-        if (selected) {
+        if (country.f) {
+          land.addColorStop(0, '#f0f7f8');
+          land.addColorStop(0.6, '#d0e4e9');
+          land.addColorStop(1, '#9fbfc9');
+        } else if (selected) {
           land.addColorStop(0, '#effff6');
           land.addColorStop(0.48, '#78f0b6');
           land.addColorStop(1, '#20a67a');
@@ -564,6 +577,10 @@
         drawCountryOutline(context, hoveredCountry);
       }
       if (selectedCountry) drawCountryOutline(context, selectedCountry);
+      const pole = project(0, -90);
+      southPoleMarker.hidden = huntActive || !geometryById.has(2001) || !pole.visible || pole.visibility < 0.2;
+      southPoleMarker.style.left = `${pole.x}px`;
+      southPoleMarker.style.top = `${pole.y}px`;
       drawSmallCountryMarkers(context, false);
       drawAtmosphere(context);
       context.restore();
@@ -697,7 +714,7 @@
     }
 
     function loadGeometry() {
-      if (countries.length >= cards.length) return Promise.resolve(countries);
+      if (countries.length === explorerCards.length) return Promise.resolve(countries);
       if (geometryPromise) return geometryPromise;
       geometryLoadAttempt += 1;
       geometryState = 'loading';
@@ -718,7 +735,9 @@
           'Territory geometry failed to load',
           territoryCards.length,
           geometryLoadAttempt
-        )
+        ),
+        featureCards.length ? loadGeometryAsset('GeoWarsGlobeFeatures', featureGeometryUrl,
+          'Continent geometry failed to load', featureCards.length, geometryLoadAttempt) : Promise.resolve([])
       ]).then(results => {
         const countryResult = results[0];
         const territoryResult = results[1];
@@ -726,11 +745,12 @@
         const countryData = countryResult.value;
         const territoryData = territoryResult.status === 'fulfilled' ? territoryResult.value : [];
         territoryGeometryReady = territoryData.length === territoryCards.length;
-        countries = [...countryData, ...territoryData];
+        const featureData = results[2]?.status === 'fulfilled' ? results[2].value : [];
+        countries = [...countryData, ...territoryData, ...featureData];
         geometryById.clear();
         countries.forEach(country => geometryById.set(country.i, country));
         drawOrder = [...countries].sort((first, second) => first.s - second.s);
-        geometryState = territoryGeometryReady ? 'ready' : 'partial';
+        geometryState = territoryGeometryReady && featureData.length === featureCards.length ? 'ready' : 'partial';
         canvas.classList.remove('hidden');
         error.classList.add('hidden');
         setLoading(false);
@@ -798,7 +818,7 @@
 
     function setRotation(nextLongitude, nextLatitude, deferDraw = false) {
       longitude = normalizeLongitude(nextLongitude);
-      latitude = clamp(nextLatitude, -70, 72);
+      latitude = clamp(nextLatitude, -90, 90);
       if (deferDraw) scheduleInteractionDraw();
       else draw();
     }
@@ -870,7 +890,7 @@
       const geometry = geometryById.get(country.id);
       if (!geometry) return;
       stopAnimation();
-      const targetLatitude = clamp(geometry.y, -62, 66);
+      const targetLatitude = geometry.f ? -90 : clamp(geometry.y, -62, 66);
       // Frame the country by its actual extent rather than a binary size flag,
       // and allow easing back out (no Math.max ratchet) when switching from a
       // small country to a large one.
@@ -1165,6 +1185,7 @@
     function renderFlagInto(element, country) {
       if (!element || !country) return;
       element.replaceChildren();
+      if (country.kind === 'continent') { element.textContent = '❄'; return; }
       element.classList.remove('is-flag-code');
       if (!root.AssetFallbacks?.prepareImage) {
         renderFlagCodeInto(element, country);
@@ -1305,18 +1326,27 @@
       emptyCard.classList.add('hidden');
       countryCard.classList.remove('hidden');
       const isTerritory = country.kind === 'territory';
-      if (identityKicker) identityKicker.textContent = isTerritory ? 'Territory selected' : 'Country selected';
+      const isContinent = country.kind === 'continent';
+      const focusLabel = focusCountryButton?.querySelector('span');
+      if (focusLabel) focusLabel.textContent = isContinent ? 'Zoom to continent' : 'Zoom to country';
+      [capital, languages, currency, neighbors].forEach(value => {
+        if (value?.parentElement) value.parentElement.hidden = isContinent;
+      });
+      if (identityKicker) identityKicker.textContent = isContinent ? 'Continent selected' : isTerritory ? 'Territory selected' : 'Country selected';
       if (territoryStatus) {
         const relationship = country.parentName ? ` · Connected to ${country.parentName}` : '';
-        territoryStatus.textContent = isTerritory ? `${country.status}${relationship}. ${country.flagNote}` : '';
-        territoryStatus.classList.toggle('hidden', !isTerritory);
+        territoryStatus.textContent = isContinent ? `${country.status} ${country.flagNote}` : isTerritory ? `${country.status}${relationship}. ${country.flagNote}` : '';
+        territoryStatus.classList.toggle('hidden', !isTerritory && !isContinent);
       }
       const detailsSummary = details?.querySelector('summary');
       if (detailsSummary) detailsSummary.textContent = 'Details';
       flag.replaceChildren();
+      flag.hidden = isContinent;
       flag.classList.remove('is-flag-code');
       flag.setAttribute('aria-label', `${country.name} flag`);
-      if (root.AssetFallbacks?.prepareImage) {
+      if (isContinent) {
+        flag.removeAttribute('aria-label');
+      } else if (root.AssetFallbacks?.prepareImage) {
         const flagImage = document.createElement('img');
         flagImage.alt = `${country.name} flag`;
         if (isNonRectFlag(country)) flagImage.classList.add('is-nonrect-flag');
@@ -1388,8 +1418,11 @@
       renderCountryCard(country);
       dismissSearch();
       searchInput.value = country.name;
-      setStatus(`${country.name} ${country.kind === 'territory' ? 'territory' : 'country'} selected. Use Zoom to country to center and magnify it.`);
-      live.textContent = `${country.name} selected. Capital: ${country.capital}. Activate Zoom to country to center and magnify it.`;
+      const focusAction = country.kind === 'continent' ? 'Zoom to continent' : 'Zoom to country';
+      setStatus(`${country.name} ${country.kind || 'country'} selected. Use ${focusAction} to center and magnify it.`);
+      live.textContent = country.kind === 'continent'
+        ? `${country.name} continent selected. Geographic South Pole at 90 degrees south. Activate Zoom to continent to center it.`
+        : `${country.name} selected. Capital: ${country.capital}. Activate Zoom to country to center and magnify it.`;
       // Selection no longer moves the camera by default. Exploratory taps keep
       // the current view (and neighbours) in frame; centering + auto-zoom is an
       // explicit action via focusSelectedCountry() (card button, second tap on
@@ -1489,7 +1522,9 @@
         : cards;
       const pool = filtered.length ? filtered : cards;
       const candidates = pool.filter(country => country.id !== lastHuntTargetId);
-      const next = candidates[Math.floor(Math.random() * candidates.length)] || pool[0];
+      const next = options?.level === 'adaptive' && root.GeoWarsLearning?.selectAdaptiveCountry
+        ? root.GeoWarsLearning.selectAdaptiveCountry(pool, lastHuntTargetId)
+        : candidates[Math.floor(Math.random() * candidates.length)] || pool[0];
       huntTargetId = next.id;
       lastHuntTargetId = next.id;
       selectedCountryId = null;
@@ -1638,6 +1673,9 @@
       selectedCountryId = country.id;
       hoveredCountryId = country.id;
       huntGuesses += 1;
+      if (root.GeoWars?.activities?.getHuntOptions?.().level === 'adaptive') {
+        root.GeoWarsLearning?.record(target.id, country.id === target.id);
+      }
       if (country.id === target.id) {
         huntScore += 1;
         pauseHuntClock('answer-feedback');
@@ -1692,7 +1730,7 @@
       }
 
       searchMatches = explorerCards
-        .filter(country => country.name.toLocaleLowerCase('en').includes(query))
+        .filter(country => [country.name, ...(country.aliases || [])].some(name => name.toLocaleLowerCase('en').includes(query)))
         .sort((first, second) => {
           const firstStarts = first.name.toLocaleLowerCase('en').startsWith(query) ? 0 : 1;
           const secondStarts = second.name.toLocaleLowerCase('en').startsWith(query) ? 0 : 1;
@@ -1713,7 +1751,7 @@
           option.className = 'explorer-search-option';
           option.setAttribute('role', 'option');
           option.setAttribute('aria-selected', 'false');
-          const resultType = country.kind === 'territory'
+          const resultType = country.kind === 'continent' ? 'Continent' : country.kind === 'territory'
             ? `Territory · ${country.parentName || country.subregion}`
             : country.continent;
           const flag = document.createElement('span');
@@ -1762,11 +1800,10 @@
       const playing = typeof playbackState === 'boolean'
         ? playbackState
         : !!music?.isPlaying?.();
-      const label = muted ? 'Music off' : playing ? 'Music on' : 'Start music';
-      musicButton.setAttribute('aria-pressed', String(muted));
-      musicButton.setAttribute('aria-label', muted ? 'Turn music on' : playing ? 'Turn music off' : 'Start music');
+      musicButton.setAttribute('aria-checked', String(!muted && playing));
+      musicButton.setAttribute('aria-label', 'Music');
       musicButton.dataset.playing = String(playing);
-      if (musicButtonLabel) musicButtonLabel.textContent = label;
+      if (musicButtonLabel) musicButtonLabel.textContent = 'Music';
       if (musicButtonUse) {
         const href = muted
           ? 'assets/geowars-icons.svg#icon-sound-muted'
@@ -1782,7 +1819,7 @@
         renderMusicControl(false);
         return Promise.resolve(false);
       }
-      if (musicButtonLabel) musicButtonLabel.textContent = 'Starting…';
+      if (musicButtonLabel) musicButtonLabel.textContent = 'Music';
       try {
         return Promise.resolve(music.start()).then(playing => {
           renderMusicControl(!!playing && !!music.isPlaying?.());
@@ -1929,7 +1966,10 @@
     huntModeButton?.addEventListener('click', startHunt);
     huntExitButton?.addEventListener('click', () => endHunt(true));
     huntAgainButton?.addEventListener('click', startHunt);
-    huntFreeButton?.addEventListener('click', showFreeExplorer);
+    huntFreeButton?.addEventListener('click', () => {
+      if (root.GeoWars?.activities) root.GeoWars.activities.home({ focus: true });
+      else showFreeExplorer();
+    });
     focusCountryButton?.addEventListener('click', focusSelectedCountry);
     homeButtons.forEach(button => button.addEventListener('click', returnHome));
     musicButton?.addEventListener('click', toggleExplorerMusic);

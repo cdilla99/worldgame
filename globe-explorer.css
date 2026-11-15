@@ -2428,3 +2428,9 @@
     width: min(91vw, 350px);
   }
 }
+.explorer-pole-marker { position: absolute; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 3px; transform: translate(-50%, -4px); pointer-events: none; color: #f1eee5; font: 600 11px/1.3 Inter, system-ui, sans-serif; text-shadow: 0 1px 3px #101a18, 0 0 4px #101a18; white-space: nowrap; }
+.explorer-pole-marker::before { content: ''; width: 8px; height: 8px; border: 2px solid #101a18; border-radius: 50%; background: #f4c542; }
+.explorer-pole-marker[hidden] { display: none; }
+#explorer-country-flag[hidden] { display: none; }
+.explorer-country-identity:has(#explorer-country-flag[hidden]) { grid-template-columns: minmax(0, 1fr); }
+.explorer-country-facts > div[hidden], .explorer-more-facts > div[hidden] { display: none; }

@@ -1,6 +1,6 @@
 # Player accounts
 
-Players can create a nickname and avatar without an email or password. Each
+Players can create a player name without an email or password. Each
 device profile has separate quiz totals, country-review history and Daily Puzzle
 records. Device profiles are shared-browser conveniences, not private accounts.
 Clearing browser storage removes device-only progress.
@@ -15,7 +15,7 @@ another device profile signs out the current Supabase session in this browser.
 Selecting an account-linked device profile lets players use its cached records;
 Google sign-in is required again for cloud access.
 
-Guest records move into a new nickname profile when “Keep my guest progress” is
+Guest records move into a new local profile when “Keep my guest progress” is
 selected. Linking to an existing account on another device imports this device's
 quiz records once. If that account already has a local profile in this browser,
 sign-in selects that profile and leaves the other local profile's history intact.
@@ -65,7 +65,7 @@ for current console labels and publishing requirements.
 
 The public privacy page is `https://earthlinggame.netlify.app/privacy.html`.
 Use that exact URL in Google Auth Platform's privacy policy field. It is linked
-from the player menu and sign-in chooser. Privacy and cloud-deletion requests
+from the home footer and sign-in chooser. Privacy and cloud-deletion requests
 go to `info@thinkabacus.ca`; a browser reset does not delete hosted records.
 
 Google controls the appearance of its sign-in UI: some browser/FedCM dialogs show

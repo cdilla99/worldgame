@@ -170,6 +170,27 @@
     };
   }
 
+  // Mix attainable questions, review and stretch questions without repeating
+  // the last country. Read the active profile on every round, including switches.
+  function selectAdaptiveCountry(cards, previousId, random = Math.random) {
+    const state = readState();
+    const recent = Object.values(state).filter(entry => entry && entry.seen > 0)
+      .sort((a, b) => b.last - a.last).slice(0, 12);
+    const wins = recent.filter(entry => entry.box > 0).length;
+    const stage = recent.length < 4 ? 0 : recent.length >= 8 && wins / recent.length >= 0.8 ? 2 : wins / recent.length >= 0.55 ? 1 : 0;
+    const weights = [[7, 3, 1, 0.3], [3, 6, 3, 1], [2, 3, 6, 3]][stage];
+    const candidates = cards.filter(card => card.id !== previousId);
+    if (!candidates.length) return cards[0] || null;
+    const weighted = candidates.map(card => {
+      const rank = ['easy', 'medium', 'hard', 'expert'].indexOf(card.difficulty);
+      const entry = state[card.id];
+      const review = entry?.seen && entry.box === 0 ? 1.5 : entry?.box >= MASTERED_BOX ? 0.5 : 1;
+      return { card, weight: weights[Math.max(0, rank)] * review };
+    });
+    let remaining = random() * weighted.reduce((sum, item) => sum + item.weight, 0);
+    return (weighted.find(item => (remaining -= item.weight) < 0) || weighted.at(-1)).card;
+  }
+
   // Clear all learning history. Device-local only.
   function reset() {
     const store = getStore();
@@ -184,6 +205,7 @@
 
   return {
     record: record,
+    selectAdaptiveCountry: selectAdaptiveCountry,
     selectStudyBatch: selectStudyBatch,
     getSummary: getSummary,
     reset: reset,

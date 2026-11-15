@@ -2441,7 +2441,6 @@ img.is-nonrect-flag {
   .landing[data-selected-game='explorer'] .landing-explore-actions {
     align-self: end;
   }
-  }
 
   .landing[data-selected-game='shape'] .landing-tagline {
     max-width: 10ch;

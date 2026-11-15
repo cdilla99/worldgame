@@ -1,19 +1,59 @@
 # Activity navigation
 
-The initial screen contains Country Hunt and Shape Quiz cards. Both offer an
-Explore path and a Challenge path. Explore opens the existing globe or shape
-library without a timer. Challenge starts a 60-second game. Daily Puzzle remains
-available above the cards as a compact calendar SVG button, with an accessible
-Daily Puzzle name and hover/keyboard-focus tooltip.
+The initial screen contains Country Hunt and Shape Quiz cards. Both offer a
+Practise path and a Play path. Practise opens the existing globe or shape
+library without a timer. Play starts a 60-second game; its time limit is stated
+once inside Play settings, without duration badges on the launch buttons.
+A compact shared settings row above both cards shows labeled
+Difficulty and Region controls. These shared settings apply to both games.
+Each control opens the existing dialog focused on its selected field. Home
+summaries retain their applied values while the dialog edits a draft. Applying
+home settings does not start a game; cancellation restores the previous settings
+and returns focus to the control that opened the dialog. Daily
+challenge remains available above the cards with a calendar icon and visible label.
 
-Homepage action buttons show an open book for Explore and a controller for Challenge.
-They use 48 by 44 pixel targets, retain explicit accessible names, and show the
-action word on hover or keyboard focus. Small activity names remain visible to
+The shared placement follows the compact difficulty selector beside the puzzle
+collection in [Google Arts & Culture](https://mobbin.com/screens/9414f65f-fef5-41e7-88aa-cbc55f64816c).
+Detailed choices remain in a dialog, comparable to the difficulty choices within
+[Abode trivia setup](https://mobbin.com/screens/a327db81-ca41-4554-8bca-302a0679926f).
+These are design references; the placement decision also reflects EARTHLING's
+single shared setting and mobile viewport checks.
+
+Homepage action buttons show an open book for Practise and a controller for Play.
+They retain targets at least 44 pixels high, explicit accessible names, and
+visible action labels on touch and keyboard. Play uses orange in both cards;
+Practise uses a quiet outlined treatment. Small activity names remain visible to
 identify each game without adding instructions.
+
+The atlas visual direction uses Inter headings, warm-white text and outlines,
+forest-green surfaces, and matching quiet card borders. The orange wordmark and
+primary Play buttons remain. Daily challenge uses the same orange treatment as
+Play; preview artwork has no decorative glow.
+
+A muted home-only footer credits Collin-Edward Dillon and links to his LinkedIn
+profile alongside Privacy. The creator link opens in a new tab; Privacy opens a
+closable in-app dialog. Both links have visible keyboard focus. The footer stays
+with the activity home, outside active gameplay.
+
+Quiz feedback exposes Next country in timed and untimed play. Timed feedback
+continues automatically after three seconds if untouched. Interacting with
+Country facts cancels that timeout and leaves the game clock paused until the
+player continues. Feedback retains the exact question outline beside the answer,
+without duplicate element IDs. Facts and other interactive controls keep their native pointer
+and keyboard actions; they do not trigger the panel's continue shortcut.
 
 A plain Sign in entry in the utility header opens the player chooser. Google is
 an option inside that dialog. For an authenticated player the header shows their
 name and opens their profile controls instead.
+
+The chooser places Google's official Continue with Google button above the
+device-player list and nickname form. A separate neutral retry action appears
+only if the provider button cannot load. It is hidden during loading and once
+the official button is ready; failed credential verification leaves the official
+button available to try again. The modal opens with its heading focused, without
+opening the phone keyboard, and keeps the title/close row visible while scrolling.
+This separates provider sign-in from the local alternative, as in the
+[Skillshare sign-in reference](https://mobbin.com/screens/2c5dbeb5-3ea3-4e37-89d0-3851ceab244f).
 
 The EARTHLING logo returns home. Daily Puzzle omits the secondary back row and
 visible puzzle-number caption. Its guidance shows distance, direction, whether
@@ -21,13 +61,20 @@ the latest guess is closer, and the closest guess so far.
 
 The audience is geography enthusiasts and capable children. Keep copy factual
 and brief. The globe and outlines lead the home screen, with small activity names
-and compact Explore/Challenge buttons. Avoid promotional headlines and extra
+and compact Practise/Play buttons. Avoid promotional headlines and extra
 onboarding explanations.
 
 Visible copy is limited to actions, identifiers, rules, values, feedback, and
 actionable errors. Do not add slogans, repeated headings, motivational sentences,
 or descriptions of obvious controls. Keep essential accessible descriptions and
 country facts. Use short, consistent labels that can be translated without idioms.
+
+Home actions provide a brief synthesized tap sound on trusted clicks and native
+keyboard activation. Hover, focus, startup, and programmatic clicks are silent.
+Play retains its existing round-start cue without an extra tap sound. The player
+menu's Sound effects switch shares the game's mute preference and remembers it
+on this device. Music remains separate and starts only when explicitly requested;
+starting a game does not start a music download.
 
 Difficulty and region are available through the Difficulty button inside an
 active challenge. Its dialog pauses the timer. Cancel restores the prior
@@ -61,6 +108,21 @@ Globe reveal flags use intrinsic image proportions within fixed slots, so wide
 and square flags remain complete. Nepal uses the bundled native pennant SVG
 through the shared asset pipeline, with transparent surroundings, no rounded
 clipping, and contain sizing across previews, Explore, quiz, and Daily views.
+The same intrinsic sizing applies to every flag, including square Swiss and
+Vatican flags and Qatar's wide flag. Flag images have sharp corners; a neutral
+layout slot must not crop or recolour their edges. The hidden quiz hint retains
+its cover until reveal. Remote fallback artwork must preserve original
+proportions; standardized 4:3 icon variants are not used.
+
+Result screens put Replay and Home directly after the completed score, before
+next-game difficulty and answer history. Country Hunt hides its globe while
+results are visible and focuses the results heading; Home returns to the activity
+home. Starting or practising another Hunt restores the globe.
+
+The Daily attempt badge counts the next attempt while playing and the actual
+number of guesses after completion. Home shows Solved or Completed with the
+guess count, retaining the result link. Completion survives reloads and clears
+for the next local day, including when home stays open across midnight.
 
 `activities.js` owns this navigation surface. It relocates the existing settings
 controls and quiz preview instead of duplicating their IDs or engine state.

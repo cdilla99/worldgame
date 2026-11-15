@@ -14,9 +14,9 @@
 .profile-form input { font-size: 16px; }
 .player-google-options { margin-top: 24px; padding-top: 18px; border-top: 1px solid #39394a; }
 .player-google-options > p { margin: 10px 0 14px; color: #b4b4c8; font-size: 0.85rem; line-height: 1.5; }
-.google-signin-button { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: 48px; background: #fff; border: 1px solid #747775; color: #1f1f1f; }
+.google-signin-button { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 44px; padding: 10px; border-radius: 10px; background: transparent; border: 1px solid var(--color-border); color: var(--color-text); font: inherit; cursor: pointer; }
 .google-signin-button svg { flex: none; }
-.google-signin-button[hidden] { display: none; }
+.google-signin-button[hidden] { display: none !important; }
 .google-signin-container { width: 100%; min-width: 0; }
 .google-signin-container:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .google-signin-container[aria-busy='true'] { opacity: 0.65; }
@@ -292,7 +292,7 @@
   .has-feedback .reveal-card { gap: 10px; padding: 12px; }
   .has-feedback .feedback-country-card { grid-template-columns: minmax(0, 1fr) 56px; min-height: 0; gap: 10px; padding: 10px; }
   .has-feedback #feedback-flag { width: 56px; min-height: 0; }
-  .has-feedback #feedback-flag .reveal-flag { width: 56px; max-height: 40px; }
+  .has-feedback #feedback-flag .reveal-flag { width: auto; height: auto; max-width: 100%; max-height: 100%; }
   .has-feedback #feedback-flag .asset-fallback { min-height: 40px; padding: 4px; }
   .has-feedback #feedback-flag .asset-fallback__detail { display: none; }
   .has-feedback .feedback-score:empty { display: none; }

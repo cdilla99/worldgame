@@ -25,6 +25,25 @@ function installStubs() {
 const clock = installStubs();
 const learning = (await import('../learning-progress.js')).default;
 
+test('adaptive selection grows harder, eases after misses, and follows the active profile', () => {
+  let profile = 'adaptive-a';
+  globalThis.GeoWarsProfiles = { storageKey: key => `${profile}:${key}` };
+  const cards = ['easy', 'medium', 'hard', 'expert'].map((difficulty, id) => ({ id: id + 1, difficulty }));
+  try {
+    assert.equal(learning.selectAdaptiveCountry(cards, null, () => 0.5).difficulty, 'easy');
+    for (let id = 10; id < 18; id++) learning.record(id, true);
+    assert.equal(learning.selectAdaptiveCountry(cards, null, () => 0.5).difficulty, 'hard');
+    assert.notEqual(learning.selectAdaptiveCountry(cards, 3, () => 0.5).id, 3);
+    profile = 'adaptive-b';
+    assert.equal(learning.selectAdaptiveCountry(cards, null, () => 0.5).difficulty, 'easy');
+    profile = 'adaptive-a';
+    for (let id = 10; id < 18; id++) learning.record(id, false);
+    assert.equal(learning.selectAdaptiveCountry(cards, null, () => 0.5).difficulty, 'easy');
+    assert.equal(learning.selectAdaptiveCountry([], null), null);
+    assert.equal(learning.selectAdaptiveCountry([cards[0]], 1).id, 1);
+  } finally { delete globalThis.GeoWarsProfiles; }
+});
+
 test('record promotes correct answers up the Leitner boxes and schedules review', () => {
   learning.reset();
   const first = learning.record(1, true);

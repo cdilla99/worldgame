@@ -15,7 +15,19 @@ function preserveClassicRuntime() {
     name: 'preserve-classic-runtime',
     configureServer(server) {
       server.middlewares.use(async (request, response, next) => {
-        if (request.url?.split('?')[0] !== sdkUrl) return next();
+        const pathname = request.url?.split('?')[0];
+        // These are ordered classic scripts, not Vite modules. Serving their
+        // original source avoids multi-megabyte inline development sourcemaps.
+        if (pathname && /^\/(?:[\w-]+\.js|assets\/globe-[\w-]+\.js|data\/(?:countries|territories|geographic-features)\.js)$/.test(pathname)) {
+          try {
+            const source = await readFile(resolve(rootDir, pathname.slice(1)));
+            response.setHeader('Content-Type', 'text/javascript; charset=utf-8');
+            response.setHeader('Cache-Control', 'no-cache');
+            response.end(source);
+            return;
+          } catch { return next(); }
+        }
+        if (pathname !== sdkUrl) return next();
         response.setHeader('Content-Type', 'text/javascript; charset=utf-8');
         response.end(await readFile(sdkPath));
       });
@@ -47,7 +59,7 @@ function preserveClassicRuntime() {
         cp(resolve(rootDir, directory), resolve(outDir, directory), { recursive: true })
       ));
       await mkdir(resolve(outDir, 'data'), { recursive: true });
-      await Promise.all(['countries.js', 'territories.js'].map(file =>
+      await Promise.all(['countries.js', 'territories.js', 'geographic-features.js'].map(file =>
         copyFile(resolve(rootDir, 'data', file), resolve(outDir, 'data', file))
       ));
     }
@@ -58,6 +70,6 @@ export default defineConfig({
   publicDir: false,
   server: { headers },
   preview: { headers },
-  build: { cssMinify: false },
+  build: { cssMinify: true },
   plugins: [preserveClassicRuntime()]
 });

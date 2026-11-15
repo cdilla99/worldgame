@@ -240,5 +240,5 @@ test('preservation: selection, disclosure, hunt, keyboard, focus, roles, and nam
   await expect(page.locator('#explorer-hunt-summary')).toBeVisible();
   await expect(challengeMode).toHaveAttribute('aria-pressed', 'true');
   await expect(huntMode).toHaveAttribute('aria-pressed', 'false');
-  expect(await page.evaluate(() => document.activeElement === document.body)).toBe(true);
+  await expect(page.locator('#explorer-hunt-summary-title')).toBeFocused();
 });

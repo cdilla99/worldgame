@@ -193,7 +193,8 @@ test('Challenge_Panel starts hidden with a Country Hunt card and a Shape Quiz ca
   assert.ok(huntDescription.length > 0 && !/\n/.test(huntDescription));
   const huntButton = elementById(hunt.outer, 'btn-challenge-hunt');
   assert.equal(huntButton.attributes.type, 'button');
-  assert.equal(huntButton.attributes['aria-describedby'], 'atlas-challenge-hunt-desc');
+  assert.equal(huntButton.attributes['aria-describedby'], 'atlas-challenge-hunt-desc hunt-time-rule');
+  assert.equal(elementById(hunt.outer, 'hunt-time-rule').inner.trim(), '60 seconds');
   assert.ok(huntButton.inner.trim().length > 0);
 
   assert.equal(quiz.attributes['aria-labelledby'], 'atlas-challenge-quiz-title');
@@ -210,6 +211,7 @@ test('classic engines retain their order and the activity controller loads last'
   assert.deepEqual(scripts, [
     'data/countries.js',
     'data/territories.js',
+    'data/geographic-features.js',
     'difficulty-ladder.js',
     'ladder-progress.js',
     'player-profiles.js',
@@ -235,6 +237,7 @@ test('classic engines retain their order and the activity controller loads last'
     'worldle.js',
     'challenge-previews.js',
     'mobile-experience.js',
+    'privacy-dialog.js',
     'activities.js'
   ]);
 

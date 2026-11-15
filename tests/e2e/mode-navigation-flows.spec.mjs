@@ -71,21 +71,20 @@ test('legacy navigation API cannot silently end a hunt for Daily Puzzle', async 
   expect(await page.evaluate(() => GeoWars.explorer.getState().huntActive)).toBe(false);
 });
 
-test('hunt summary can replay or return to free exploration', async ({ page }) => {
+test('hunt summary can replay at a new difficulty or return Home', async ({ page }) => {
   await page.locator('#btn-challenge-hunt').click();
   await page.locator('#btn-explorer-hunt-exit').click();
   await expect(page.locator('#explorer-hunt-summary')).toBeVisible();
   await page.locator('#btn-explorer-hunt-again').click();
   expect(await page.evaluate(() => GeoWars.explorer.getState().huntActive)).toBe(true);
   await page.locator('#btn-explorer-hunt-exit').click();
-  await page.locator('#btn-activity-difficulty').click();
-  await page.locator('[data-level="explorer"]').click();
-  await page.locator('#btn-apply-activity-settings').click();
+  await page.locator('#hunt-next-difficulty').getByRole('button', { name: 'Medium', exact: true }).click();
+  await page.locator('#btn-explorer-hunt-again').click();
   expect(await page.evaluate(() => GeoWars.explorer.getState().huntActive)).toBe(true);
   await expect(page.locator('#btn-activity-difficulty')).toHaveText('Difficulty: Medium');
   await page.locator('#btn-explorer-hunt-exit').click();
   await page.locator('#btn-explorer-hunt-free').click();
-  await expect(page.locator('body')).toHaveAttribute('data-activity', 'hunt-explore');
+  await expect(page.locator('body')).toHaveAttribute('data-activity', 'home');
 });
 
 test('difficulty and region persist without appearing on the activity home', async ({ page }) => {
