@@ -1484,7 +1484,7 @@ function startGame(options) {
   setControlDisabled($btnShowRegion, !level.showRegionHint);
   if ($btnIKnow) $btnIKnow.classList.toggle('hidden', !level.showTypedAnswer);
   if ($btnShowOptions) $btnShowOptions.classList.toggle('hidden', !level.choiceCount);
-  if ($btnBail) $btnBail.classList.toggle('hidden', !level.showTypedAnswer);
+  if ($btnBail) $btnBail.classList.toggle('hidden', !level.showTypedAnswer || !level.choiceCount);
 
   if (state.mode === 'sprint' && level.showSprintTimer) {
     $timerContainer.classList.remove('hidden');
@@ -1736,6 +1736,7 @@ document.getElementById('btn-i-know').addEventListener('click', showTypedAnswer)
 // Bail: clicked "I KNOW IT" but actually don't — fall back to options at 2×
 document.getElementById('btn-bail').addEventListener('click', () => {
   if (state.answered || state.gameOver) return;
+  if (!getLevelConfig(state.level).choiceCount || !state.choices.length) return;
   $typeAnswer.classList.add('hidden');
   showChoiceButtons(2, true);
 });
