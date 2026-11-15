@@ -35,7 +35,7 @@
     return loading;
   }
 
-  document.querySelectorAll('a[href="/privacy.html"]').forEach(link => {
+  document.querySelectorAll('a[href="/privacy.html"], a[href="/privacy"]').forEach(link => {
     link.addEventListener('click', event => {
       if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       event.preventDefault();

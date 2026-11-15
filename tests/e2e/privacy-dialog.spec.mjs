@@ -51,3 +51,17 @@ test('standalone privacy keeps a visible top-right return control', async ({ pag
   await close.click();
   await expect(page.locator('body')).toHaveAttribute('data-activity', 'home');
 });
+
+test('hosting clean URLs still open privacy in place', async ({ page }) => {
+  await page.route('http://127.0.0.1:4173/', async route => {
+    const response = await route.fetch();
+    const body = (await response.text()).replaceAll('href="/privacy.html"', 'href="/privacy"');
+    await route.fulfill({ response, body });
+  });
+  await page.goto('/');
+  await page.locator('.activity-home-footer').getByRole('link', { name: 'Privacy', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Privacy', exact: true })).toBeVisible();
+  await expect(page.locator('#privacy-dialog').getByRole('link', { name: 'info@thinkabacus.ca' })).toBeVisible();
+  await page.getByRole('button', { name: 'Close privacy', exact: true }).click();
+  await expect(page.locator('body')).toHaveAttribute('data-activity', 'home');
+});
