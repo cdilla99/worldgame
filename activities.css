@@ -58,18 +58,18 @@ body.activity-navigation #game { max-width: none; }
 .activity-settings-dialog h2 { margin: 0; font-size: 1.3rem; line-height: 1.3; }
 .activity-settings-dialog header button { flex: none; width: 44px; height: 44px; border: 1px solid #51445f; border-radius: 10px; background: #20182c; color: #eee7fa; font-size: 1.4rem; cursor: pointer; }
 #activity-settings-description { margin: 18px 0; color: #b8adc9; font-size: 0.85rem; line-height: 1.5; }
-#activity-settings-slot #atlas-menu-setup-slot { display: grid; gap: 22px; }
+#activity-settings-slot #atlas-menu-setup-slot { display: block; margin: 0; padding: 0; }
 #activity-settings-slot .mode-select, #activity-settings-slot .game-setup-summary { display: none; }
 #activity-settings-slot .setup-group { margin: 0; padding: 0; border: 0; min-width: 0; }
-#activity-settings-slot legend { margin-bottom: 10px; color: #c6b9d9; font-size: 0.8rem; }
+#activity-settings-slot legend { display: none; }
 #activity-settings-slot .difficulty-grid, #activity-settings-slot .region-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 #activity-settings-slot .diff-btn { min-width: 0; min-height: 46px; border: 1px solid #4d405b; border-radius: 10px; background: #21192e; color: #e0d8ee; padding: 10px 8px; font-size: 0.82rem; cursor: pointer; }
 #activity-settings-slot .diff-btn em { display: none; }
 #activity-settings-slot .diff-btn.active { background: #4b2a7d; border-color: #ad86e1; color: #fff; }
 #activity-settings-slot .game-setup, #activity-settings-slot .game-setup-content { border: 0; background: transparent; padding: 0; margin: 0; }
-.activity-settings-actions { display: grid; grid-template-columns: 1fr 1.6fr; gap: 10px; margin-top: 24px; }
-.activity-settings-actions > button { min-height: 46px; border-radius: 11px; padding: 10px; cursor: pointer; }
-.activity-settings-actions > button:first-child { border: 1px solid #4d405b; background: #21192e; color: #e0d8ee; }
+#activity-settings-slot .setup-group[hidden] { display: none; }
+#activity-settings-dialog[data-section='difficulty'] .game-setup-wrap { display: none; }
+#activity-settings-slot { margin-top: 18px; }
 body.activity-navigation button:focus-visible { outline: 3px solid #c5a5ff; outline-offset: 3px; }
 body.activity-navigation .results-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .challenge-next-difficulty { min-width: 0; margin: 20px 0; padding: 0; border: 0; text-align: left; }

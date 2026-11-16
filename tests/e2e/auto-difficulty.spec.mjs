@@ -15,8 +15,10 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 844, height: 390 }
     await expect(page.locator('#auto-difficulty-help')).toHaveText('Adjusts as you play.');
     await page.screenshot({ path: `test-results/auto-settings-${viewport.width}.png` });
     await page.locator('[data-level="cadet"]').click();
-    await expect(page.locator('#auto-difficulty-help')).toBeHidden();
-    await page.keyboard.press('Escape');
+    await expect(page.locator('#activity-settings-dialog')).toBeHidden();
+    await expect(page.locator('#home-difficulty-value')).toHaveText('Easy');
+    await page.locator('#btn-home-difficulty').click();
+    await page.locator('[data-level="adaptive"]').click();
     await expect(page.locator('#home-difficulty-value')).toHaveText('Auto');
     await page.locator('#btn-challenge-shapes').click();
     for (let answer = 0; answer < 4; answer++) {

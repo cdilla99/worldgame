@@ -32,7 +32,7 @@ test('Player contains preferences while challenge controls live in the difficult
   await page.locator('#btn-challenge-shapes').click();
   await page.locator('#btn-game-difficulty').click();
   await expect(page.locator('#activity-settings-dialog [data-level]')).toHaveCount(5);
-  await expect(page.locator('#activity-settings-dialog [data-continent]')).toHaveCount(6);
+  await expect(page.locator('#activity-settings-dialog [data-continent]:visible')).toHaveCount(0);
   await expect(page.locator('#btn-sprint')).toBeHidden();
   await expect(page.locator('#btn-showoff')).toBeHidden();
 });

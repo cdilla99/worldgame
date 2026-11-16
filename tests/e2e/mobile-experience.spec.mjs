@@ -55,11 +55,10 @@ test('revealing an answer counts as exploration and View results reaches the res
 });
 
 test('challenge settings persist and stay in the same dialog after resizing', async ({ page }) => {
-  await page.locator('#btn-challenge-shapes').click();
-  await page.locator('#btn-game-difficulty').click();
+  await page.locator('#btn-home-difficulty').click();
   await page.locator('[data-level="explorer"]').click();
+  await page.locator('#btn-home-region').click();
   await page.locator('[data-continent="Europe"]').click();
-  await page.locator('#btn-apply-activity-settings').click();
   await page.reload();
   await page.locator('#btn-challenge-shapes').click();
   await expect(page.locator('#btn-game-difficulty')).toHaveText('Difficulty: Medium');

@@ -2,23 +2,25 @@
 
 The initial screen contains Country Hunt and Shape Quiz cards. Both offer a
 Practise path and a Play path. Practise opens the existing globe or shape
-library without a timer. Play starts a 60-second game; its time limit is stated
-once inside Play settings, without duration badges on the launch buttons.
+library without a timer. Play starts a 60-second game, without duration badges
+on the launch buttons.
 A compact shared settings row above both cards shows labeled
 Difficulty and Region controls. These shared settings apply to both games.
 New players default to Auto, with “Adjusts as you play.” shown in settings.
 Auto offers four answer choices and uses the easiest available countries until
 the player has four correct answers, then adapts using their learning progress.
 Returning players retain their saved difficulty and region on every screen size.
-Each control opens the existing dialog focused on its selected field. Home
-summaries retain their applied values while the dialog edits a draft. Applying
-home settings does not start a game; cancellation restores the previous settings
-and returns focus to the control that opened the dialog. Daily
+Each control opens a compact picker showing only its own choices, focused on
+the selected value. Selecting an option applies it and closes the picker.
+The X, Escape, and backdrop dismiss without changes and return focus to the
+opening control. Home selections do not start a game. During play the timer
+pauses; changing the selection restarts the game, while dismissal or selecting
+the current value resumes it. Daily
 challenge remains available above the cards with a calendar icon and visible label.
 
 The shared placement follows the compact difficulty selector beside the puzzle
 collection in [Google Arts & Culture](https://mobbin.com/screens/9414f65f-fef5-41e7-88aa-cbc55f64816c).
-Detailed choices remain in a dialog, comparable to the difficulty choices within
+Detailed choices remain in a focused picker, comparable to the difficulty choices within
 [Abode trivia setup](https://mobbin.com/screens/a327db81-ca41-4554-8bca-302a0679926f).
 These are design references; the placement decision also reflects EARTHLING's
 single shared setting and mobile viewport checks.

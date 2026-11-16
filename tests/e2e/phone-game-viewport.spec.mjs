@@ -86,7 +86,6 @@ for (const viewport of [
       await page.locator('#btn-challenge-shapes').tap();
       await page.locator('#btn-game-difficulty').tap();
       await page.locator('[data-level="earthling"]').tap();
-      await page.locator('#btn-apply-activity-settings').tap();
       await expectOnScreen(page, ['#btn-i-know', '#btn-show-options', '#flag-hint', '#btn-show-region']);
       await page.locator('#btn-show-options').tap();
       await expect(page.locator('#choices .choice-btn:not(.hidden)')).toHaveCount(6);

@@ -36,6 +36,7 @@
     byId('activity-settings-slot').append(setup);
     settings.open = true;
     const difficultyGroup = setup.querySelector('[data-level]')?.closest('fieldset');
+    const regionGroup = setup.querySelector('[data-continent]')?.closest('fieldset');
     if (difficultyGroup) setup.prepend(difficultyGroup);
     byId('game-utility-region').insertBefore(byId('btn-game-difficulty'), game.querySelector('.game-hud'));
 
@@ -117,9 +118,8 @@
       byId('btn-activity-explore').setAttribute('aria-pressed', String(!challenge));
       const levelName = root.GeoWarsDifficulty?.getLevelLabel(selectedLevel()) || 'Auto';
       [byId('btn-game-difficulty'), byId('btn-activity-difficulty')].forEach(button => text(button, 'Difficulty: ' + levelName));
-      // Keep the home summary on the applied settings while the dialog edits a draft.
-      const homeLevel = settingsSnapshot?.level || selectedLevel();
-      const homeRegion = settingsSnapshot?.region || selectedRegion();
+      const homeLevel = selectedLevel();
+      const homeRegion = selectedRegion();
       text(homeDifficultyValue, root.GeoWarsDifficulty.getLevelLabel(homeLevel));
       text(homeRegionValue, setup.querySelector(`[data-continent="${homeRegion}"]`)?.textContent.trim() || 'Worldwide');
       syncQuizReplay(!byId('results').classList.contains('hidden') && state.sessionKind === 'standard' && state.mode === 'sprint');
@@ -160,8 +160,15 @@
       if (settingsSnapshot.quiz && settingsSnapshot.timed) root.clearInterval(state.timer);
       if (settingsSnapshot.hunt) root.GeoWars.explorer.pauseHunt?.('settings');
       settings.open = true;
-      text(byId('activity-settings-description'), '');
-      text(byId('btn-apply-activity-settings'), settingsSnapshot.quiz || settingsSnapshot.hunt ? 'Apply and restart' : 'Apply');
+      dialog.dataset.section = section;
+      difficultyGroup.hidden = section !== 'difficulty';
+      regionGroup.hidden = section !== 'region';
+      text(byId('activity-settings-title'), section === 'region' ? 'Region' : 'Difficulty');
+      byId('btn-close-activity-settings').setAttribute('aria-label', `Close ${section} settings`);
+      text(byId('activity-settings-description'), settingsSnapshot.quiz || settingsSnapshot.hunt ? 'Changing this starts a new game.' : '');
+      setup.querySelectorAll('[data-continent]').forEach(button => {
+        button.disabled = root.GeoWarsDifficulty.buildLevelDeck(selectedLevel(), root.countryCards || [], button.dataset.continent).length === 0;
+      });
       dialog.showModal();
       setup.querySelector(section === 'region' ? '[data-continent].active' : '[data-level].active')?.focus();
     }
@@ -173,10 +180,6 @@
       }
       const previous = settingsSnapshot;
       settingsSnapshot = null;
-      if (!apply) {
-        setup.querySelector(`[data-level="${previous.level}"]`)?.click();
-        setup.querySelector(`[data-continent="${previous.region}"]`)?.click();
-      }
       dialog.close();
       if (apply && previous.quiz) startQuiz(typeof state !== 'undefined' ? state.mode : 'sprint');
       else if (apply && previous.hunt) startHunt();
@@ -201,8 +204,22 @@
     });
     byId('btn-home-region').addEventListener('click', event => openSettings('region', event.currentTarget));
     byId('btn-close-activity-settings').addEventListener('click', () => closeSettings(false));
-    byId('btn-cancel-activity-settings').addEventListener('click', () => closeSettings(false));
-    byId('btn-apply-activity-settings').addEventListener('click', () => closeSettings(true));
+    setup.addEventListener('click', event => {
+      const button = event.target.closest('[data-level], [data-continent]');
+      if (!dialog.open || !button || button.disabled || !settingsSnapshot) return;
+      const changed = selectedLevel() !== settingsSnapshot.level || selectedRegion() !== settingsSnapshot.region;
+      closeSettings(changed);
+    });
+    let backdropPressed = false;
+    function outsideDialog(event) {
+      const box = dialog.getBoundingClientRect();
+      return event.target === dialog && (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom);
+    }
+    dialog.addEventListener('pointerdown', event => { backdropPressed = outsideDialog(event); });
+    dialog.addEventListener('click', event => {
+      if (backdropPressed && outsideDialog(event)) closeSettings(false);
+      backdropPressed = false;
+    });
     dialog.addEventListener('cancel', event => { event.preventDefault(); closeSettings(false); });
     byId('btn-header-google').addEventListener('click', () => root.openPlayerModal());
     root.addEventListener('focus', scheduleSync);

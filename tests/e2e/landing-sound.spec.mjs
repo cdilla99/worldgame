@@ -30,7 +30,7 @@ test('home is silent until activation and gives one cue per keyboard or pointer 
   await page.keyboard.press('Enter');
   await expect(page.locator('#activity-settings-dialog')).toBeVisible();
   expect(await page.evaluate(() => soundStarts)).toBe(1);
-  await page.locator('#btn-cancel-activity-settings').click();
+  await page.locator('#btn-close-activity-settings').click();
   expect(await page.evaluate(() => soundStarts)).toBe(2);
   await page.locator('#btn-explore-shapes').click();
   expect(await page.evaluate(() => soundStarts)).toBe(3);
@@ -70,7 +70,7 @@ test('navigation works when Web Audio is unavailable', async ({ page }) => {
   await page.goto('/');
   await page.locator('#btn-home-region').click();
   await expect(page.locator('#activity-settings-dialog')).toBeVisible();
-  await page.locator('#btn-cancel-activity-settings').click();
+  await page.locator('#btn-close-activity-settings').click();
   await page.locator('#btn-activity-daily').click();
   await expect(page.locator('#worldle-screen')).toBeVisible();
   expect(errors).toEqual([]);

@@ -75,7 +75,6 @@ body.activity-navigation .activity-home-setting-copy > span { color: var(--color
 body.activity-navigation .activity-home-setting-copy > strong { font-size: .8125rem; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
 body.activity-navigation .activity-home-setting svg { width: 12px; height: 12px; flex: none; color: var(--color-muted); }
 body.activity-navigation .activity-home-setting:hover { background: var(--color-surface-raised); border-color: var(--color-muted); }
-body.activity-navigation .activity-time-rule { color: var(--color-muted); font: 400 .8125rem/1.4 var(--font-body); margin: 12px 0 20px; }
 body.activity-navigation #atlas-challenge-panel .activity-paths button:focus-visible,
 body.activity-navigation .activity-home-setting:focus-visible {
   outline: 2px solid var(--color-focus); outline-offset: 4px;

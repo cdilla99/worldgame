@@ -33,6 +33,22 @@ for (const viewport of [
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
     await page.screenshot({ path: `test-results/home-play-settings-${viewport.width}.png`, fullPage: true });
+    for (const section of ['difficulty', 'region']) {
+      await page.locator(`#btn-home-${section}`).click();
+      const picker = page.locator('#activity-settings-dialog');
+      await expect(picker).toHaveAccessibleName(section === 'difficulty' ? 'Difficulty' : 'Region');
+      await expect(picker.locator('[data-level]:visible')).toHaveCount(section === 'difficulty' ? 5 : 0);
+      await expect(picker.locator('[data-continent]:visible')).toHaveCount(section === 'region' ? 6 : 0);
+      await expect(picker.getByText('Time limit: 60 seconds')).toHaveCount(0);
+      for (const button of await picker.locator('button:visible').all()) {
+        await expect(button).toBeInViewport({ ratio: 1 });
+        const box = await button.boundingBox();
+        expect(box.height).toBeGreaterThanOrEqual(44);
+      }
+      await page.screenshot({ path: `test-results/${section}-picker-${viewport.width}.png` });
+      await page.getByRole('button', { name: `Close ${section} settings`, exact: true }).click();
+      await expect(page.locator(`#btn-home-${section}`)).toBeFocused();
+    }
   });
 }
 
@@ -41,22 +57,37 @@ test('each shared control focuses its own selected field, and Escape restores fo
   await page.locator('#btn-home-difficulty').click();
   await expect(page.locator('#activity-settings-dialog')).toBeVisible();
   await expect(page.locator('#activity-settings-dialog [data-level].active')).toBeFocused();
-  await expect(page.locator('#btn-apply-activity-settings')).toHaveText('Apply');
+  await expect(page.locator('#activity-settings-title')).toHaveText('Difficulty');
+  await expect(page.locator('#activity-settings-dialog [data-continent]:visible')).toHaveCount(0);
   await page.keyboard.press('Escape');
   await expect(page.locator('#btn-home-difficulty')).toBeFocused();
   await page.locator('#btn-home-region').click();
   await expect(page.locator('#activity-settings-dialog [data-continent].active')).toBeFocused();
+  await expect(page.locator('#activity-settings-title')).toHaveText('Region');
+  await expect(page.locator('#activity-settings-dialog [data-level]:visible')).toHaveCount(0);
   await page.keyboard.press('Escape');
   await expect(page.locator('#btn-home-region')).toBeFocused();
   await expect(page.locator('body')).toHaveAttribute('data-activity', 'home');
 });
 
-test('applied settings persist while cancelled drafts leave the home summary unchanged', async ({ page }) => {
+test('backdrop dismisses without changing saved settings', async ({ page }) => {
+  await page.goto('/');
+  const saved = await page.evaluate(() => localStorage.getItem('earthling-quiz-preferences'));
+  await page.locator('#btn-home-region').click();
+  await page.mouse.click(2, 2);
+  await expect(page.locator('#activity-settings-dialog')).toBeHidden();
+  await expect(page.locator('#btn-home-region')).toBeFocused();
+  expect(await page.evaluate(() => localStorage.getItem('earthling-quiz-preferences'))).toBe(saved);
+});
+
+test('selections apply immediately and dismissal leaves settings unchanged', async ({ page }) => {
   await page.goto('/');
   await page.locator('#btn-home-difficulty').click();
   await page.locator('#activity-settings-dialog [data-level="adaptive"]').click();
+  await expect(page.locator('#activity-settings-dialog')).toBeHidden();
+  await page.locator('#btn-home-region').click();
   await page.locator('#activity-settings-dialog [data-continent="Asia"]').click();
-  await page.locator('#btn-apply-activity-settings').click();
+  await expect(page.locator('#activity-settings-dialog')).toBeHidden();
   await expect(page.locator('#home-difficulty-value')).toHaveText('Auto');
   await expect(page.locator('#home-region-value')).toHaveText('Asia');
   await expect(page.locator('#game')).toBeHidden();
@@ -64,8 +95,6 @@ test('applied settings persist while cancelled drafts leave the home summary unc
 
   const saved = await page.evaluate(() => localStorage.getItem('earthling-quiz-preferences'));
   await page.locator('#btn-home-region').click();
-  await page.locator('#activity-settings-dialog [data-level="expert"]').click();
-  await page.locator('#activity-settings-dialog [data-continent="Europe"]').click();
   await expect(page.locator('#home-difficulty-value')).toHaveText('Auto');
   await expect(page.locator('#home-region-value')).toHaveText('Asia');
   await page.keyboard.press('Escape');
@@ -81,8 +110,8 @@ for (const activity of ['hunt', 'shapes']) {
     await page.goto('/');
     await page.locator('#btn-home-difficulty').click();
     await page.locator('#activity-settings-dialog [data-level="expert"]').click();
+    await page.locator('#btn-home-region').click();
     await page.locator('#activity-settings-dialog [data-continent="Europe"]').click();
-    await page.locator('#btn-apply-activity-settings').click();
     await expect(page.locator('#btn-home-difficulty')).toHaveAccessibleName(/Difficulty.*Expert/);
     await expect(page.locator('#btn-home-region')).toHaveAccessibleName(/Region.*Europe/);
     await page.locator(`#btn-challenge-${activity}`).click();

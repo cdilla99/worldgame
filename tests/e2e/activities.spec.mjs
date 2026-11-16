@@ -69,7 +69,7 @@ test('action labels remain visible on touch and keyboard navigation', async ({ p
   await expect(explore.locator('.activity-action-label')).toBeVisible();
 });
 
-test('Shape Quiz challenge puts difficulty in the game header and applies or cancels changes', async ({ page }) => {
+test('Shape Quiz difficulty pauses play, resumes on dismissal, and restarts on selection', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
   await page.locator('#btn-challenge-shapes').click();
@@ -81,13 +81,17 @@ test('Shape Quiz challenge puts difficulty in the game header and applies or can
   const paused = await page.locator('#timer-text').textContent();
   await page.waitForTimeout(1100);
   await expect(page.locator('#timer-text')).toHaveText(paused);
-  await page.locator('[data-level="expert"]').click();
-  await page.locator('#btn-cancel-activity-settings').click();
+  await page.locator('#btn-close-activity-settings').click();
   await expect(page.locator('#btn-game-difficulty')).toHaveText('Difficulty: Auto');
   await expect(page.locator('#btn-game-difficulty')).toBeFocused();
+  await expect.poll(() => page.locator('#timer-text').textContent()).not.toBe(paused);
+  const currentCard = await page.evaluate(() => state.currentCard.id);
+  await page.locator('#btn-game-difficulty').click();
+  await page.locator('[data-level="adaptive"]').click();
+  await expect(page.locator('#activity-settings-dialog')).toBeHidden();
+  expect(await page.evaluate(() => state.currentCard.id)).toBe(currentCard);
   await page.locator('#btn-game-difficulty').click();
   await page.locator('[data-level="expert"]').click();
-  await page.locator('#btn-apply-activity-settings').click();
   await expect(page.locator('#btn-game-difficulty')).toHaveText('Difficulty: Expert');
   await expect(page.locator('#activity-settings-dialog')).toBeHidden();
   await expect(page.locator('#choices')).toBeHidden();
@@ -129,12 +133,10 @@ test('Country Hunt has Explore and Challenge paths with paused, effective diffic
   await page.locator('#btn-activity-difficulty').click();
   expect(await page.evaluate(() => GeoWars.explorer.getState().huntPaused)).toBe(true);
   await page.locator('[data-level="expert"]').click();
-  await page.locator('[data-continent="Europe"]').click();
-  await page.locator('#btn-apply-activity-settings').click();
   await expect(page.locator('#btn-activity-difficulty')).toHaveText('Difficulty: Expert');
   await expect.poll(() => page.evaluate(() => {
     const id = GeoWars.explorer.getState().huntTargetId;
-    return countryCards.some(c => c.id === id && c.continent === 'Europe' && ['hard', 'expert'].includes(c.difficulty));
+    return countryCards.some(c => c.id === id && ['hard', 'expert'].includes(c.difficulty));
   })).toBe(true);
   await page.locator('#btn-activity-home').click();
   await expect(page.locator('#hunt-switch-confirm')).toBeVisible();
