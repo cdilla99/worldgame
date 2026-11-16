@@ -44,6 +44,23 @@ test('adaptive selection grows harder, eases after misses, and follows the activ
   } finally { delete globalThis.GeoWarsProfiles; }
 });
 
+test('Auto keeps the opening gentle, progresses in small regions, and uses the easiest available tier', () => {
+  learning.reset();
+  const cards = ['easy', 'easy', 'medium', 'hard', 'expert'].map((difficulty, index) => ({ id: index + 1, difficulty }));
+  let previous = null;
+  for (let answer = 0; answer < 4; answer++) {
+    for (const random of [0, 0.5, 0.999999]) {
+      assert.equal(learning.selectAdaptiveCountry(cards, previous, () => random).difficulty, 'easy');
+    }
+    const next = learning.selectAdaptiveCountry(cards, previous, () => 0.5);
+    learning.record(next.id, true);
+    previous = next.id;
+  }
+  assert.equal(learning.selectAdaptiveCountry(cards, previous, () => 0.999999).difficulty, 'expert', 'repeated correct answers can complete the opening in a small pool');
+  learning.reset();
+  assert.equal(learning.selectAdaptiveCountry(cards.filter(card => card.difficulty !== 'easy'), null, () => 0.999999).difficulty, 'medium');
+});
+
 test('record promotes correct answers up the Leitner boxes and schedules review', () => {
   learning.reset();
   const first = learning.record(1, true);

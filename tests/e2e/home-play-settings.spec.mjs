@@ -16,7 +16,7 @@ for (const viewport of [
     await expect(group).toHaveCount(1);
     await expect(page.locator('.atlas-challenge-card #btn-home-difficulty')).toHaveCount(0);
     await expect(page.locator('.atlas-challenge-card #btn-home-region')).toHaveCount(0);
-    await expect(page.locator('#btn-home-difficulty')).toHaveAccessibleName(/Difficulty.*Easy/);
+    await expect(page.locator('#btn-home-difficulty')).toHaveAccessibleName(/Difficulty.*Auto/);
     await expect(page.locator('#btn-home-region')).toHaveAccessibleName(/Region.*Worldwide/);
     for (const selector of ['#btn-home-difficulty', '#btn-home-region']) {
       const button = page.locator(selector);
@@ -57,7 +57,7 @@ test('applied settings persist while cancelled drafts leave the home summary unc
   await page.locator('#activity-settings-dialog [data-level="adaptive"]').click();
   await page.locator('#activity-settings-dialog [data-continent="Asia"]').click();
   await page.locator('#btn-apply-activity-settings').click();
-  await expect(page.locator('#home-difficulty-value')).toHaveText('Adaptive');
+  await expect(page.locator('#home-difficulty-value')).toHaveText('Auto');
   await expect(page.locator('#home-region-value')).toHaveText('Asia');
   await expect(page.locator('#game')).toBeHidden();
   expect(await page.evaluate(() => GeoWars.explorer.getState().huntTargetId)).toBeNull();
@@ -66,13 +66,13 @@ test('applied settings persist while cancelled drafts leave the home summary unc
   await page.locator('#btn-home-region').click();
   await page.locator('#activity-settings-dialog [data-level="expert"]').click();
   await page.locator('#activity-settings-dialog [data-continent="Europe"]').click();
-  await expect(page.locator('#home-difficulty-value')).toHaveText('Adaptive');
+  await expect(page.locator('#home-difficulty-value')).toHaveText('Auto');
   await expect(page.locator('#home-region-value')).toHaveText('Asia');
   await page.keyboard.press('Escape');
   await expect(page.locator('#btn-home-region')).toBeFocused();
   expect(await page.evaluate(() => localStorage.getItem('earthling-quiz-preferences'))).toBe(saved);
   await page.reload();
-  await expect(page.locator('#home-difficulty-value')).toHaveText('Adaptive');
+  await expect(page.locator('#home-difficulty-value')).toHaveText('Auto');
   await expect(page.locator('#home-region-value')).toHaveText('Asia');
 });
 

@@ -181,6 +181,15 @@
     const weights = [[7, 3, 1, 0.3], [3, 6, 3, 1], [2, 3, 6, 3]][stage];
     const candidates = cards.filter(card => card.id !== previousId);
     if (!candidates.length) return cards[0] || null;
+    // Begin with the easiest available countries until four correct answers.
+    // Count answers rather than distinct countries so small regions can progress.
+    const correctAnswers = Object.values(state).reduce((total, entry) => total + Math.max(0, Number(entry?.correct) || 0), 0);
+    if (correctAnswers < 4) {
+      const rank = card => Math.max(0, ['easy', 'medium', 'hard', 'expert'].indexOf(card.difficulty));
+      const easiest = Math.min(...candidates.map(rank));
+      const opening = candidates.filter(card => rank(card) === easiest);
+      return opening[Math.min(opening.length - 1, Math.floor(random() * opening.length))];
+    }
     const weighted = candidates.map(card => {
       const rank = ['easy', 'medium', 'hard', 'expert'].indexOf(card.difficulty);
       const entry = state[card.id];

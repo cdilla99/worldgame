@@ -16,7 +16,7 @@ const syntheticPool = [
 assert.deepEqual(ladder.LEVEL_ORDER, ['adaptive', 'cadet', 'explorer', 'earthling', 'expert']);
 assert.deepEqual(
 	ladder.listLevels().map(level => level.name),
-	['Adaptive', 'Easy', 'Medium', 'Hard', 'Expert'],
+	['Auto', 'Easy', 'Medium', 'Hard', 'Expert'],
 	'display labels use the plain-language difficulty scale while level IDs remain stable'
 );
 assert.ok(ladder.getLevel('cadet').allowedModes.includes('sprint'), 'cadet keeps Sprint available');
@@ -24,8 +24,10 @@ assert.equal(ladder.getLevel('cadet').showSprintTimer, true, 'cadet Sprint uses 
 assert.equal(ladder.getLevel('explorer').showSprintTimer, true, 'explorer Sprint uses the timer');
 assert.equal(ladder.getLevel('earthling').showTypedAnswer, true);
 assert.equal(ladder.getLevel('expert').showFlagHint, false);
-assert.equal(ladder.getDefaultLevel(false), 'cadet');
-assert.equal(ladder.getDefaultLevel(true), 'earthling');
+assert.equal(ladder.getDefaultLevel(false), 'adaptive');
+assert.equal(ladder.getDefaultLevel(true), 'adaptive');
+assert.equal(ladder.getLevel('adaptive').showTypedAnswer, false);
+assert.equal(ladder.getLevel('adaptive').choiceCount, 4);
 
 const cadetDeck = ladder.buildLevelDeck('cadet', countries, 'all');
 assert.ok(cadetDeck.length > 0, 'cadet level produces a playable deck');

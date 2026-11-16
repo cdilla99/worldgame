@@ -33,7 +33,7 @@
   <link rel="stylesheet" href="theme.css?v=20261107-clean2" />
   <link rel="stylesheet" href="mobile.css?v=20261114-login1" />
   <link rel="stylesheet" href="activities.css?v=20261108-replay1" />
-  <link rel="stylesheet" href="app-design.css?v=20261114-first-game1" />
+  <link rel="stylesheet" href="app-design.css?v=20261115-auto1" />
   <link rel="stylesheet" href="retro-theme.css?v=20261114-daily-orange1" />
 </head>
 <body class="is-explorer-active">
@@ -322,12 +322,13 @@
                     <fieldset class="setup-group">
                       <legend>Difficulty</legend>
                       <div class="option-grid difficulty-grid">
-                        <button type="button" class="diff-btn" data-level="adaptive" aria-pressed="false">Adaptive <em>For you</em></button>
+                        <button type="button" class="diff-btn active" data-level="adaptive" aria-pressed="true" aria-describedby="auto-difficulty-help">Auto</button>
                         <button type="button" class="diff-btn" data-level="cadet" aria-pressed="false">Easy <em>Cadet</em></button>
                         <button type="button" class="diff-btn" data-level="explorer" aria-pressed="false">Medium <em>Explorer</em></button>
-                        <button type="button" class="diff-btn active" data-level="earthling" aria-pressed="true">Hard <em>Earthling</em></button>
+                        <button type="button" class="diff-btn" data-level="earthling" aria-pressed="false">Hard <em>Earthling</em></button>
                         <button type="button" class="diff-btn" data-level="expert" aria-pressed="false">Expert <em>Verification</em></button>
                       </div>
+                      <p id="auto-difficulty-help" class="auto-difficulty-help">Adjusts as you play.</p>
                     </fieldset>
                     <fieldset class="setup-group">
                       <legend>Region</legend>
@@ -355,7 +356,7 @@
         <div class="activity-section-actions">
           <button id="btn-activity-explore" type="button">Practise</button>
           <button id="btn-activity-challenge" type="button">Play</button>
-          <button id="btn-activity-difficulty" class="activity-difficulty" type="button" aria-haspopup="dialog">Difficulty: Easy</button>
+          <button id="btn-activity-difficulty" class="activity-difficulty" type="button" aria-haspopup="dialog">Difficulty: Auto</button>
         </div>
       </div>
       <div id="atlas-explore-switch" class="atlas-explore-switch" role="group" aria-label="Explore views">
@@ -378,7 +379,7 @@
             <span id="home-play-settings-title" class="sr-only">Play settings</span>
             <div class="activity-home-setting-fields">
               <button id="btn-home-difficulty" class="activity-home-setting" type="button" aria-haspopup="dialog" aria-controls="activity-settings-dialog">
-                <span class="activity-home-setting-copy"><span>Difficulty</span><strong id="home-difficulty-value">Easy</strong></span>
+                <span class="activity-home-setting-copy"><span>Difficulty</span><strong id="home-difficulty-value">Auto</strong></span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><path d="m8 10 4 4 4-4"/></svg>
               </button>
               <button id="btn-home-region" class="activity-home-setting" type="button" aria-haspopup="dialog" aria-controls="activity-settings-dialog">
@@ -742,7 +743,7 @@
             </div>
           </div>
           <div class="game-utility-actions" aria-label="Game utilities">
-            <button id="btn-game-difficulty" class="ghost-sm activity-difficulty" type="button" aria-haspopup="dialog">Difficulty: Easy</button>
+            <button id="btn-game-difficulty" class="ghost-sm activity-difficulty" type="button" aria-haspopup="dialog">Difficulty: Auto</button>
             <button id="btn-mute" class="ghost-sm" type="button" aria-label="Mute sound effects" aria-pressed="false">
               <svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="assets/geowars-icons.svg#icon-sound"></use></svg>
               <span>Sound</span>
@@ -1104,10 +1105,10 @@
   <script src="data/countries.js?v=20260831-cy-ps197"></script>
   <script src="data/territories.js?v=20260730-territories3"></script>
   <script src="data/geographic-features.js?v=20261115-antarctica1"></script>
-  <script src="difficulty-ladder.js?v=20261114-adaptive1"></script>
+  <script src="difficulty-ladder.js?v=20261115-auto1"></script>
   <script src="ladder-progress.js?v=20260803-ladder1"></script>
   <script src="player-profiles.js?v=20261108-profiles1"></script>
-  <script src="learning-progress.js?v=20261114-adaptive1"></script>
+  <script src="learning-progress.js?v=20261115-auto1"></script>
   <script src="daily-challenge.js?v=20261014-worldle-nav1"></script>
   <script src="daily-worldle.js?v=20261108-profiles1"></script>
   <script src="anthems.js"></script>
@@ -1120,7 +1121,7 @@
   <script src="background-music.js?v=20261115-lazy1"></script>
   <script src="asset-fallbacks.js?v=20261114-native-flags1"></script>
   <script src="shape-geometry.js?v=20261114-compact-outlines3"></script>
-  <script src="app.js?v=20261115-home-sound1"></script>
+  <script src="app.js?v=20261115-auto1"></script>
   <script src="assets/globe-data.js?v=20260729-natural-earth"></script>
   <script src="interactive-globe.js?v=20261014-worldle-nav1"></script>
   <script src="geography.js?v=20260730-guidance1"></script>
@@ -1130,6 +1131,6 @@
   <script src="challenge-previews.js?v=20261114-preview-cadence1"></script>
   <script src="mobile-experience.js?v=20261114-player-menu3"></script>
   <script src="privacy-dialog.js?v=20261115-clean-url1"></script>
-  <script src="activities.js?v=20261115-home-sound1"></script>
+  <script src="activities.js?v=20261115-auto1"></script>
 </body>
 </html>

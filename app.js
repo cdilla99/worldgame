@@ -11,8 +11,8 @@
 
 const state = {
   mode: 'sprint', // 'sprint' or 'showoff'
-  level: 'earthling',
-  difficulty: 'earthling',
+  level: 'adaptive',
+  difficulty: 'adaptive',
   continent: 'all',
   deck: [],
   currentCard: null,
@@ -1029,6 +1029,8 @@ function selectLevelOption(selectedButton) {
     button.classList.toggle('active', isSelected);
     button.setAttribute('aria-pressed', String(isSelected));
   });
+  const autoHelp = document.getElementById('auto-difficulty-help');
+  if (autoHelp) autoHelp.hidden = selectedLevel !== 'adaptive';
   if (ladderProgress && typeof ladderProgress.setLastLevel === 'function') {
     ladderProgress.setLastLevel(selectedLevel);
   }
@@ -1181,14 +1183,12 @@ if ($dailyReviewButton) $dailyReviewButton.addEventListener('click', () => start
 const $dailyChallengeButton = document.getElementById('btn-daily-challenge');
 if ($dailyChallengeButton) $dailyChallengeButton.addEventListener('click', () => startDailyChallenge());
 
-// A first phone session starts gently; subsequent visits restore explicit choices.
+// Auto starts new players gently; saved choices are restored on every device size.
 function restoreQuizPreferences() {
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem('earthling-quiz-preferences') || 'null'); } catch (e) { /* optional */ }
-  const phone = window.matchMedia?.('(max-width: 767px), (max-width: 960px) and (max-height: 500px) and (pointer: coarse)').matches;
-  if (!saved && !phone) return;
   const level = $levelButtons.find(button => button.dataset.level === saved?.level)
-    || $levelButtons.find(button => button.dataset.level === 'cadet');
+    || $levelButtons.find(button => button.dataset.level === 'adaptive');
   selectLevelOption(level);
   selectModeOption(saved?.mode === 'sprint' ? $btnSprint : $btnShowoff);
   const continent = Array.from($continentButtons).find(button => button.dataset.continent === saved?.continent)

@@ -6,6 +6,10 @@ library without a timer. Play starts a 60-second game; its time limit is stated
 once inside Play settings, without duration badges on the launch buttons.
 A compact shared settings row above both cards shows labeled
 Difficulty and Region controls. These shared settings apply to both games.
+New players default to Auto, with “Adjusts as you play.” shown in settings.
+Auto offers four answer choices and uses the easiest available countries until
+the player has four correct answers, then adapts using their learning progress.
+Returning players retain their saved difficulty and region on every screen size.
 Each control opens the existing dialog focused on its selected field. Home
 summaries retain their applied values while the dialog edits a draft. Applying
 home settings does not start a game; cancellation restores the previous settings

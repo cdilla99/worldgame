@@ -361,6 +361,8 @@ body.activity-navigation [aria-checked='true'] .player-switch { background: var(
   body.activity-navigation .atlas-stats-slot .landing-statistics-toggle { min-height: 44px; padding-block: 8px; }
 }
 body.activity-navigation :is(#activity-settings-description, #player-google-status, #local-player-status):empty { display: none; }
+.auto-difficulty-help { margin: 10px 0 0; color: var(--color-muted); font-size: .8rem; line-height: 1.4; }
+.auto-difficulty-help[hidden] { display: none; }
 
 /* Privacy uses the same surface, close control and focus treatment as other dialogs. */
 .privacy-dialog { position: fixed; inset: 0; margin: auto; width: min(560px, calc(100vw - 24px)); height: fit-content; max-height: calc(100dvh - 32px); padding: 0 20px 20px; border: 1px solid var(--color-border); border-radius: 18px; background: var(--color-surface); color: var(--color-text); overflow-y: auto; overscroll-behavior: contain; }

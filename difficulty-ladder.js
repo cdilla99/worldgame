@@ -133,9 +133,9 @@
   }
 
   function getLevel(levelId) {
-    if (levelId === 'adaptive') return cloneLevel({ ...LEVELS.explorer, id: 'adaptive', name: 'Adaptive',
-      description: 'A mix of countries that adjusts to your progress.', recommendation: 'Adjusts to your progress on this player profile.',
-      showTypedAnswer: true, poolKind: 'full', recommended: true });
+    if (levelId === 'adaptive') return cloneLevel({ ...LEVELS.explorer, id: 'adaptive', name: 'Auto',
+      description: 'Adjusts as you play.', recommendation: 'Adjusts as you play.',
+      poolKind: 'full', recommended: true });
     return cloneLevel(LEVELS[normalizeLevelId(levelId)]);
   }
 
@@ -215,7 +215,7 @@
   }
 
   function getDefaultLevel(hasHistory) {
-    return hasHistory ? 'earthling' : 'cadet';
+    return 'adaptive';
   }
 
   return Object.freeze({

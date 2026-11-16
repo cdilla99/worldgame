@@ -75,7 +75,7 @@ test('Shape Quiz challenge puts difficulty in the game header and applies or can
   await page.locator('#btn-challenge-shapes').click();
   await expect(page.locator('#game')).toBeVisible();
   await expect(page.locator('#game-mode-label')).toBeHidden();
-  await expect(page.locator('#btn-game-difficulty')).toHaveText('Difficulty: Easy');
+  await expect(page.locator('#btn-game-difficulty')).toHaveText('Difficulty: Auto');
   await page.locator('#btn-game-difficulty').click();
   await expect(page.locator('#activity-settings-dialog')).toBeVisible();
   const paused = await page.locator('#timer-text').textContent();
@@ -83,7 +83,7 @@ test('Shape Quiz challenge puts difficulty in the game header and applies or can
   await expect(page.locator('#timer-text')).toHaveText(paused);
   await page.locator('[data-level="expert"]').click();
   await page.locator('#btn-cancel-activity-settings').click();
-  await expect(page.locator('#btn-game-difficulty')).toHaveText('Difficulty: Easy');
+  await expect(page.locator('#btn-game-difficulty')).toHaveText('Difficulty: Auto');
   await expect(page.locator('#btn-game-difficulty')).toBeFocused();
   await page.locator('#btn-game-difficulty').click();
   await page.locator('[data-level="expert"]').click();
@@ -215,11 +215,11 @@ for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }
     const levels = page.locator('#quiz-next-difficulty');
     await expect(levels).toBeVisible();
     await expect(levels.locator('button')).toHaveText(await page.evaluate(() => GeoWarsDifficulty.listLevels().map(level => level.name)));
-    await expect(levels.getByRole('button', { name: 'Easy', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await expect(levels.getByRole('button', { name: 'Auto', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await levels.getByRole('button', { name: 'Medium', exact: true }).click();
     await expect(levels.getByRole('button', { name: 'Medium', exact: true })).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('#res-level')).toHaveText('Easy');
-    expect(await page.evaluate(() => state.level)).toBe('cadet');
+    await expect(page.locator('#res-level')).toHaveText('Auto');
+    expect(await page.evaluate(() => state.level)).toBe('adaptive');
     await expect(page.locator('#res-correct')).toHaveText('1/1');
     await expect(page.locator('#btn-again')).toHaveText('Play Medium');
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
@@ -247,7 +247,7 @@ test('Country Hunt results replay with a new difficulty and retain the final sco
   await expect(levels).toBeVisible();
   await levels.getByRole('button', { name: 'Expert', exact: true }).click();
   await expect(page.locator('#explorer-hunt-final-score')).toHaveText('1');
-  expect(await page.evaluate(() => GeoWars.activities.getHuntOptions().level)).toBe('cadet');
+  expect(await page.evaluate(() => GeoWars.activities.getHuntOptions().level)).toBe('adaptive');
   await expect(page.locator('#btn-explorer-hunt-again')).toHaveText('Play Expert');
   await page.screenshot({ path: 'test-results/hunt-results-difficulty.png', fullPage: true });
   await page.locator('#btn-explorer-hunt-again').click();

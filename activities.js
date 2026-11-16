@@ -39,7 +39,7 @@
     if (difficultyGroup) setup.prepend(difficultyGroup);
     byId('game-utility-region').insertBefore(byId('btn-game-difficulty'), game.querySelector('.game-hud'));
 
-    function selectedLevel() { return setup.querySelector('[data-level].active')?.dataset.level || 'cadet'; }
+    function selectedLevel() { return setup.querySelector('[data-level].active')?.dataset.level || 'adaptive'; }
     function selectedRegion() { return setup.querySelector('[data-continent].active')?.dataset.continent || 'all'; }
     function quizActive() { return !game.classList.contains('hidden'); }
     function isHidden(element, hidden) { if (element && element.hidden !== hidden) element.hidden = hidden; }
@@ -115,7 +115,7 @@
       isHidden(byId('btn-activity-challenge'), daily || challenge);
       isHidden(byId('btn-activity-difficulty'), daily || !challenge);
       byId('btn-activity-explore').setAttribute('aria-pressed', String(!challenge));
-      const levelName = root.GeoWarsDifficulty?.getLevelLabel(selectedLevel()) || 'Easy';
+      const levelName = root.GeoWarsDifficulty?.getLevelLabel(selectedLevel()) || 'Auto';
       [byId('btn-game-difficulty'), byId('btn-activity-difficulty')].forEach(button => text(button, 'Difficulty: ' + levelName));
       // Keep the home summary on the applied settings while the dialog edits a draft.
       const homeLevel = settingsSnapshot?.level || selectedLevel();
@@ -220,7 +220,7 @@
       getHuntOptions: () => ({ level: selectedLevel(), continent: selectedRegion() })
     });
     try {
-      if (!localStorage.getItem('earthling-quiz-preferences')) setup.querySelector('[data-level="cadet"]')?.click();
+      if (!localStorage.getItem('earthling-quiz-preferences')) setup.querySelector('[data-level="adaptive"]')?.click();
     } catch (_) { /* Defaults remain playable if browser storage is blocked. */ }
     home({ focus: false, announce: false });
     sync();
